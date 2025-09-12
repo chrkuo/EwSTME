@@ -1,0 +1,289 @@
+##merging all visium samples specifically metastatic v. localized 
+#load all libraries#
+library(DESeq2)
+library(STutility)
+library(ggplot2)
+library(patchwork)
+library(Matrix)
+library(magrittr)
+library(dplyr)
+library(spdep)
+library(RColorBrewer)
+library(plotly)
+library(Seurat)
+library(SeuratData)
+library(kableExtra)
+library(ggiraph)
+library(biomaRt)
+library(spData)
+library(sf)
+library(viridis)
+library(viridisLite)
+library(presto)
+library(devtools)
+library(msigdbr)
+library(fgsea)
+library(tibble)
+library(data.table)
+library(tidyverse)
+
+#reading RDS objects that are processed and normalized/scaled etc# 
+se_EWS4064_normalize <- readRDS(file = "file path that contained the normalized seurat object")
+
+#annotating the objects and merge all objects together# 
+#add new column of sample ID instead of relying on the orig.ident 
+#metastatic 
+#add tissue type 
+#add fusion type 
+#add outcome status 
+se_EWS4064_normalize@meta.data$sample.id <- "EWS4064"
+se_EWS4064_normalize@meta.data$disease.status <- "metastatic"
+se_EWS4064_normalize@meta.data$fusion.status <- "EWSR1FLI"
+se_EWS4064_normalize@meta.data$dtissue.status <- "bone"
+se_EWS4064_normalize@meta.data$outcome <- "PORR"
+
+se_EWS4512_normalize@meta.data$sample.id <- "EWS4512"
+se_EWS4512_normalize@meta.data$disease.status <- "metastatic"
+se_EWS4512_normalize@meta.data$fusion.status <- "EWSR1FLI"
+se_EWS4512_normalize@meta.data$dtissue.status <- "softtissue"
+se_EWS4512_normalize@meta.data$outcome <- "PORR"
+
+se_EWS4521_normalize@meta.data$sample.id <- "EWS4521"
+se_EWS4521_normalize@meta.data$disease.status <- "metastatic"
+se_EWS4521_normalize@meta.data$fusion.status <- "EWSR1ERG"
+se_EWS4521_normalize@meta.data$dtissue.status <- "bone"
+se_EWS4521_normalize@meta.data$outcome <- "PORR"
+
+se_EWS4523_normalize@meta.data$sample.id <- "EWS4523"
+se_EWS4523_normalize@meta.data$disease.status <- "metastatic"
+se_EWS4523_normalize@meta.data$fusion.status <- "EWSR1FLI"
+se_EWS4523_normalize@meta.data$dtissue.status <- "bone"
+se_EWS4523_normalize@meta.data$outcome <- "PORR"
+
+se_EWS4577_normalize@meta.data$sample.id <- "EWS4577"
+se_EWS4577_normalize@meta.data$disease.status <- "metastatic"
+se_EWS4577_normalize@meta.data$fusion.status <- "EWSR1FLI"
+se_EWS4577_normalize@meta.data$dtissue.status <- "softtissue"
+se_EWS4577_normalize@meta.data$outcome <- "remission"
+
+se_EWS4578_normalize@meta.data$sample.id <- "EWS4578"
+se_EWS4578_normalize@meta.data$disease.status <- "metastatic"
+se_EWS4578_normalize@meta.data$fusion.status <- "EWSR1FLI"
+se_EWS4578_normalize@meta.data$dtissue.status <- "softtissue"
+se_EWS4578_normalize@meta.data$outcome <- "remission"
+
+#localized
+se_EWS4531_normalize@meta.data$sample.id <- "EWS4531"
+se_EWS4531_normalize@meta.data$disease.status <- "localized"
+se_EWS4531_normalize@meta.data$fusion.status <- "EWSR1ERG"
+se_EWS4531_normalize@meta.data$dtissue.status <- "softtissue"
+se_EWS4531_normalize@meta.data$outcome <- "remission"
+
+se_EWS4539_normalize@meta.data$sample.id <- "EWS4539"
+se_EWS4539_normalize@meta.data$disease.status <- "localized"
+se_EWS4539_normalize@meta.data$fusion.status <- "EWSR1FLI"
+se_EWS4539_normalize@meta.data$dtissue.status <- "bone"
+se_EWS4539_normalize@meta.data$outcome <- "remission"
+
+se_EWS4550_normalize@meta.data$sample.id <- "EWS4550"
+se_EWS4550_normalize@meta.data$disease.status <- "localized"
+se_EWS4550_normalize@meta.data$fusion.status <- "EWSR1FLI"
+se_EWS4550_normalize@meta.data$dtissue.status <- "softtissue"
+se_EWS4550_normalize@meta.data$outcome <- "remission"
+
+se_EWS4553_normalize@meta.data$sample.id <- "EWS4553"
+se_EWS4553_normalize@meta.data$disease.status <- "localized"
+se_EWS4553_normalize@meta.data$fusion.status <- "EWSR1FLI"
+se_EWS4553_normalize@meta.data$dtissue.status <- "bone"
+se_EWS4553_normalize@meta.data$outcome <- "PORR"
+
+se_EWS4554_normalize@meta.data$sample.id <- "EWS4554"
+se_EWS4554_normalize@meta.data$disease.status <- "localized"
+se_EWS4554_normalize@meta.data$fusion.status <- "EWSR1FLI"
+se_EWS4554_normalize@meta.data$dtissue.status <- "bone"
+se_EWS4554_normalize@meta.data$outcome <- "PORR"
+
+se_EWS4556_normalize@meta.data$sample.id <- "EWS4556"
+se_EWS4556_normalize@meta.data$disease.status <- "localized"
+se_EWS4556_normalize@meta.data$fusion.status <- "EWSR1ERG"
+se_EWS4556_normalize@meta.data$dtissue.status <- "bone"
+se_EWS4556_normalize@meta.data$outcome <- "remission"
+
+se_EWS4557_normalize@meta.data$sample.id <- "EWS4557"
+se_EWS4557_normalize@meta.data$disease.status <- "localized"
+se_EWS4557_normalize@meta.data$fusion.status <- "EWSR1FLI"
+se_EWS4557_normalize@meta.data$dtissue.status <- "bone"
+se_EWS4557_normalize@meta.data$outcome <- "remission"
+
+se_EWS4559_normalize@meta.data$sample.id <- "EWS4559"
+se_EWS4559_normalize@meta.data$disease.status <- "localized"
+se_EWS4559_normalize@meta.data$fusion.status <- "EWSR1FLI"
+se_EWS4559_normalize@meta.data$dtissue.status <- "bone"
+se_EWS4559_normalize@meta.data$outcome <- "PORR"
+
+se_EWS4564_normalize@meta.data$sample.id <- "EWS4564"
+se_EWS4564_normalize@meta.data$disease.status <- "localized"
+se_EWS4564_normalize@meta.data$fusion.status <- "EWSR1FLI"
+se_EWS4564_normalize@meta.data$dtissue.status <- "softtissue"
+se_EWS4564_normalize@meta.data$outcome <- "remission"
+
+se_EWS4582_normalize@meta.data$sample.id <- "EWS4582"
+se_EWS4582_normalize@meta.data$disease.status <- "localized"
+se_EWS4582_normalize@meta.data$fusion.status <- "EWSR1FLI"
+se_EWS4582_normalize@meta.data$dtissue.status <- "bone"
+se_EWS4582_normalize@meta.data$outcome <- "PORR"
+
+#merge all samples
+allsamples.merge <- MergeSTData(se_EWS4064_normalize, c(se_EWS4512_normalize, se_EWS4521_normalize, se_EWS4523_normalize, 
+                                              se_EWS4531_normalize, se_EWS4539_normalize, se_EWS4550_normalize, se_EWS4553_normalize, 
+                                              se_EWS4554_normalize, se_EWS4556_normalize, se_EWS4557_normalize, se_EWS4559_normalize,
+                                              se_EWS4564_normalize, se_EWS4577_normalize, se_EWS4578_normalize, se_EWS4582_normalize))
+#now process the merged object# 
+allsamples.merge <- FindVariableFeatures(allsamples.merge, nfeatures = 'all.genes')
+allsamples.merge <- ScaleData(allsamples.merge)
+
+#perform linear reduction analysis:
+allsamples.merge <- RunPCA(allsamples.merge, features = VariableFeatures(object = allsamples.merge))
+allsamples.merge <- FindNeighbors(allsamples.merge, reduction = "pca", dims = 1:15)
+allsamples.merge <- FindClusters(allsamples.merge, verbose = FALSE)
+allsamples.merge <- RunUMAP(allsamples.merge, dims = 1:15) #i picked 1:15 
+
+#viewing all the plots# 
+DimPlot(allsamples.merge, reduction = "umap", label = TRUE)
+DimPlot(allsamples.merge, group.by = c("disease.status", "sample.id"), reduction = "umap", label = TRUE)
+DimPlot(allsamples.merge, group.by = "sample.id", reduction = "umap", label = TRUE)
+DimPlot(allsamples.merge, group.by = "outcome", reduction = "umap", label = TRUE)
+DimPlot(allsamples.merge, group.by = "dtissue.status", reduction = "umap", label = TRUE)
+DimPlot(allsamples.merge, group.by = "fusion.status", reduction = "umap", label = TRUE)
+
+#plot out the clusters on tumors#
+ST.FeaturePlot(allsamples.merge, indices = c(1, 2, 3, 4), features = "seurat_clusters", pt.size = 1.5, ncol = 2)
+ST.FeaturePlot(allsamples.merge, indices = c(5, 6, 7, 8), features = "seurat_clusters", pt.size = 1.5, ncol = 2)
+ST.FeaturePlot(allsamples.merge, indices = c(9, 10, 11, 12), features = "seurat_clusters", pt.size = 1.5, ncol = 2)
+ST.FeaturePlot(allsamples.merge, indices = c(13, 14, 15, 16), features = "seurat_clusters", pt.size = 1.5, ncol = 2)
+
+#plotting features on UMAP#
+FeaturePlot(allsamples.merge, feature = c("NKX2-2", "CD99", "FLI1"))
+FeaturePlot(allsamples.merge, feature = "NKX2-2")
+FeaturePlot(allsamples.merge, feature = c("CD14", "CD68", "CD163", "CSF1R", "FCGR3A")) #macrophage 
+FeaturePlot(allsamples.merge, feature = c("PDCD1", "LAG3", "TIGIT", "CTLA4")) #Tcell Exhaustion Markers 
+
+#convert identity into factor for analysis
+allsamples.merge.allgenes@active.ident <- as.factor(allsamples.merge.allgenes$disease.status)
+# find all markers of the whole object 
+pbmc.markers <- FindAllMarkers(allsamples.merge.backup, only.pos = TRUE)
+write.csv(pbmc.markers, file = "findallmarkers.localizedvmetastatic.022124.csv") #saved the result as csv file 
+#heatmap selecting a few to graph 
+pbmc.markers %>%
+  group_by(cluster) %>%
+  dplyr::filter(avg_log2FC > 0.25) %>%
+  slice_head(n = 30) %>%
+  ungroup() -> top10
+DoHeatmap(allsamples.merge.backup, features = top10$gene, disp.max = 1.5) + 
+  theme(axis.text = element_text(size = 6))
+#then graph specifically metastatic v. localized 
+metastatic.disease.markers <- FindMarkers(allsamples.merge.backup, ident.1 = 'metastatic', ident.2 = 'localized') # test.use = "DESeq2"
+head(disease.markers, n = 10) #first used DESeq2
+
+#now use default settings
+wilcox.results <- FindAllMarkers(allsamples.merge, only.pos = TRUE)
+
+#plot heatmap 
+wilcox.results %>%
+  group_by(cluster) %>%
+  dplyr::filter(avg_log2FC > 0.25) %>%
+  slice_head(n = 100) %>%
+  ungroup() -> top10
+DoHeatmap(allsamples.merge, features = top10$gene) + 
+  theme(axis.text = element_text(size = 4))
+
+#now looking at the genes that are most upregulated in localized that coincides with hallmark:EMT 
+DoHeatmap(allsamples.merge, features = c("FSTL1", "COL3A1", "COL1A2", "DCN", "IGFBP4", 
+                                         "LUM", "CCN1", "BGN", "TIMP1", "SPARC", "FBN1", "COL4A1", 
+                                         "COL4A2", "ITGB1", "CDH11", "COL5A2", "PDGFRB", "FLNA", "MYL9", 
+                                         "JUN", "COL6A2", "COL1A1", "MMP2", "COL6A3", "COL5A1", "CCN2", "VCAN", "EMP3",
+                                         "ACTA2", "ITGB5", "PMEPA1", "TAGLN", "TGFB1", "VIM", "THBS2", "TIMP3", "SERPINE1", "HTRA1", "TNC", "MSX1", "POSTN", "WNT5A", "MMP14", "RHOB", "GAS1", "GJA1"))
+
+#now look at genes that are most upregulated in metastatic# Glutathione metabolism KEGG
+DoHeatmap(allsamples.merge, features = c("SMS", "ODC1", "GSTM1", "GSTM4"))
+
+#now look at genes that are most upregulated in metastatic# SMARCE1 TARGETS DN 
+DoHeatmap(allsamples.merge, features = c("TWIST1", "HMGA1", "PRAME", "FH", "SMS", "CACYBP", "SGK1", "UCHL1", "SCG2", "TBC1D4"))
+DoHeatmap(allsamples.merge, features = c("TGFB1", "TGFB2"))
+
+
+#now integrate them 
+test.list <- SplitObject(allsamples.merge, split.by = "sample.id")
+
+# normalize and identify variable features for each dataset independently
+test.list <- lapply(X = test.list, FUN = function(x) {
+  x <- FindVariableFeatures(x, nfeatures = 2000)
+  #trying all genes on 2/12/24
+})
+# select features that are repeatedly variable across datasets for integration
+features <- SelectIntegrationFeatures(object.list = test.list)
+test.anchors <- FindIntegrationAnchors(object.list = test.list, anchor.features = features)
+
+# this command creates an 'integrated' data assay
+test.combined <- IntegrateData(anchorset = test.anchors)
+allsamples.merge.integrated.STUTILITY.2000genes <- test.combined
+
+
+# Force the images assay the same as original one
+allsamples.merge.integrated.STUTILITY.2000genes@tools <- allsamples.merge@tools
+DefaultAssay(allsamples.merge.integrated.STUTILITY.2000genes) <- "integrated"
+
+# Run the standard workflow for visualization and clustering for 2000 genes
+allsamples.merge.integrated.STUTILITY.2000genes <- ScaleData(allsamples.merge.integrated.STUTILITY.2000genes, verbose = FALSE)
+allsamples.merge.integrated.STUTILITY.2000genes <- RunPCA(allsamples.merge.integrated.STUTILITY.2000genes, npcs = 50)
+ElbowPlot(allsamples.merge.integrated.STUTILITY.2000genes) #picked 1:15 since 1:20 didnt make too much of a difference
+allsamples.merge.integrated.STUTILITY.2000genes <- RunUMAP(allsamples.merge.integrated.STUTILITY.2000genes, reduction = "pca", dims = 1:15)
+allsamples.merge.integrated.STUTILITY.2000genes <- FindNeighbors(allsamples.merge.integrated.STUTILITY.2000genes, reduction = "pca", dims = 1:15)
+allsamples.merge.integrated.STUTILITY.2000genes <- FindClusters(allsamples.merge.integrated.STUTILITY.2000genes, resolution = 0.4) #default 0.8 resolution -> trying lower resolution 0.5
+DimPlot(allsamples.merge.integrated.STUTILITY.2000genes, reduction = "umap") #picked 0.4
+DimPlot(allsamples.merge.integrated.STUTILITY.2000genes, group.by = c("disease.status", "sample.id"), reduction = "umap")
+DimPlot(allsamples.merge.integrated.STUTILITY.2000genes, group.by = "sample.id", reduction = "umap")
+
+#plot out the clusters on tumors#
+ST.FeaturePlot(allsamples.merge.integrated.STUTILITY.2000genes, indices = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16), features = "seurat_clusters", pt.size = 0.8, ncol = 4)
+ST.FeaturePlot(allsamples.merge.integrated.STUTILITY.2000genes, indices = 1, features = "seurat_clusters", pt.size = 2.5, ncol = 3, split.labels = FALSE)
+ST.FeaturePlot(allsamples.merge.integrated.STUTILITY.2000genes, indices = 2, features = "seurat_clusters", pt.size = 2.5, ncol = 3, split.labels = FALSE)
+ST.FeaturePlot(allsamples.merge.integrated.STUTILITY.2000genes, indices = 3, features = "seurat_clusters", pt.size = 2.5, ncol = 3, split.labels = FALSE)
+ST.FeaturePlot(allsamples.merge.integrated.STUTILITY.2000genes, indices = 4, features = "seurat_clusters", pt.size = 2.5, ncol = 3, split.labels = FALSE)
+ST.FeaturePlot(allsamples.merge.integrated.STUTILITY.2000genes, indices = 5, features = "seurat_clusters", pt.size = 2.5, ncol = 3, split.labels = FALSE)
+ST.FeaturePlot(allsamples.merge.integrated.STUTILITY.2000genes, indices = 6, features = "seurat_clusters", pt.size = 2.5, ncol = 3, split.labels = FALSE)
+ST.FeaturePlot(allsamples.merge.integrated.STUTILITY.2000genes, indices = 7, features = "seurat_clusters", pt.size = 2.5, ncol = 3, split.labels = FALSE)
+ST.FeaturePlot(allsamples.merge.integrated.STUTILITY.2000genes, indices = 8, features = "seurat_clusters", pt.size = 2.5, ncol = 3, split.labels = FALSE)
+ST.FeaturePlot(allsamples.merge.integrated.STUTILITY.2000genes, indices = 9, features = "seurat_clusters", pt.size = 2.5, ncol = 3, split.labels = FALSE)
+ST.FeaturePlot(allsamples.merge.integrated.STUTILITY.2000genes, indices = 10, features = "seurat_clusters", pt.size = 2.5, ncol = 3, split.labels = FALSE)
+ST.FeaturePlot(allsamples.merge.integrated.STUTILITY.2000genes, indices = 11, features = "seurat_clusters", pt.size = 2.5, ncol = 3, split.labels = FALSE)
+ST.FeaturePlot(allsamples.merge.integrated.STUTILITY.2000genes, indices = 12, features = "seurat_clusters", pt.size = 2.5, ncol = 3, split.labels = FALSE)
+ST.FeaturePlot(allsamples.merge.integrated.STUTILITY.2000genes, indices = 13, features = "seurat_clusters", pt.size = 2.5, ncol = 3, split.labels = FALSE)
+ST.FeaturePlot(allsamples.merge.integrated.STUTILITY.2000genes, indices = 14, features = "seurat_clusters", pt.size = 2.5, ncol = 3, split.labels = FALSE)
+ST.FeaturePlot(allsamples.merge.integrated.STUTILITY.2000genes, indices = 15, features = "seurat_clusters", pt.size = 2.5, ncol = 3, split.labels = FALSE)
+ST.FeaturePlot(allsamples.merge.integrated.STUTILITY.2000genes, indices = 16, features = "seurat_clusters", pt.size = 2.5, ncol = 3, split.labels = FALSE)
+
+FeaturePlot(allsamples.merge.all.STUTILITY, feature = c("NKX2-2", "CD99", "FLI1"), pt.size = 0.5)
+FeaturePlot(allsamples.merge.integrated.STUTILITY.2000genes, feature = c("CD14", "CD68", "CD163", "CSF1R", "FCGR3A"), pt.size = 0.1) #macrophage 
+FeaturePlot(allsamples.merge.integrated.STUTILITY.2000genes, feature = c("PDCD1", "LAG3", "TIGIT", "CTLA4"), pt.size = 0.5) #Tcell Exhaustion Markers 
+
+#this would allow the disease status to be the main active.ident but due to this analysis with integration i want to investivgate clusters
+#allsamples.merge.integratedbackup@active.ident <- as.factor(allsamples.merge.integratedbackup$disease.status)
+pbmc.markers.allgenes <- FindAllMarkers(allsamples.merge.integrated.STUTILITY, only.pos = TRUE)
+#writeCSV#
+write.csv(pbmc.markers.allgenes, file = "findallmarkers.integratedmerged.allgenes.csv")
+
+#allsamples.merge.integrated.STUTILITY.2000genes@active.ident <- as.factor(allsamples.merge.integrated.STUTILITY.2000genes$disease.status)
+
+pbmc.markers.2000genes <- FindAllMarkers(allsamples.merge.integrated.STUTILITY.2000genes, only.pos = TRUE)
+write.csv(pbmc.markers, file = "findallmarkers.integratedmerged.2000genes.csv")
+
+
+DoHeatmap(allsamples.merge.integrated.STUTILITY.2000genes, features = c("FSTL1", "COL3A1", "COL1A2", "DCN", "IGFBP4", 
+                                         "LUM", "CCN1", "BGN", "TIMP1", "SPARC", "FBN1", "COL4A1", 
+                                         "COL4A2", "ITGB1", "CDH11", "COL5A2", "PDGFRB", "FLNA", "MYL9", 
+                                         "JUN", "COL6A2", "COL1A1", "MMP2", "COL6A3", "COL5A1", "CCN2", "VCAN", "EMP3",
+                                         "ACTA2", "ITGB5", "PMEPA1", "TAGLN", "TGFB1", "VIM", "THBS2", "TIMP3", "SERPINE1", "HTRA1", "TNC", "MSX1", "POSTN", "WNT5A", "MMP14", "RHOB", "GAS1", "GJA1"))
+
+### now using the original object that did not have idents remodified#
+DimPlot(allsamples.merge.integrated)
