@@ -1,0 +1,128 @@
+#Estimate Analysis#
+library(Seurat)
+library(tidyr)
+library(ggplot2)
+library(CePa)
+library(estimate)
+library(STutility)
+library(ggplot2)
+library(viridis)
+library(RColorBrewer)
+display.brewer.all()
+library(colorspace)
+hcl_palettes(plot = TRUE)
+dev.off()
+hcl_palettes(palette = "Reds", plot = TRUE)
+sequential_hcl(n = 5, palette = "Reds")
+
+#ReadRDS 
+#load my STUTILITY objects# using EWS4064 as an example 
+se_EWS4064_normalize <- readRDS(file = "file path to the RDS")
+
+library(tidyestimate)
+
+#EWS4064
+dim(se_EWS4064_normalize)
+head(se_EWS4064_normalize[, 1:5])
+filtered <- filter_common_genes(se_EWS4064_normalize@assays[["RNA"]]@counts, 
+                                id = "hgnc_symbol", 
+                                tidy = FALSE, 
+                                tell_missing = TRUE, 
+                                find_alias = TRUE)
+
+scored <- estimate_score(filtered,
+                         is_affymetrix = TRUE)
+scored
+write.csv(scored, file = "full_dfEWS4064.csv")
+
+df_immuneEWS4064 <- subset(scored, select = c(immune))
+write.csv(df_immuneEWS4064, file = "df_immuneEWS4064.csv")
+
+df_stromalEWS4064 <- subset(scored, select = c(stromal))
+write.csv(df_stromalEWS4064, file = "df_stromalEWS4064.csv")
+
+df_purityEWS4064 <- subset(scored, select = c(purity))
+write.csv(df_purityEWS4064, file = "df_purityEWS4064.csv")
+
+# transpose 
+df_transposed <- t(scored[, -1])
+
+colnames(df_transposed) <- scored$sample
+
+assay <- CreateAssayObject(counts = df_transposed)
+se_EWS4064_normalize[["ESTIMATE"]] <- assay
+
+rm(assay)
+
+# plot
+DefaultAssay(se_EWS4064_normalize) <- "ESTIMATE"
+# Hexadecimal color specification #colorbrewersetting colors# https://www.datanovia.com/en/blog/top-r-color-palettes-to-know-for-great-data-visualization/#viridis-color-palettes
+#brewer.pal(n = 8, name = "Set1")
+#se_EWS4064_normalize <- LoadImages(se_EWS4064_normalize, time.resolve = FALSE, verbose = TRUE)
+
+png("EWS4064_estimate_plot.png", width=20, height=6, units="in", res=300)
+ST.FeaturePlot(object = se_EWS4064_normalize, slot = "counts", cols = c("#377EB8", "#F0F0F0", "red"),
+               pt.alpha = 10000, pt.size = 1.8, dark.theme = FALSE, features = c("purity", "stromal", "immune", "estimate"), ncol = 2)
+dev.off()
+
+ST.FeaturePlot(object = se_EWS4064_normalize, slot = "counts", cols = c("#377EB8", "#F0F0F0", "red"),
+               pt.alpha = 10000, pt.size = 1.8, dark.theme = FALSE, features = c("purity"), ncol = 2)
+
+ST.FeaturePlot(object = se_EWS4064_normalize, slot = "counts", cols = c("#377EB8", "#F0F0F0", "red"),
+               pt.alpha = 10000, pt.size = 1.8, dark.theme = FALSE, features = c("stromal"), ncol = 2)
+
+ST.FeaturePlot(object = se_EWS4064_normalize, slot = "counts", cols = c("#377EB8", "#F0F0F0", "red"),
+               pt.alpha = 10000, pt.size = 1.8, dark.theme = FALSE, features = c("immune"), value.scale = c("samplewise"), ncol = 2)
+
+ST.FeaturePlot(object = se_EWS4064_normalize, slot = "counts", cols = c("#377EB8", "#F0F0F0", "red"),
+               pt.alpha = 10000, pt.size = 1.8, dark.theme = FALSE, features = c("estimate"), ncol = 2)
+
+VlnPlot(object = se_EWS4064_normalize,
+        features = "immune",
+        assay = "ESTIMATE",
+        pt.size = 0)
+ggsave(filename = "EWS4064_vln_immune_estimate.png", device = "png") 
+
+VlnPlot(object = se_EWS4064_normalize,
+        features = "purity",
+        assay = "ESTIMATE",
+        pt.size = 0)
+ggsave(filename = "EWS4064_vln_purity_estimate.png", device = "png") 
+
+VlnPlot(object = se_EWS4064_normalize,
+        features = "stromal",
+        assay = "ESTIMATE",
+        pt.size = 0)
+ggsave(filename = "EWS4064_vln_stromal_estimate.png", device = "png") 
+
+VlnPlot(object = se_EWS4064_normalize,
+        features = "estimate",
+        assay = "ESTIMATE",
+        pt.size = 0)
+ggsave(filename = "EWS4064_vln_estimatescore_estimate.png", device = "png") 
+
+
+### Making correlation plots
+#EWS4064
+data_df <- as.data.frame(as.matrix(se_EWS4064_normalize@assays[["ESTIMATE"]]@data))
+
+transposed_data <- t(data_df)
+data_df <- as.data.frame(transposed_data)
+# Now you can use the data frame for plotting
+png("EWS4064_ImmunevStromal_plot.png", width=6, height=6, units="in", res=300)
+ggplot(data_df, aes(x = immune, y = stromal, color = purity)) +
+  geom_point(size = 0.5) +
+  scale_color_gradient(name = 'Tumor Purity Scores') +
+  labs(x = 'Immune Scores', y = 'Stromal Scores', title = 'Stromal Scores vs Immune Scores with Tumor Purity Gradient')
+dev.off()
+
+# Assuming your data frame is named data_df
+correlation_coefficient <- cor(data_df$stromal, data_df$immune)
+
+# Spearman correlation coefficient
+cor_spearman <- cor(data_df$stromal, data_df$immune, method = "spearman")
+
+print(cor_spearman)
+# Print or use the correlation coefficient
+print(correlation_coefficient)# Assuming your data frame is named data_df
+
