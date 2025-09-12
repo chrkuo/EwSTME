@@ -1,0 +1,335 @@
+
+
+## General macrophage markers
+
+From the article Estimation of immune cell content in tumor using single-cell RNA-seq reference data
+
+```{r}
+macrophage_features <- list(c("CD14",
+                              "CD68",
+                              "CD163",
+                              "CSF1R",
+                              "FCGR3A"))
+
+#EWS4064
+EWS_mac_module <- AddModuleScore(
+  object = se_EWS4064_normalize ,
+  features = macrophage_features,
+  rownames(x=se_EWS4064_normalize ),
+  ctrl = 10,
+  name = 'macrophage_features')
+
+EWS4064.mac.score <- EWS_mac_module@meta.data[["macrophage_features1"]]
+write.csv(EWS4064.mac.score, "EWS4064.mac.score.csv")
+
+png("EWS4064_mac_plot.png", width=7, height=8, units="in", res=300)
+FeaturePlot(EWS_mac_module, features = c("macrophage_features1"), cols = c("#377EB8", "#F0F0F0", "red"), pt.size = 1)
+dev.off()
+
+png("EWS4064_mac_spatialplot.png", width=7, height=8, units="in", res=300)
+ST.FeaturePlot(EWS_mac_module, features = "macrophage_features1", pt.size = 2, cols = c("#377EB8", "#F0F0F0", "red"))
+dev.off()
+
+png("EWS4064_mac_vlnplot.png", width=7, height=8, units="in", res=300)
+VlnPlot(EWS_mac_module, features = "macrophage_features1")
+dev.off()
+
+## Icaf and Mycaf
+
+```{r}
+  #myCAF and iCAF gene signatures based on PMID: 31197017 Cross-species single-cell analysis of pancreatic ductal adenocarcinoma reveals antigen-presenting cancer-associated fibroblasts
+#TGFB CAF from Single-Cell RNA Sequencing Reveals Stromal Evolution into LRRC15+ Myofibroblasts as a Determinant of Patient Response to Cancer Immunotherapy Cancer Discov (2020) 10 (2): 232–253.
+myCAF_features <- list(c("MYL9", "CALD1", "MMP11", "HOPX", "BGN", "IGFBP7", "TPM2", "CTHRC1", "ACTA2", "TAGLN", "INHBA",  "COL10A1", "TPM1",
+                         "POSTN", "GRP", "CST1"))
+
+iCAF_features <- list(c("C3",  "DUSP1", "FBLN1", "LMNA", "CLU",  "CCDC80", "MYC",  "EFEMP1", "HAS1", "NR4A1", "CFD",  "ANXA1",  "CXCL12",
+                        "FGF7", "KLF4", "EMP1", "GPRC5A", "SRPX", "MT2A", "MEDAG", "IGF1", "MGST1",  "MCL1", "CEBPD", "S100A10", "UAP1",
+                        "TNXB", "CEBPB",  "PNRC1", "SOCS3", "PTGDS",  "FOSB", "NFKBIA", "CXCL2", "THBS1",
+                        "CCL2", "OGN", "GSN",  "DPT", "PLA2G2A",  "NAMPT", "ITM2A", "RGCC", "JUND", "NNMT", "ZFP36", "PIM1",
+                        "CPE", "GFPT2", "SOD2", "KDM6B", "FSTL1", "FBLN2", "NR4A3", "MFAP5",
+                        "ABL2", "SGK1",  "CILP", "UGDH", "FBLN5", "ADAMTS1", "ADH1B", "WISP2",
+                        "GPX3", "S100A4",  "IL6",  "HAS2", "PLAC9", "IGFBP6", "FBN1", "BDKRB1",
+                        "TPPP3", "RASD1", "MT1A","CXCL14", "PI16", "APOE", "IL8", "ARC",  "PTX3", "TNFAIP6", "MT1E", "MT1X", "CXCL1"))
+
+tgfbCAF_features <- list(c("MMP11", "COL11A1", "C1QTNF3", "CTHRC1", "COL12A1", "COL10A1", "COL5A2", "THBS2", "AEBP1", "LRRC15", "ITGA11"))
+
+#Now using CAF signature from the same paper# 
+
+#EWS4064
+EWS_Mycaf_module <- AddModuleScore(
+  object = se_EWS4064_normalize,
+  features = myCAF_features,
+  rownames(x=se_EWS4064_normalize),
+  ctrl = 10, #using 10 from ctrl 
+  name = 'myCAF_features')
+
+FeaturePlot(EWS_Mycaf_module, features = c("myCAF_features1"), cols = c("#377EB8", "#F0F0F0", "red"), pt.size = 1)
+ST.FeaturePlot(EWS_Mycaf_module, features = "myCAF_features1", pt.size = 2, cols = c("#377EB8", "#F0F0F0", "red"))
+
+EWS4064.Mycaf.score <- EWS_Mycaf_module@meta.data[["myCAF_features1"]]
+write.csv(EWS4064.Mycaf.score, "EWS4064.Mycaf.score.csv")
+
+## ICAFs ## 
+#EWS4064
+EWS_icaf_module <- AddModuleScore(
+  object = se_EWS4064_normalize,
+  features = iCAF_features,
+  rownames(x=se_EWS4064_normalize),
+  ctrl = 10, #using 10 from ctrl 
+  name = 'iCAF_features')
+
+FeaturePlot(EWS_icaf_module, features = c("iCAF_features1"), cols = c("#377EB8", "#F0F0F0", "red"), pt.size = 1)
+ST.FeaturePlot(EWS_icaf_module, features = "iCAF_features1", pt.size = 2, cols = c("#377EB8", "#F0F0F0", "red"))
+
+EWS4064.icaf.score <- EWS_icaf_module@meta.data[["iCAF_features1"]]
+write.csv(EWS4064.icaf.score, "EWS4064.icaf.score.csv")
+
+## EMT 46 genes score
+
+```{r}
+#now look at the original objects se_tumor#
+
+
+EMT <- list(c("FSTL1", "COL3A1", "COL1A2", "DCN", "IGFBP4", 
+              "LUM", "CCN1", "BGN", "TIMP1", "SPARC", "FBN1", "COL4A1", 
+              "COL4A2", "ITGB1", "CDH11", "COL5A2", "PDGFRB", "FLNA", "MYL9", 
+              "JUN", "COL6A2", "COL1A1", "MMP2", "COL6A3", "COL5A1", "CCN2", "VCAN", "EMP3",
+              "ACTA2", "ITGB5", "PMEPA1", "TAGLN", "TGFB1", "VIM", "THBS2", "TIMP3", "SERPINE1", "HTRA1", "TNC", "MSX1", "POSTN", "WNT5A", "MMP14", "RHOB", "GAS1", "GJA1"))
+  
+#EWS4064
+EWS_EMT_module <- AddModuleScore(
+  object = se_EWS4064_normalize,
+  features = EMT,
+  rownames(x=se_EWS4064_normalize),
+  ctrl = 10, #using 10 from ctrl 
+  name = 'EMT')
+
+FeaturePlot(EWS_EMT_module, features = c("EMT1"), cols = c("#377EB8", "#F0F0F0", "red"), pt.size = 0.2)
+ST.FeaturePlot(EWS_EMT_module, features = "EMT1", pt.size = 2, cols = c("#377EB8", "#F0F0F0", "red"))
+
+EWS4064.EMT.score <- EWS_EMT_module@meta.data[["EMT1"]]
+write.csv(EWS4064.EMT.score, "EWS4064.EMT.score.csv")
+
+
+## EWS Marker
+
+```{r}
+#EwS Code# 
+
+#based on the paper Functionally compromised immune cells in EwS# 
+#running a few markers; first lets run EWS 
+EWS = list(c("NKX2-2", "CD99", "CAV1", "CCND1", "HES1", "KDSR", "PAPPA"))
+
+#EWS4064
+EWS_module <- AddModuleScore(
+  object = se_EWS4064_normalize,
+  features = EWS,
+  rownames(x=se_EWS4064_normalize),
+  ctrl = 10, #using 10 from ctrl 
+  name = 'EWS')
+
+FeaturePlot(EWS_module, features = c("EWS1"), cols = c("#377EB8", "#F0F0F0", "red"), pt.size = 1)
+ST.FeaturePlot(EWS_module, features = "EWS1", pt.size = 2, cols = c("#377EB8", "#F0F0F0", "red"))
+
+EWS4064.EWS.score <- EWS_module@meta.data[["EWS1"]]
+write.csv(EWS4064.EWS.score, "EWS4064.EWS.score.csv")
+
+## M1
+
+```{r}
+
+M1Mac <- list(c("CD14", "CD68", "CD163", "CSF1R", "FCGR3A", "IL23", "TNF", "CXCL9", "CXCL10", "CXCL11", "CD86", "IL1A", "IL1B", "IL6", "CCL5", "IRF5", "IRF1", "CD40", "IDO1", "KYNU", "CCR7")) 
+
+#EWS4064
+EWS_EMT_module <- AddModuleScore(
+  object = se_EWS4064_normalize,
+  features = M1Mac,
+  rownames(x=se_EWS4064_normalize),
+  ctrl = 10, #using 10 from ctrl 
+  name = 'M1Mac')
+
+FeaturePlot(EWS_EMT_module, features = c("M1Mac1"), cols = c("#377EB8", "#F0F0F0", "red"), pt.size = 1)
+ST.FeaturePlot(EWS_EMT_module, features = "M1Mac1", pt.size = 2, cols = c("#377EB8", "#F0F0F0", "red"))
+
+EWS4064.M1Mac.score <- EWS_EMT_module@meta.data[["M1Mac1"]]
+write.csv(EWS4064.M1Mac.score, "EWS4064.M1Mac.score.csv")
+
+## M2
+
+```{###I then combined macrophage signature with M1 and respective M2 signatures ####}
+
+M2Mac <-list(c("CD14", "CD68", "CD163", "CSF1R", "FCGR3A", "IL4R", "CCL4", "CCL13", "CCL20", "CCL17", "CCL18", "CCL22", "CCL24", "LYVE1", "VEGFA", "VEGFB", "VEGFC", "VEGFD", "EGF", "CTSA", "CTSB",
+               "CTSC", "CTSD", "TGFB1", "TGFB2", "TGFB3", "MMP14", "MMP19", "MMP9", "CLEC7A", "WNT7B", "FASL", "TNFSF12", "TNFSF8", "CD276", "VTCN1", "MSR1", "FN1", "IRF4" ))
+
+
+#EWS4064
+EWS_EMT_module <- AddModuleScore(
+  object = se_EWS4064_normalize,
+  features = M2Mac,
+  rownames(x=se_EWS4064_normalize),
+  ctrl = 10, #using 10 from ctrl 
+  name = 'M2Mac')
+
+FeaturePlot(EWS_EMT_module, features = c("M2Mac1"), cols = c("#377EB8", "#F0F0F0", "red"), pt.size = 1)
+ST.FeaturePlot(EWS_EMT_module, features = "M2Mac1", pt.size = 2, cols = c("#377EB8", "#F0F0F0", "red"))
+
+EWS4064.M2Mac.score <- EWS_EMT_module@meta.data[["M2Mac1"]]
+write.csv(EWS4064.M2Mac.score, "EWS4064.M2Mac.score.csv")
+
+
+## T cells
+
+```{r}
+
+
+T_features <- list(c("BCL11B", "CD2", "CD28", "CD3D", "CD3E",
+                     "CD3G", "CD6", "CD96", "GIMAP5", "ITM2A",
+                     "LCK", "NCALD", "PRKCQ", "SH2D1A", "SKAP1", "TRA",
+                     "TRAC", "TRAT1", "TRBC1"))
+
+#EWS4064
+EWS_T_module <- AddModuleScore(
+  object = se_EWS4064_normalize ,
+  features = T_features,
+  rownames(x=se_EWS4064_normalize ),
+  ctrl = 10,
+  name = 'T_features')
+
+
+FeaturePlot(EWS_T_module, features = c("T_features1"), cols = c("#377EB8", "#F0F0F0", "red"), pt.size = 1)
+
+ST.FeaturePlot(EWS_T_module, features = "T_features1", pt.size = 2, cols = c("#377EB8", "#F0F0F0", "red"))
+
+VlnPlot(EWS_T_module, features = "T_features1")
+
+EWS4064.T.score <- EWS_T_module@meta.data[["T_features1"]]
+write.csv(EWS4064.T.score, "EWS4064.T.score.csv")
+
+
+## B cells
+
+```{r}
+
+#B Cell#
+
+#Bcells 
+Bcell <- list(c("CD19", 
+                "MS4A1",
+                "CD79A",
+                "CD79B",
+                "BLNK",
+                "SLAMF7",
+                "FCRL5"))
+
+EWS_module <- AddModuleScore(
+  object = se_EWS4064_normalize,
+  features = Bcell,
+  rownames(x=se_EWS4064_normalize),
+  ctrl = 10, #using 10 from ctrl 
+  name = 'Bcell')
+
+FeaturePlot(EWS_module, features = c("Bcell1"), cols = c("#377EB8", "#F0F0F0", "red"), pt.size = 1)
+ST.FeaturePlot(EWS_module, features = "Bcell1", pt.size = 2, cols = c("#377EB8", "#F0F0F0", "red"))
+
+EWS4064.Bcell.score <- EWS_module@meta.data[["Bcell1"]]
+write.csv(EWS4064.Bcell.score, "EWS4064.Bcell.score.csv")
+
+## Dendritic cells
+
+```{r}
+##### Dendritic cell #####
+##now dendritic cell###
+dendrtic <- list(c("CD40", "CD80", "CD83", "CCR7"))
+
+EWS_module <- AddModuleScore(
+  object = se_EWS4064_normalize,
+  features = dendrtic,
+  rownames(x=se_EWS4064_normalize),
+  ctrl = 10, #using 10 from ctrl 
+  name = 'dendrtic')
+
+FeaturePlot(EWS_module, features = c("dendrtic1"), cols = c("#377EB8", "#F0F0F0", "red"), pt.size = 1)
+ST.FeaturePlot(EWS_module, features = "dendrtic1", pt.size = 2, cols = c("#377EB8", "#F0F0F0", "red"))
+
+EWS4064.dendrtic.score <- EWS_module@meta.data[["dendrtic1"]]
+write.csv(EWS4064.dendrtic.score, "EWS4064.dendrtic.score.csv")
+
+## Pro inflammatory 
+
+```{r}
+#Proinflammatory genesets based on paper PMCID: PMC8027624
+proinf <- list(c("IL1B", "IL6", "CCL2", "CCL3", "CCL4", "CCL7", "TNF", "CXCL2", "CXCL9", "CXCL10", "SOCS3"))
+
+EWS_module <- AddModuleScore(
+  object = se_EWS4064_normalize,
+  features = proinf,
+  rownames(x=se_EWS4064_normalize),
+  ctrl = 10, #using 10 from ctrl 
+  name = 'proinf')
+
+FeaturePlot(EWS_module, features = c("proinf1"), cols = c("#377EB8", "#F0F0F0", "red"), pt.size = 1)
+ST.FeaturePlot(EWS_module, features = "proinf1", pt.size = 2, cols = c("#377EB8", "#F0F0F0", "red"))
+
+EWS4064.proinf.score <- EWS_module@meta.data[["proinf1"]]
+write.csv(EWS4064.proinf.score, "EWS4064.proinf.score.csv")
+
+```{r}
+##### Antiinflammatory ##### 
+antiinf <- list(c("CD163", "MRC1", "MSR1", "CCL13", "CCL18", "IL10", "FOLR2", "STAB1", "CD163L1", "PLD4", "F13A1", "MERTK", "AXL", "CCL22", "GPNMB", "CHI3L1"))
+
+EWS_module <- AddModuleScore(
+  object = se_EWS4064_normalize,
+  features = antiinf,
+  rownames(x=se_EWS4064_normalize),
+  ctrl = 10, #using 10 from ctrl 
+  name = 'antiinf')
+
+FeaturePlot(EWS_module, features = c("antiinf1"), cols = c("#377EB8", "#F0F0F0", "red"), pt.size = 1)
+ST.FeaturePlot(EWS_module, features = "antiinf1", pt.size = 2, cols = c("#377EB8", "#F0F0F0", "red"))
+
+EWS4064.antiinf.score <- EWS_module@meta.data[["antiinf1"]]
+write.csv(EWS4064.antiinf.score, "EWS4064.antiinf.score.csv")
+
+```
+
+## TDysfxn
+
+```{r}
+###### T Dysfxn score ##### 
+dysfxn <- list(c("LAG3", "TIGIT", "PDCD1", "HAVCR2", "CTLA4")) 
+
+#EWS4064
+EWS_dysfxn_module <- AddModuleScore(
+  object = se_EWS4064_normalize,
+  features = dysfxn,
+  rownames(x=se_EWS4064_normalize),
+  ctrl = 10, #using 10 from ctrl 
+  name = 'dysfxn')
+
+FeaturePlot(EWS_dysfxn_module, features = c("dysfxn1"), cols = c("#377EB8", "#F0F0F0", "red"), pt.size = 1)
+ST.FeaturePlot(EWS_dysfxn_module, features = "dysfxn1", pt.size = 2, cols = c("#377EB8", "#F0F0F0", "red"))
+
+EWS4064.dysfxn.score <- EWS_dysfxn_module@meta.data[["dysfxn1"]]
+write.csv(EWS4064.dysfxn.score, "EWS4064.dysfxn.score.csv")
+
+
+## T Effector
+
+```{r}
+#T effect# 
+#need to run these list https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6145135/
+Teffect <- list(c("GZMA", "GZMB", "PRF1", "EOMES", "IFNG", "TNF", "CXCL9", "CXCL10", "CD8A", "CD4", "FOXP3", "ICOS", "CTLA4"))
+
+EWS_module <- AddModuleScore(
+  object = se_EWS4064_normalize,
+  features = Teffect,
+  rownames(x=se_EWS4064_normalize),
+  ctrl = 10, #using 10 from ctrl 
+  name = 'Teffect')
+
+FeaturePlot(EWS_module, features = c("Teffect1"), cols = c("#377EB8", "#F0F0F0", "red"), pt.size = 1)
+ST.FeaturePlot(EWS_module, features = "Teffect1", pt.size = 2, cols = c("#377EB8", "#F0F0F0", "red"))
+
+EWS4064.Teffect.score <- EWS_module@meta.data[["Teffect1"]]
+write.csv(EWS4064.Teffect.score, "EWS4064.Teffect.score.csv")
+
