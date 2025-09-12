@@ -1,0 +1,370 @@
+
+########GSEA for grouped analysis: looking at localized first####### 
+allsamples.merge.genes <-  wilcoxauc(allsamples.merge, 'disease.status')
+
+# we have all the genes for each cluster
+dplyr::count(allsamples.merge.genes, group)
+
+msigdbr_species() #How to subset KEGG pathway 
+m_df<- msigdbr(species = "Homo sapiens", category = "H")
+msigdbr_collections() #view the collections 
+head(m_df)
+
+fgsea_sets<- m_df %>% split(x = .$gene_symbol, f = .$gs_name)
+
+#localized group#
+allsamples.merge.genes %>%
+  dplyr::filter(group == "localized") %>%
+  arrange(desc(logFC), desc(auc)) %>%
+  head(n = 50)
+
+allsamples.merge.genes<- allsamples.merge.genes %>%
+  dplyr::filter(group == "localized") %>%
+  arrange(desc(auc)) %>% 
+  dplyr::select(feature, auc)
+
+ranks<- deframe(allsamples.merge.genes)
+
+head(ranks)
+
+fgseaRes<- fgsea(fgsea_sets, stats = ranks, nperm = 1000)
+
+fgseaResTidy <- fgseaRes %>%
+  as_tibble() %>%
+  arrange(desc(NES))
+
+fgseaResTidy %>% 
+  dplyr::select(-leadingEdge, -ES, -nMoreExtreme) %>% 
+  arrange(padj) %>% 
+  head()
+
+# only plot the top 30 pathways
+ggplot(fgseaResTidy %>% filter(padj < 0.05) %>% head(n= 30), aes(reorder(pathway, NES), NES)) +
+  geom_col(aes(fill= NES >4 )) +
+  coord_flip() +
+  labs(x="Pathway", y="Normalized Enrichment Score",
+       title="GO:MF pathways NES from Localized Group") + 
+  theme_minimal()
+
+ggplot(fgseaResTidy %>% head(n= 50), aes(reorder(pathway, NES), NES)) +
+  geom_col(aes(fill= padj < 0.05)) +
+  coord_flip() +
+  labs(x="Pathway", y="Normalized Enrichment Score",
+       title="GP:MF pathways NES from GSEA Localized Group") + 
+  theme_minimal() 
+
+ggplot(fgseaResTidy %>% filter(padj < 0.05) %>% head(n= 30), aes(reorder(pathway, NES), NES)) +
+  geom_point(aes(color = NES > 4), size = 3) +
+  coord_flip() +
+  labs(x="Pathway", y="Normalized Enrichment Score",
+       title="GO:MF pathways NES from GSEA Localized Group") +
+  theme_minimal() +
+  scale_color_manual(name = "NES > 4", values = c("TRUE" = "red", "FALSE" = "blue")) +
+  scale_shape_manual(name = "FDR < 0.05", values = c("TRUE" = 16, "FALSE" = 1))
+
+library(scales)
+
+# Define a custom scale function
+scale_size_padj <- function(...) {
+  scale_size_continuous(..., 
+                        trans = scales::trans_new("reverse_log10", 
+                                                  transform = function(x) -log10(x), 
+                                                  inverse = function(x) 10^(-x)),
+                        guide = guide_legend(reverse = TRUE))
+}
+
+# Use the custom scale function in your plot
+ggplot(fgseaResTidy %>% filter(padj < 0.05) %>% head(n = 30), aes(reorder(pathway, NES), NES)) +
+  geom_point(aes(color = NES, size = padj), shape = 16) +
+  coord_flip() +
+  labs(x = "Pathway", y = "Normalized Enrichment Score",
+       title = "KEGG pathways from Localized group",
+       color = "NES", size = "Adjusted P-value") +
+  theme_minimal() +
+  scale_color_gradientn(colors = c("#377EB8", "#F0F0F0", "red")) +
+  scale_size_padj(range = c(1, 10)) +
+  theme(legend.position = "right")
+
+########GSEA for grouped analysis: now look at metastatic####### 
+allsamples.merge.genes <-  wilcoxauc(allsamples.merge, 'disease.status')
+
+# we have all the genes for each cluster
+dplyr::count(allsamples.merge.genes, group)
+
+#localized group#
+allsamples.merge.genes %>%
+  dplyr::filter(group == "metastatic") %>%
+  arrange(desc(logFC), desc(auc)) %>%
+  head(n = 50)
+
+allsamples.merge.genes<- allsamples.merge.genes %>%
+  dplyr::filter(group == "metastatic") %>%
+  arrange(desc(auc)) %>% 
+  dplyr::select(feature, auc)
+
+ranks<- deframe(allsamples.merge.genes)
+
+head(ranks)
+
+fgseaRes<- fgsea(fgsea_sets, stats = ranks, nperm = 1000)
+
+fgseaResTidy <- fgseaRes %>%
+  as_tibble() %>%
+  arrange(desc(NES))
+
+
+fgseaResTidy %>% 
+  dplyr::select(-leadingEdge, -ES, -nMoreExtreme) %>% 
+  arrange(padj) %>% 
+  head()
+
+# only plot the top 30 pathways
+ggplot(fgseaResTidy %>% filter(padj < 0.05) %>% head(n= 30), aes(reorder(pathway, NES), NES)) +
+  geom_col(aes(fill= NES >4 )) +
+  coord_flip() +
+  labs(x="Pathway", y="Normalized Enrichment Score",
+       title="GO:MF pathways NES from Metastatic Group") + 
+  theme_minimal()
+
+ggplot(fgseaResTidy %>% head(n= 50), aes(reorder(pathway, NES), NES)) +
+  geom_col(aes(fill= padj < 0.05)) +
+  coord_flip() +
+  labs(x="Pathway", y="Normalized Enrichment Score",
+       title="GO:MF pathways NES from GSEA Metastatic Group") + 
+  theme_minimal() 
+
+ggplot(fgseaResTidy %>% filter(padj < 0.05) %>% head(n= 30), aes(reorder(pathway, NES), NES)) +
+  geom_point(aes(color = NES > 4), size = 3) +
+  coord_flip() +
+  labs(x="Pathway", y="Normalized Enrichment Score",
+       title="GO:MF pathways NES from GSEA Metastatic Group") +
+  theme_minimal() +
+  scale_color_manual(name = "NES > 4", values = c("TRUE" = "red", "FALSE" = "blue")) +
+  scale_shape_manual(name = "FDR < 0.05", values = c("TRUE" = 16, "FALSE" = 1))
+
+
+ggplot(fgseaResTidy %>% filter(padj < 0.05) %>% head(n = 30), aes(reorder(pathway, NES), NES)) +
+  geom_point(aes(color = NES, size = -log10(padj)), shape = 16) +
+  coord_flip() +
+  labs(x = "Pathway", y = "Normalized Enrichment Score",
+       title = "Hallmark pathways Metastatic Group",
+       color = "NES", size = expression(-log[10](italic("p")["adj"]))) +
+  theme_minimal() +
+  scale_color_gradient(low = "blue", high = "red") +
+  scale_size_continuous(name = "Adjusted P-value", breaks = c(2, 3, 4), labels = c("0.01", "0.001", "0.0001")) +
+  theme(legend.position = "right")
+
+ggplot(fgseaResTidy %>% filter(padj < 0.05) %>% head(n = 30), aes(reorder(pathway, NES), NES)) +
+  geom_point(aes(color = NES, size = -log10(padj)), shape = 16) +
+  coord_flip() +
+  labs(x = "Pathway", y = "Normalized Enrichment Score",
+       title = "GO:MF pathways NES from GSEA Metastatic Group",
+       color = "NES", size = expression(-log[10](italic("p")["adj"]))) +
+  theme_minimal() +
+  scale_color_gradient(low = "blue", high = "red") +
+  scale_size_continuous(name = "Adjusted P-value", breaks = c(2, 3, 4), labels = c("0.01", "0.001", "0.0001")) +
+  theme(legend.position = "right")
+
+
+library(scales)
+
+# Define a custom scale function
+scale_size_padj <- function(...) {
+  scale_size_continuous(..., 
+                        trans = scales::trans_new("reverse_log10", 
+                                                  transform = function(x) -log10(x), 
+                                                  inverse = function(x) 10^(-x)),
+                        guide = guide_legend(reverse = TRUE))
+}
+
+# Use the custom scale function in your plot
+ggplot(fgseaResTidy %>% filter(padj < 0.05) %>% head(n = 30), aes(reorder(pathway, NES), NES)) +
+  geom_point(aes(color = NES, size = padj), shape = 16) +
+  coord_flip() +
+  labs(x = "Pathway", y = "Normalized Enrichment Score",
+       title = "KEGG pathways from Metastatic group",
+       color = "NES", size = "Adjusted P-value") +
+  theme_minimal() +
+  scale_color_gradientn(colors = c("#377EB8", "#F0F0F0", "red")) +
+  scale_size_padj(range = c(1, 10)) +
+  theme(legend.position = "right")
+
+
+### trying to see enrichment score of EMT genes 
+
+msigdbr_species()
+
+m_df<- msigdbr(species = "Homo sapiens", category = "H")
+
+head(m_df)
+
+fgsea_sets<- m_df %>% split(x = .$gene_symbol, f = .$gs_name)
+
+MYC_features <- as.list(fgsea_sets[["HALLMARK_MYC_TARGETS_V1"]])
+MYC_features <- as.list(MYC_features)
+MYC_features <- list(gene_list = unlist(MYC_features))
+
+#all samples merged 
+EWS_EMT_module <- AddModuleScore(
+  object = allsamples.merge.backup ,
+  features = EMT,
+  rownames(x=allsamples.merge.backup ),
+  ctrl = 100,#median is different if you use different ctrl
+  name = 'EMT')
+
+EWS4064.EMT.score <- EWS_EMT_module@meta.data[["EMT_features1"]]
+write.csv(EWS4064.EMT.score, "EWS4064.EMT.score.csv")
+
+FeaturePlot(EWS_EMT_module, features = c("MYC_features1"), cols = c("#377EB8", "#F0F0F0", "red"), pt.size = 0.2)
+
+ST.FeaturePlot(EWS_EMT_module, indices = c(1, 2, 3, 4), features = "EMT1", pt.size = 1, cols = c("#377EB8", "#F0F0F0", "red"))
+ST.FeaturePlot(EWS_EMT_module, indices = c(5, 6, 7, 8), features = "EMT1", pt.size = 1, cols = c("#377EB8", "#F0F0F0", "red"))
+ST.FeaturePlot(EWS_EMT_module, indices = c(9, 10, 11, 12), features = "EMT1", pt.size = 1, cols = c("#377EB8", "#F0F0F0", "red"))
+ST.FeaturePlot(EWS_EMT_module, indices = c(13, 14, 15, 16), features = "EMT1", pt.size = 1, cols = c("#377EB8", "#F0F0F0", "red"))
+
+VlnPlot(EWS_EMT_module, features = "EMT1", pt.size = 0)
+
+vln_plot <- VlnPlot(EWS_EMT_module, features = "EMT1", pt.size = 0)
+# Subset the data
+metastatic_scores <- EWS_EMT_module$EMT1[EWS_EMT_module$disease.status == "metastatic"]
+localized_scores <- EWS_EMT_module$EMT1[EWS_EMT_module$disease.status == "localized"]
+
+
+# Perform the Wilcoxon rank-sum test
+test_result <- wilcox.test(metastatic_scores, localized_scores)
+
+# Check the results
+print(test_result)
+
+# Calculate the median scores
+median_metastatic <- median(metastatic_scores, na.rm = TRUE)
+median_localized <- median(localized_scores, na.rm = TRUE)
+
+# Extract data used in the plot
+plot_data <- vln_plot$data
+
+# Prepare the medians data frame
+medians <- data.frame(
+  Group = c("metastatic", "localized"),
+  Median = c(median_metastatic, median_localized)
+)
+
+# Add median lines to the plot
+vln_plot + 
+  geom_hline(data = medians, aes(yintercept = Median, group = Group), 
+             linetype = "dashed", color = "red", size = 0.5)
+
+# Print the results
+cat("Median EMT1 score for metastatic group:", median_metastatic, "\n")
+#Median EMT1 score for metastatic group: -0.2182209 
+
+cat("Median EMT1 score for localized group:", median_localized, "\n")
+#Median EMT1 score for localized group: 0.2583676 
+
+######
+filtered <- filter_common_genes(allsamples.merge.backup@assays[["RNA"]]@counts, 
+                                id = "hgnc_symbol", 
+                                tidy = FALSE, 
+                                tell_missing = TRUE, 
+                                find_alias = TRUE)
+
+scored <- estimate_score(filtered,
+                         is_affymetrix = TRUE)
+scored
+#write.csv(scored, file = "full_dfEWS4064.csv")
+
+df_immuneallsamples <- subset(scored, select = c(immune))
+#write.csv(df_immuneEWS4064, file = "df_immuneEWS4064.csv")
+
+df_stromalallsamples <- subset(scored, select = c(stromal))
+#write.csv(df_stromalEWS4064, file = "df_stromalEWS4064.csv")
+
+df_purityallsamples <- subset(scored, select = c(purity))
+write.csv(df_purityEWS4064, file = "df_purityEWS4064.csv")
+
+# transpose 
+df_transposed <- t(scored[, -1])
+
+colnames(df_transposed) <- scored$sample
+
+assay <- CreateAssayObject(counts = df_transposed)
+allsamples.merge.backup[["ESTIMATE"]] <- assay
+
+rm(assay)
+
+# plot
+DefaultAssay(se_EWS4064_normalize) <- "ESTIMATE"
+# Hexadecimal color specification #colorbrewersetting colors# https://www.datanovia.com/en/blog/top-r-color-palettes-to-know-for-great-data-visualization/#viridis-color-palettes
+#brewer.pal(n = 8, name = "Set1")
+#se_EWS4064_normalize <- LoadImages(se_EWS4064_normalize, time.resolve = FALSE, verbose = TRUE)
+
+png("EWS4064_estimate_plot.png", width=20, height=6, units="in", res=300)
+ST.FeaturePlot(object = se_EWS4064_normalize, slot = "counts", cols = c("#377EB8", "#F0F0F0", "red"),
+               pt.alpha = 10000, pt.size = 1.8, dark.theme = FALSE, features = c("purity", "stromal", "immune", "estimate"), ncol = 2)
+dev.off()
+
+VlnPlot(object = allsamples.merge.backup,
+        features = "immune",
+        assay = "ESTIMATE",
+        pt.size = 0)
+
+VlnPlot(object = allsamples.merge.backup,
+        features = "purity",
+        assay = "ESTIMATE",
+        pt.size = 0)
+
+VlnPlot(object = allsamples.merge.backup,
+        features = "stromal",
+        assay = "ESTIMATE",
+        pt.size = 0)
+
+VlnPlot(object = allsamples.merge.backup,
+        features = "estimate",
+        assay = "ESTIMATE",
+        pt.size = 0)
+
+# Extract "immune" feature values for metastatic and localized populations
+immune_metastatic <- allsamples.merge.backup@assays$ESTIMATE@data["immune", allsamples.merge.backup$disease.status == "metastatic"]
+immune_localized <- allsamples.merge.backup@assays$ESTIMATE@data["immune", allsamples.merge.backup$disease.status == "localized"]
+
+# Perform Wilcoxon rank-sum test
+wilcox_test_result <- wilcox.test(immune_metastatic, immune_localized)
+
+# Print the test result
+print(wilcox_test_result)
+
+# Calculate the median for the metastatic population
+median_immune_metastatic <- median(immune_metastatic, na.rm = TRUE)
+
+# Calculate the median for the localized population
+median_immune_localized <- median(immune_localized, na.rm = TRUE)
+
+# Print the medians
+cat("Median 'immune' value for metastatic population:", median_immune_metastatic, "\n")
+#Median 'immune' value for metastatic population: -95.59982 
+cat("Median 'immune' value for localized population:", median_immune_localized, "\n")
+#Median 'immune' value for localized population: -3.091762 
+
+
+
+# Extract "stromal" feature values for metastatic and localized populations
+stromal_metastatic <- allsamples.merge.backup@assays$ESTIMATE@data["stromal", allsamples.merge.backup$disease.status == "metastatic"]
+stromal_localized <- allsamples.merge.backup@assays$ESTIMATE@data["stromal", allsamples.merge.backup$disease.status == "localized"]
+
+# Perform Wilcoxon rank-sum test
+wilcox_test_result <- wilcox.test(stromal_metastatic, stromal_localized)
+
+# Print the test result
+print(wilcox_test_result)
+
+# Calculate the median for the metastatic population
+median_stromal_metastatic <- median(stromal_metastatic, na.rm = TRUE)
+
+# Calculate the median for the localized population
+median_stromal_localized <- median(stromal_localized, na.rm = TRUE)
+
+# Print the medians
+cat("Median 'stromal' value for metastatic population:", median_stromal_metastatic, "\n")
+#Median 'stromal' value for metastatic population: 100.8907 
+cat("Median 'stromal' value for localized population:", median_stromal_localized, "\n")
+#Median 'stromal' value for localized population: 296.8369 
