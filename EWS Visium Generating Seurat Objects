@@ -1,0 +1,447 @@
+#initial raw data QC and generating seurat objects for data visualization# 
+
+#Load all libraries# 
+library(SeuratObject)
+library(Seurat)
+library(semla)
+library(tibble)
+library(ggplot2)
+library(patchwork)
+library(dplyr)
+library("devtools")
+library("usethis")
+library(DESeq2)
+library(STutility)
+library(ggplot2)
+library(patchwork)
+library(Matrix)
+library(magrittr)
+library(dplyr)
+library(spdep)
+library(RColorBrewer)
+library(plotly)
+library(Seurat)
+library(SeuratData)
+library(kableExtra)
+library(ggiraph)
+library(spData)
+library(sf)
+library(viridis)
+library(viridisLite)
+library(presto)
+library(devtools)
+library(msigdbr)
+library(fgsea)
+library(tibble)
+library(data.table)
+library(tidyverse)
+
+
+#Load 10X Visium data# 
+# set data directories
+data_path_EWS4064_h5 = "file path to EWS4064 raw_feature_bc_matrix.h5"
+
+data_path_EWS4064_tissue_positions = "file path to spatial/tissue_positions_list.csv"
+
+data_path_EWS4064_image = "file path to spatial/tissue_hires_image.png"
+
+data_path_EWS4064_scalefactors = "file path to scalefactors_json.json"
+
+################################################################################
+samples <- data_path_EWS4064_h5
+spotfiles <- data_path_EWS4064_tissue_positions
+imgs <- data_path_EWS4064_image
+json <- data_path_EWS4064_scalefactors
+
+infoTable_EWS4064 <- data.frame(samples, spotfiles, imgs, json)
+print (infoTable_EWS4064)
+
+se_EWS4064 <- InputFromTable(infoTable_EWS4064)
+ST.FeaturePlot(se_EWS4064, features = "nFeature_RNA", cols = c("lightgray", "mistyrose", "red", "dark red", "black"), ncol = 2, pt.size = 2)
+ggsave(filename = "EWS4064_nfeatureRNA_unfiltered.png", device = "png") 
+
+#qc plot
+p1 <- ggplot() +
+  geom_histogram(data = se_EWS4064[[]], aes(nFeature_RNA), fill = "red", alpha = 0.7, bins = 50) +
+  ggtitle("Unique genes per spot")
+
+p2 <- ggplot() +
+  geom_histogram(data = se_EWS4064[[]], aes(nCount_RNA), fill = "red", alpha = 0.7, bins = 50) +
+  ggtitle("Total counts per spots")
+
+gene_attr <- data.frame(nUMI = Matrix::rowSums(se_EWS4064@assays$RNA@counts), 
+                        nSpots = Matrix::rowSums(se_EWS4064@assays$RNA@counts > 0))
+p3 <- ggplot() +
+  geom_histogram(data = gene_attr, aes(nUMI), fill = "red", alpha = 0.7, bins = 50) +
+  scale_x_log10() +
+  ggtitle("Total counts per gene (log10 scale)")
+
+p4 <- ggplot() +
+  geom_histogram(data = gene_attr, aes(nSpots), fill = "red", alpha = 0.7,  bins = 50) +
+  ggtitle("Total spots per gene")
+
+(p1 - p2)/(p3 - p4)
+ggsave(filename = "EWS4064_QC.png", device = "png") 
+
+#then filter#
+se_EWS4064 <- InputFromTable(infotable = infoTable_EWS4064, 
+                             transpose = TRUE,
+                             minUMICountsPerGene = 0, 
+                             minSpotsPerGene = 5,
+                             minUMICountsPerSpot = 200,
+                             platform =  "Visium")
+#then graph it 
+ST.FeaturePlot(se_EWS4064, features = "nFeature_RNA", cols = c("lightgray", "mistyrose", "red", "dark red", "black"), ncol = 2, pt.size = 2)
+ggsave(filename = "EWS4064_nfeatureRNA_filtered.png", device = "png") 
+
+#####################################################################
+#Plot the number of unique genes and the number of UMIs per spot
+
+png("EWS4064_nr_feats_ncount_RNA_plot.png", width=18, height=9, units="in", res=300)
+ST.FeaturePlot(se_EWS4064, features = c("nFeature_RNA", "nCount_RNA"), cols = c(" light blue", "grey", "dark red"), pt.size = 2, show.sb = "TRUE")
+dev.off()
+
+# Plot selected genes
+
+png("EWS4064_FeaturePlot.png", width=18, height=9, units="in", res=300)
+ST.FeaturePlot(se_EWS4064, features = c("CD163", "NKX2-2", "CD99"), pt.size = 2, cols = c(" light blue", "grey", "red"))
+dev.off()
+#######################################################################################################
+
+#Normalization SCTransform (Seurat)- Plot normalized values
+
+#sctransform replaces NormalizeData(), ScaleData(), and FindVariableFeatures().
+#first normalize# 
+se_EWS4064_normalize <- NormalizeData(se_EWS4064, normalization.method = "LogNormalize", scale.factor = 10000)
+
+png("EWS4064_FeaturePlot-normalized.png", width=24, height=9, units="in", res=300)
+ST.FeaturePlot(se_EWS4064_normalize, features = c("TREM2", "CD79B", "CD79A"), pt.size = 2)
+dev.off()
+
+#scale data 
+se_EWS4064_normalize <- FindVariableFeatures(se_EWS4064_normalize, selection.method = "vst", nfeatures = 2000)
+se_EWS4064_normalize <- ScaleData(se_EWS4064_normalize)
+
+#QC metrics after normalization 
+
+####EWS4064####
+png("EWS4064_QC_metrics_after_normalization.png", width=9, height=9, units="in", res=300)
+p1 <- ggplot() + geom_histogram(data = se_EWS4064_normalize[[]], aes(nFeature_RNA), fill = "red", alpha = 0.7, bins = 50) + ggtitle("Unique genes per spot")
+
+p2 <- ggplot() + geom_histogram(data = se_EWS4064_normalize[[]], aes(nCount_RNA), fill = "red", alpha = 0.7, bins = 50) + ggtitle("Total counts per spots")
+
+
+gene_attr <- data.frame(nUMI = Matrix::rowSums(se_EWS4064_normalize@assays$RNA@counts), 
+                        nSpots = Matrix::rowSums(se_EWS4064_normalize@assays$RNA@counts > 0))
+
+p3 <- ggplot() + geom_histogram(data = gene_attr, aes(nUMI), fill = "red", alpha = 0.7, bins = 50) + scale_x_log10() + ggtitle("Total counts per gene (log10 scale)")
+
+p4 <- ggplot() + geom_histogram(data = gene_attr, aes(nSpots), fill = "red", alpha = 0.7,  bins = 50) +
+  
+  ggtitle("Total spots per gene")
+
+(p1 - p2)/(p3 - p4)
+dev.off()
+
+################################################################################
+#Dimensionality reduction, clustering, and visualization
+
+#perform linear reduction analysis:
+se_EWS4064_normalize <- RunPCA(se_EWS4064_normalize, features = VariableFeatures(object = se_EWS4064_normalize))
+
+ElbowPlot(se_EWS4064_normalize)
+ggsave(filename = "EWS4064_elbow.png", device = "png") 
+
+#picked the PCs# These are the PC's i picked to generate my seurat objects#
+#EWS4064 1:15 
+#EWS4512 1:17
+#EWS4521 1:17
+#EWS4523 1:15
+#EWS4531 1:17
+#EWS4539 1:15
+#EWS4550 1:15
+#EWS4553 1:17
+#EWS4554 1:20
+#EWS4556 1:12
+#EWS4557 1:15
+#EWS4559 1:15
+#EWS4564 1:15
+#EWS4577 1:17
+#EWS4578 1:12
+#EWS4582 1:15
+
+#EWS4064
+se_EWS4064_normalize <- FindNeighbors(se_EWS4064_normalize, reduction = "pca", dims = 1:15)
+se_EWS4064_normalize <- FindClusters(se_EWS4064_normalize, verbose = FALSE)
+se_EWS4064_normalize <- RunUMAP(se_EWS4064_normalize, reduction = "pca", dims = 1:15)
+
+#.......................................................
+png("UMAP_plot-EWS4064.png", width=9, height=9, units="in", res=300)
+DimPlot(se_EWS4064_normalize, reduction = "umap", pt.size = 1.8)
+dev.off()
+
+# Cluster spots and plot cluster labels
+png("Seurat-clusters-EWS4064.png", width=12, height=9, units="in", res=300)
+ST.FeaturePlot(se_EWS4064_normalize, features = "seurat_clusters", pt.size = 2.5)
+dev.off()
+
+#splitting different clusters
+ST.FeaturePlot(object = se_EWS4064_normalize, features = "seurat_clusters", pt.size = 1, split.labels = T, indices = 1, show.sb = FALSE, ncol = 2)
+ggsave(filename = "EWS4064clusters.png", device = "png") 
+
+
+#most variable features
+#EWS4064
+head(se_EWS4064_normalize@assays[["RNA"]]@var.features, 20)
+
+top <- se_EWS4064_normalize@assays[["RNA"]]@var.features
+
+se_EWS4064_normalize <- LoadImages(se_EWS4064_normalize, time.resolve = FALSE, verbose = TRUE)
+
+FeatureOverlay(se_EWS4064_normalize, 
+                      features = c("COL1A1", "MMP9", "ACTA1", "IGLC1", "IGKC", "IL32"), 
+                      cols = c("lightgray", "mistyrose", "red", "darkred", "black"),
+                      pt.size = 1.5, 
+                      pt.alpha = 0.5, 
+                      ncols = 2)
+ggsave(filename = "EWS4064Variable.png", device = "png") 
+
+###Matrix factorialization#####
+se_EWS4064_normalize <- RunNMF(se_EWS4064_normalize) # Specificy nfactors to choose the number of factors, default=20.
+cscale <- c("lightgray", "mistyrose", "red", "darkred", "black")
+
+ST.DimPlot(se_EWS4064_normalize, 
+           dims = 1:10,
+           ncol = 2, # Sets the number of columns at dimensions level
+           grid.ncol = 4, # Sets the number of columns at sample level
+           reduction = "NMF", 
+           pt.size = 1, 
+           center.zero = F, 
+           cols = cscale, 
+           show.sb = FALSE)
+ggsave(filename = "EWS4064NMF1.10.png", device = "png") 
+
+ST.DimPlot(se_EWS4064_normalize, 
+           dims = 11:20,
+           ncol = 2, # Sets the number of columns at dimensions level
+           grid.ncol = 4, # Sets the number of columns at sample level
+           reduction = "NMF", 
+           pt.size = 1, 
+           center.zero = F, 
+           cols = cscale, 
+           show.sb = FALSE)
+ggsave(filename = "EWS4064NMF11.20.png", device = "png") 
+
+
+print(se_EWS4064_normalize[["NMF"]])
+FactorGeneLoadingPlot(se_EWS4064_normalize, factor = 1)
+ggsave(filename = "EWS4064contrib.gene.png", device = "png") 
+
+#### DEA ####
+
+#EWS4064
+markers <- FindMarkers(se_EWS4064_normalize, ident.1 = "0")
+head(markers) 
+write.csv(markers, file = "EWS4064.ident0dea.csv")
+markers <- FindMarkers(se_EWS4064_normalize, ident.1 = "1")
+head(markers) 
+write.csv(markers, file = "EWS4064.ident1dea.csv")
+markers <- FindMarkers(se_EWS4064_normalize, ident.1 = "2")
+head(markers) 
+write.csv(markers, file = "EWS4064.ident2dea.csv")
+markers <- FindMarkers(se_EWS4064_normalize, ident.1 = "3")
+head(markers) 
+write.csv(markers, file = "EWS4064.ident3dea.csv")
+markers <- FindMarkers(se_EWS4064_normalize, ident.1 = "4")
+head(markers) 
+write.csv(markers, file = "EWS4064.ident4dea.csv")
+
+# find markers for every cluster compared to all remaining cells, report only the positive ones
+EWS4064.markers <- FindAllMarkers(se_EWS4064_normalize, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+write.csv(EWS4064.markers, file = "EWS4064allmarkers.csv")
+
+########GSEA for EWS4064#########
+EWS4064_genes <-  wilcoxauc(se_EWS4064_normalize, 'seurat_clusters')
+
+# we have all the genes for each cluster
+dplyr::count(EWS4064_genes, group)
+
+msigdbr_species() #How to subset KEGG pathway 
+m_df<- msigdbr(species = "Homo sapiens", category = "C2", subcategory = "CP:REACTOME")
+msigdbr_collections() #view the collections 
+head(m_df)
+
+fgsea_sets<- m_df %>% split(x = .$gene_symbol, f = .$gs_name)
+
+#fgsea_sets$HALLMARK_MYC_TARGETS_V1
+
+
+#cluster 0 for category H gsea
+EWS4064_genes %>%
+  dplyr::filter(group == "4") %>%
+  arrange(desc(logFC), desc(auc)) %>%
+  head(n = 50)
+
+ews4064.genes<- EWS4064_genes %>%
+  dplyr::filter(group == "4") %>%
+  arrange(desc(auc)) %>% 
+  dplyr::select(feature, auc)
+
+ranks<- deframe(ews4064.genes)
+
+head(ranks)
+
+fgseaRes<- fgsea(fgsea_sets, stats = ranks, nperm = 1000)
+
+fgseaResTidy <- fgseaRes %>%
+  as_tibble() %>%
+  arrange(desc(NES))
+
+
+fgseaResTidy %>% 
+  dplyr::select(-leadingEdge, -ES, -nMoreExtreme) %>% 
+  arrange(padj) %>% 
+  head()
+
+# only plot the top 30 pathways
+png("EWS4064.cluster4.hallmark.gsea_plot.png", width=12, height=6, units="in", res=300)
+ggplot(fgseaResTidy %>% filter(padj < 0.05) %>% head(n= 30), aes(reorder(pathway, NES), NES)) +
+  geom_col(aes(fill= NES >3 )) +
+  coord_flip() +
+  labs(x="Pathway", y="Normalized Enrichment Score",
+       title="Reactome pathways NES from GSEA") + 
+  theme_minimal()
+dev.off()
+
+png("EWS4064.cluster0.hallmark.gsea_plot.png", width=12, height=6, units="in", res=300)
+ggplot(fgseaResTidy %>% head(n= 50), aes(reorder(pathway, NES), NES)) +
+  geom_col(aes(fill= padj < 0.05)) +
+  coord_flip() +
+  labs(x="Pathway", y="Normalized Enrichment Score",
+       title="Hallmark pathways NES from GSEA") + 
+  theme_minimal() +
+dev.off()
+
+png("EWS4064.cluster0.hallmark.gsea_plot.png", width=12, height=6, units="in", res=300)
+ggplot(fgseaResTidy %>% filter(padj < 0.05) %>% head(n= 30), aes(reorder(pathway, NES), NES)) +
+  geom_point(aes(color = NES > 4), size = 3) +
+  coord_flip() +
+  labs(x="Pathway", y="Normalized Enrichment Score",
+       title="Hallmark pathways NES from GSEA") +
+  theme_minimal() +
+  scale_color_manual(name = "NES > 4", values = c("TRUE" = "red", "FALSE" = "blue")) +
+  scale_shape_manual(name = "FDR < 0.05", values = c("TRUE" = 16, "FALSE" = 1))
+dev.off()
+
+####### immune cluster 
+msigdbr_species() #How to subset KEGG pathway 
+m_df<- msigdbr(species = "Homo sapiens", category = "C2", subcategory = "CP:KEGG")
+msigdbr_collections() #view the collections 
+head(m_df)
+
+fgsea_sets<- m_df %>% split(x = .$gene_symbol, f = .$gs_name)
+
+fgsea_sets$CP
+
+####
+subDir <- "multipanel-plots/"
+dir.create(file.path(results_folder, subDir), recursive = T)
+setwd(file.path(results_folder, subDir))
+
+se_EWS4064_normalize <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/STUTILITY_090123/RDS.afternormalization/se_EWS4064.Rdata")
+#run some multipanel-plots
+png("EWS4064_multipanel_plot.png", width=16, height=9, units="in", res=300)
+p3 <- ST.FeaturePlot(se_EWS4064_normalize, features = c("CD163", "NKX2-2", "CD99", "ACTA2", "NT5E", "CD8A", "TGFB1", "MRC1"), ncol = 4, grid.ncol = 4, show.sb = TRUE)
+p1 <- FeaturePlot(se_EWS4064_normalize, features = c("CD163", "NKX2-2", "CD99", "ACTA2", "NT5E", "CD8A", "TGFB1", "MRC1"), pt.size = 0.5, cols = c("mistyrose", "red", "darkred"))
+p2 <- VlnPlot(se_EWS4064_normalize, features = c("CD163", "NKX2-2", "CD99", "ACTA2", "NT5E", "CD8A", "TGFB1", "MRC1"), ncol = 4, group.by = "seurat_clusters")
+(p1 - p2)/p3
+dev.off()
+
+png("EWS4064_fibroblastgene_plot.png", width=16, height=9, units="in", res=300)
+p3 <- ST.FeaturePlot(se_EWS4064_normalize, features = c("ACTA2", "FAP", "POSTN", "ASPN", "MFAP5", "PDPN", "ITGA11", "PDGFRA", "PDGFRB", "S100A4", "VIM", "COL11A1"), ncol = 4, grid.ncol = 4, show.sb = TRUE)
+p1 <- FeaturePlot(se_EWS4064_normalize, features = c("ACTA2", "FAP", "POSTN", "ASPN", "MFAP5", "PDPN", "ITGA11", "PDGFRA", "PDGFRB", "S100A4", "VIM", "COL11A1"), pt.size = 0.5, cols = c("mistyrose", "red", "darkred"))
+p2 <- VlnPlot(se_EWS4064_normalize, features = c("ACTA2", "FAP", "POSTN", "ASPN", "MFAP5", "PDPN", "ITGA11", "PDGFRA", "PDGFRB", "S100A4", "VIM", "COL11A1"), ncol = 4, group.by = "seurat_clusters")
+(p1 - p2)/p3
+dev.off()
+
+png("EWS4064_iCAF_plot.png", width=16, height=9, units="in", res=300)
+p3 <- ST.FeaturePlot(se_EWS4064_normalize, features = c("ACTA2", "FAP", "IL6", "CXCL8", "CXCL12"), ncol = 4, grid.ncol = 4, show.sb = TRUE)
+p1 <- FeaturePlot(se_EWS4064_normalize, features = c("ACTA2", "FAP", "IL6", "CXCL8", "CXCL12"), pt.size = 0.5, cols = c("mistyrose", "red", "darkred"))
+p2 <- VlnPlot(se_EWS4064_normalize, features = c("ACTA2", "FAP", "IL6", "CXCL8", "CXCL12"), ncol = 4, group.by = "seurat_clusters")
+(p1 - p2)/p3
+dev.off()
+
+png("EWS4064_Tcell_plot.png", width=16, height=9, units="in", res=300)
+p3 <- ST.FeaturePlot(se_EWS4064_normalize, features = c("CD8A", "CD4"), ncol = 4, grid.ncol = 4, show.sb = TRUE)
+p1 <- FeaturePlot(se_EWS4064_normalize, features = c("CD8A", "CD4"), pt.size = 0.5, cols = c("mistyrose", "red", "darkred"))
+p2 <- VlnPlot(se_EWS4064_normalize, features = c("CD8A", "CD4"), ncol = 4, group.by = "seurat_clusters")
+(p1 - p2)/p3
+dev.off()
+
+png("EWS4064_Bcell_plot.png", width=16, height=9, units="in", res=300)
+p3 <- ST.FeaturePlot(se_EWS4064_normalize, features = c("PTPRC", "CD79A", "JCHAIN", "CD79B", "CD52", "CD83"), ncol = 4, grid.ncol = 4, show.sb = TRUE)
+p1 <- FeaturePlot(se_EWS4064_normalize, features = c("PTPRC", "CD79A", "JCHAIN", "CD79B", "CD52", "CD83"), pt.size = 0.5, cols = c("mistyrose", "red", "darkred"))
+p2 <- VlnPlot(se_EWS4064_normalize, features = c("PTPRC", "CD79A", "JCHAIN", "CD79B", "CD52", "CD83"), ncol = 4, group.by = "seurat_clusters")
+(p1 - p2)/p3
+dev.off()
+#.......................................................
+
+#######
+#Neighborhood analysis 
+subDir <- "Neighthorhood analysis/"
+dir.create(file.path(results_folder, subDir), recursive = T)
+setwd(file.path(results_folder, subDir))
+
+se_EWS4064_normalize <- SetIdent(se_EWS4064_normalize, value = "seurat_clusters")
+se_EWS4064_normalize <- RegionNeighbours(se_EWS4064_normalize, id = 4, keep.within.id = T, verbose = TRUE)
+FeatureOverlay(se_EWS4064_normalize, features = "nbs_4", ncols = 1, cols = c("red", "lightgray"), pt.size = 2)
+ggsave(filename = "EWS4064_nbs_4.png", device = "png") 
+
+se_EWS4064_normalize <- SetIdent(se_EWS4064_normalize, value = "nbs_4")
+nbs_4.markers <- FindMarkers(se_EWS4064_normalize, ident.1 = "4", ident.2 = "nbs_4")
+nbs_4.markers$gene <- rownames(nbs_4.markers)
+EWS4064.subset <- SubsetSTData(se_EWS4064_normalize, expression = nbs_4 %in% c("4", "nbs_4"))
+sorted.marks <- nbs_4.markers %>% arrange(-avg_log2FC) %>% top_n(n = 40, wt = abs(avg_log2FC))
+DoHeatmap(EWS4064.subset, features = sorted.marks$gene, group.colors = c("red", "lightgray"), disp.min = -2, disp.max = 2)
+ggsave(filename = "EWS4064_nbs_0.heatmap.png", device = "png") 
+
+se_EWS4064_normalize <- SetIdent(se_EWS4064_normalize, value = "nbs_1")
+nbs_1.markers <- FindMarkers(se_EWS4064_normalize, ident.1 = "1", ident.2 = "nbs_1")
+nbs_1.markers$gene <- rownames(nbs_1.markers)
+EWS4064.subset <- SubsetSTData(se_EWS4064_normalize, expression = nbs_1 %in% c("1", "nbs_1"))
+sorted.marks <- nbs_1.markers %>% arrange(-avg_log2FC) %>% top_n(n = 40, wt = abs(avg_log2FC))
+DoHeatmap(EWS4064.subset, features = sorted.marks$gene, group.colors = c("red", "lightgray"), disp.min = -2, disp.max = 2)
+ggsave(filename = "EWS4064_nbs_1.heatmap.png", device = "png") 
+
+FeatureOverlay(EWS4064.subset, features = c("MPEG1", "TNNT1"), pt.size = 2,  
+               ncols = 2, cols = c("darkblue", "cyan", "yellow", "red", "darkred"))
+
+######### now doing individual clusters heatmap
+EWS4064.markers <- FindAllMarkers(se_EWS4064_normalize, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+EWS4064.markers %>%
+  group_by(cluster) %>%
+  slice_max(n = 2, order_by = avg_log2FC)
+EWS4064.markers %>%
+  group_by(cluster) %>%
+  top_n(n = 10, wt = avg_log2FC) -> top10
+DoHeatmap(se_EWS4064_normalize, features = top10$gene) + NoLegend()
+ggsave(filename = "EWS4064_all.heatmap.png", device = "png") 
+
+library(magrittr)
+library(dplyr)
+
+se_EWS4064_normalized <- SetIdent(se_EWS4064_normalized, value = "nbs_4")
+nbs_4.markers <- FindMarkers(se_EWS4064_normalized, ident.1 = "4", ident.2 = "nbs_4")
+nbs_4.markers$gene <- rownames(nbs_4.markers)
+se.subset_F1 <- SubsetSTData(se_EWS4064_normalized, expression = nbs_4 %in% c("4", "nbs_4"))
+sorted.marks <- nbs_4.markers %>% arrange(-avg_log2FC) %>% top_n(n = 40, wt = abs(avg_log2FC))
+
+png("F1_heatmap_plot-2.png", width=8, height=5, units="in", res=300)
+DoHeatmap(se.subset_F1, features = sorted.marks$gene, group.colors = c("lightgray", "light blue"), disp.min = -2, disp.max = 2)
+dev.off()
+
+png("F1_neighbor-genes_plot-2.png", width=8, height=6, units="in", res=300)
+FeatureOverlay(se.subset_F1, features = c("C7", "IGFBP5", "STMN2", "RAD51AP2"), pt.size = 2,  
+               ncols = 2, cols = c("darkblue", "cyan", "yellow", "red", "darkred"))
+dev.off()
+
