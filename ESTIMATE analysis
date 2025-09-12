@@ -126,3 +126,59 @@ print(cor_spearman)
 # Print or use the correlation coefficient
 print(correlation_coefficient)# Assuming your data frame is named data_df
 
+library(ggplot2)
+# Function to convert data to data frame
+data_to_df <- function(sample, sample_name) {
+  data_df <- as.data.frame(as.matrix(sample@assays[["ESTIMATE"]]@data))
+  transposed_data <- t(data_df)
+  sample_data <- as.data.frame(transposed_data)
+  sample_data$sample <- sample_name
+  return(sample_data)
+}
+
+# List of sample objects and corresponding names
+samples <- list(se_EWS4064_normalize, se_EWS4512_normalize, se_EWS4521_normalize, 
+                se_EWS4523_normalize, se_EWS4577_normalize, se_EWS4578_normalize, 
+                se_EWS4531_normalize, se_EWS4539_normalize, se_EWS4550_normalize, 
+                se_EWS4553_normalize, se_EWS4554_normalize, se_EWS4556_normalize, 
+                se_EWS4557_normalize, se_EWS4559_normalize, se_EWS4564_normalize, 
+                se_EWS4582_normalize)
+
+sample_names <- c("EWS4064", "EWS4512", "EWS4521", "EWS4523", "EWS4577", 
+                  "EWS4578", "EWS4531", "EWS4539", "EWS4550", "EWS4553", 
+                  "EWS4554", "EWS4556", "EWS4557", "EWS4559", "EWS4564", "EWS4582")
+
+# Data frame to hold combined data
+combined_data <- data.frame()
+
+# Loop through each sample, convert to data frame, and combine
+for (i in 1:length(samples)) {
+  sample_data <- data_to_df(samples[[i]], sample_names[i])
+  combined_data <- rbind(combined_data, sample_data)
+}
+
+# Plot the combined data with a correlation line and white background
+png("EWS_Combined_ImmunevStromal_plot.png", width=6, height=6, units="in", res=300)
+ggplot(combined_data, aes(x = immune, y = stromal, color = purity)) +
+  geom_point(size = 1.5) +
+  scale_color_gradient(name = 'Tumor Purity Scores', limits = c(0,1)) +
+  labs(x = 'Immune Scores', y = 'Stromal Scores', title = 'Stromal Scores vs Immune Scores with Tumor Purity Gradient') +
+  theme_minimal() +
+  theme(
+    panel.background = element_blank(),
+    plot.background = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(color = "black")
+  )
+dev.off()
+
+# Calculate correlation coefficients for the combined data
+correlation_coefficient <- cor(combined_data$stromal, combined_data$immune)
+cor_spearman <- cor(combined_data$stromal, combined_data$immune, method = "spearman")
+
+# Print correlation coefficients
+print(paste("Pearson correlation for combined data:", correlation_coefficient))
+#"Pearson correlation for combined data: 0.882211881139052"
+print(paste("Spearman correlation for combined data:", cor_spearman))
+#"Spearman correlation for combined data: 0.85267811476943"
