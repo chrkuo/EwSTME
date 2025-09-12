@@ -1,0 +1,690 @@
+#Deconvolution#
+library(Giotto)
+library(data.table)
+library(magrittr)
+library(ggplot2)
+library(patchwork)
+library(dplyr)
+library(tidyr)
+library(Seurat)
+install.packages("SeuratObject")
+library(CARD)
+library(Matrix)
+
+
+#load my STUTILITY objects
+se_EWS4064_normalize <- readRDS(file = "file path to RDS object ")
+
+#Using STUTILITY OBJECT 
+#Creat EWS4064 CARD OBJECT 
+#Make spatial location input file for CARD #EWS4064
+# Extract x and y coordinates
+x <- se_EWS4064_normalize@tools[["Staffli"]]@meta.data[["pixel_x"]]
+y <- se_EWS4064_normalize@tools[["Staffli"]]@meta.data[["pixel_y"]]
+
+# Assuming gene names are stored as rownames in the meta.data
+gene_names <- rownames(se_EWS4064_normalize@tools[["Staffli"]]@meta.data)
+# Create a dataframe using gene names as row names
+df <- data.frame(x, y, row.names = gene_names)
+df -> spatial_location_EWS4064
+
+# Make spatial_count input file for CARD 
+se_EWS4064_normalize@assays[["RNA"]]@counts ->test 
+as.matrix(test) -> spatial_count_EWS4064
+rm(test)
+
+# Make spatial_location input file for CARD #EWS4512
+# Extract x and y coordinates
+x <- se_EWS4512_normalize@tools[["Staffli"]]@meta.data[["pixel_x"]]
+y <- se_EWS4512_normalize@tools[["Staffli"]]@meta.data[["pixel_y"]]
+# Assuming gene names are stored as rownames in the meta.data
+gene_names <- rownames(se_EWS4512_normalize@tools[["Staffli"]]@meta.data)
+# Create a dataframe using gene names as row names
+df <- data.frame(x, y, row.names = gene_names)
+df -> spatial_location_EWS4512 
+
+# Import and clean hayashi dataset for single cell RNA data
+
+rds_file = "file path to ref-scRNAseq data"
+hayashi <- readRDS(rds_file)
+rm(rds_file)
+
+hayashi = UpdateSeuratObject(object = hayashi)
+DimPlot(hayashi, group.by = "Broad.Cell.Type")
+#rename Ewing sarcoma proliferating into Ewing sarcoma 
+hayashi@meta.data[["Cell.Type"]][hayashi@meta.data[["Cell.Type"]] == "Ewing sarcoma proliferating"] <- "Ewing sarcoma"
+
+DimPlot(hayashi, group.by = "Cell.Type", pt.size = 0.8)
+#linking the Cell.Type to active idents 
+hayashi$Cell.Type <- as.factor(hayashi$Cell.Type)
+
+#hayashi$Broad.Cell.Type <- as.factor(hayashi$Broad.Cell.Type)
+hayashi@active.ident <- hayashi$Cell.Type
+#hayashi@active.ident <- hayashi$Broad.Cell.Type
+DimPlot(hayashi)
+
+hayashi = UpdateSeuratObject(object = hayashi)
+
+# Make sc_count input file for CARD
+hayashi@assays[["RNA"]]@counts -> sc_count
+as.matrix(sc_count) -> sc_count
+
+# Make sc_meta input file for CARD
+hayashi@meta.data[["Cell.Type"]] -> test
+rownames(hayashi@meta.data) -> test2
+sc_meta <- data.frame(test2,test)
+rownames(sc_meta) <- test2
+sc_meta$sampleInfo = "sample1"
+colnames(sc_meta) <- c('cellID','cellType','sampleInfo')
+rm(test,test2)
+
+# Make CARD object EWS4064 changed mincount gene to 50 
+CARD_obj_EWS4064 = createCARDObject(
+  sc_count = sc_count,
+  sc_meta = sc_meta,
+  spatial_count = spatial_count_EWS4064,
+  spatial_location = spatial_location_EWS4064,
+  ct.varname = "cellType",
+  ct.select = unique(sc_meta$cellType),
+  sample.varname = "sampleInfo",
+  minCountGene = 50,
+  minCountSpot = 5)
+
+# Run CARD deconvolution
+CARD_obj_EWS4064 = CARD_deconvolution(CARD_object = CARD_obj_EWS4064)
+
+#now make proportions graphs 
+###### Visualize Pie Proportions #####
+colors = c("#FFD92F","#4DAF4A","#FCCDE5","#D9D9D9","#377EB8","#7FC97F","#BEAED4",
+           "#FDC086","#FFFF99","#386CB0","#F0027F","#BF5B17","#666666","#1B9E77","#D95F02",
+           "#7570B3","#E7298A","#66A61E","#E6AB02","#A6761D")
+
+p1 <- CARD.visualize.pie(proportion = CARD_obj_EWS4064@Proportion_CARD, 
+                         spatial_location = CARD_obj_EWS4064@spatial_location, 
+                         radius = 11,
+                         colors = colors)
+
+png("CARD_EWS4064_pie.png", width=18, height=9, units="in", res=300)
+print(p1)
+dev.off()
+rm(p1)
+
+##### Visualize Individual Proportions#######
+#Cell.Type
+#ct.visualize = c("B","CD14+ complement macrophage","Ewing sarcoma proliferating","Inflammatory CAF","Osteoclast","CD4+IL7R+ T", "Endothelial", "FCN1+ inflammatory monocyte", "Matrix CAF", "Regulatory T", "CD8+ Effector T", "Ewing sarcoma","IL1B+ inflammatory monocyte", "Non-inflammatory CD1C+ Dendritic", "Tissue Resident Memory T")
+#broad.cell.type
+#ct.visualize = c("B","Endothelial","Ewing sarcoma","Fibroblast","Myeloid","Osteoclast", "T")
+#OnlyEwing cell type
+ct.visualize = c("B","CD4+IL7R+ T","CD8+ Effector T","CD14+ complement macrophage","Endothelial","Ewing sarcoma", "FCN1+ inflammatory monocyte", "IL1B+ inflammatory monocyte", "Inflammatory CAF", "Matrix CAF", "Non-inflammatory CD1C+ Dendritic", "Osteoclast","Regulatory T", "Tissue Resident Memory T")
+
+#color used originally "lightblue","lightyellow","red" #
+
+p2 <- CARD.visualize.prop(
+  proportion = CARD_obj_EWS4064@Proportion_CARD,
+  spatial_location = CARD_obj_EWS4064@spatial_location,
+  ct.visualize = ct.visualize,
+  colors = c("lightblue", "lightyellow", "red"), ### if not provide, we will use the default colors
+  NumCols = 5,                                 ### number of columns in the figure panel
+  pointSize = 1.5) 
+png("CARD_EWS4064_ind.png", width=18, height=9, units="in", res=300)
+print(p2)
+dev.off()
+rm(p2)
+
+## visualize the spatial distribution of two cell types on the same plot
+p3 = CARD.visualize.prop.2CT(
+  proportion = CARD_obj_EWS4064@Proportion_CARD,                             ### Cell type proportion estimated by CARD
+  spatial_location = CARD_obj_EWS4064@spatial_location,                      ### spatial location information
+  ct2.visualize = c("CD14+ complement macrophage","Inflammatory CAF"),              ### two cell types you want to visualize
+  colors = list(c("lightblue","lightyellow","red"),c("lightblue","lightyellow","black")))       ### two color scales                             
+print(p3)
+
+p4 <- CARD.visualize.Cor(CARD_obj_EWS4064@Proportion_CARD,colors = NULL)
+
+png("CARD_EWS4064EwingB.png", width=9, height=9, units="in", res=300)
+print(p3)
+dev.off()
+
+png("CARD_coorelationEWS4064.png", width=9, height=9, units="in", res=300)
+print(p4)
+dev.off()
+
+##### Proportions Graph ######
+data_long_EWS4064 <- gather(data.frame(CARD_obj_EWS4064@Proportion_CARD), key = "Cell_Type", value = "Proportion")
+data_long_EWS4512 <- gather(data.frame(CARD_obj_EWS4512@Proportion_CARD), key = "Cell_Type", value = "Proportion")
+data_long_EWS4521 <- gather(data.frame(CARD_obj_EWS4521@Proportion_CARD), key = "Cell_Type", value = "Proportion")
+data_long_EWS4523 <- gather(data.frame(CARD_obj_EWS4523@Proportion_CARD), key = "Cell_Type", value = "Proportion")
+data_long_EWS4531 <- gather(data.frame(CARD_obj_EWS4531@Proportion_CARD), key = "Cell_Type", value = "Proportion")
+data_long_EWS4539 <- gather(data.frame(CARD_obj_EWS4539@Proportion_CARD), key = "Cell_Type", value = "Proportion")
+data_long_EWS4550 <- gather(data.frame(CARD_obj_EWS4550@Proportion_CARD), key = "Cell_Type", value = "Proportion")
+data_long_EWS4554 <- gather(data.frame(CARD_obj_EWS4554@Proportion_CARD), key = "Cell_Type", value = "Proportion")
+data_long_EWS4556 <- gather(data.frame(CARD_obj_EWS4556@Proportion_CARD), key = "Cell_Type", value = "Proportion")
+data_long_EWS4557 <- gather(data.frame(CARD_obj_EWS4557@Proportion_CARD), key = "Cell_Type", value = "Proportion")
+data_long_EWS4559 <- gather(data.frame(CARD_obj_EWS4559@Proportion_CARD), key = "Cell_Type", value = "Proportion")
+data_long_EWS4564 <- gather(data.frame(CARD_obj_EWS4564@Proportion_CARD), key = "Cell_Type", value = "Proportion")
+data_long_EWS4553 <- gather(data.frame(CARD_obj_EWS4553@Proportion_CARD), key = "Cell_Type", value = "Proportion")
+data_long_EWS4577 <- gather(data.frame(CARD_obj_EWS4577@Proportion_CARD), key = "Cell_Type", value = "Proportion")
+data_long_EWS4578 <- gather(data.frame(CARD_obj_EWS4578@Proportion_CARD), key = "Cell_Type", value = "Proportion")
+data_long_EWS4582 <- gather(data.frame(CARD_obj_EWS4582@Proportion_CARD), key = "Cell_Type", value = "Proportion")
+
+# Group the data by Cell_Type and calculate the mean Proportion for each Cell_Type
+mean_proportions_EWS4064 <- data_long_EWS4064 %>%
+  group_by(Cell_Type) %>%
+  summarize(mean_proportions_EWS4064 = mean(Proportion))
+
+mean_proportions_4512 <- data_long_EWS4512 %>%
+  group_by(Cell_Type) %>%
+  summarize(mean_proportions_4512 = mean(Proportion))
+
+mean_proportions_4521 <- data_long_EWS4521 %>%
+  group_by(Cell_Type) %>%
+  summarize(mean_proportion_4521 = mean(Proportion))
+
+mean_proportions_4523 <- data_long_EWS4523 %>%
+  group_by(Cell_Type) %>%
+  summarize(mean_proportion_4523 = mean(Proportion))
+
+mean_proportions_4531 <- data_long_EWS4531 %>%
+  group_by(Cell_Type) %>%
+  summarize(mean_proportion_4531 = mean(Proportion))
+
+mean_proportions_4539 <- data_long_EWS4539 %>%
+  group_by(Cell_Type) %>%
+  summarize(mean_proportion_4539 = mean(Proportion))
+
+mean_proportions_4550 <- data_long_EWS4550 %>%
+  group_by(Cell_Type) %>%
+  summarize(mean_proportion_4550 = mean(Proportion))
+
+mean_proportions_4554 <- data_long_EWS4554 %>%
+  group_by(Cell_Type) %>%
+  summarize(mean_proportion_4554 = mean(Proportion))
+
+mean_proportions_4556 <- data_long_EWS4556 %>%
+  group_by(Cell_Type) %>%
+  summarize(mean_proportions_4556 = mean(Proportion))
+
+mean_proportions_4557 <- data_long_EWS4557 %>%
+  group_by(Cell_Type) %>%
+  summarize(mean_proportions_4557 = mean(Proportion))
+
+mean_proportions_4559 <- data_long_EWS4559 %>%
+  group_by(Cell_Type) %>%
+  summarize(mean_proportion_4559 = mean(Proportion))
+
+mean_proportions_4564 <- data_long_EWS4564 %>%
+  group_by(Cell_Type) %>%
+  summarize(mean_proportion_4564 = mean(Proportion))
+
+mean_proportions_4553 <- data_long_EWS4553 %>%
+  group_by(Cell_Type) %>%
+  summarize(mean_proportion_4553 = mean(Proportion))
+
+mean_proportions_4577 <- data_long_EWS4577 %>%
+  group_by(Cell_Type) %>%
+  summarize(mean_proportion_4577 = mean(Proportion))
+
+
+mean_proportions_4578 <- data_long_EWS4578 %>%
+  group_by(Cell_Type) %>%
+  summarize(mean_proportion_4578 = mean(Proportion))
+
+
+mean_proportions_4582 <- data_long_EWS4582 %>%
+  group_by(Cell_Type) %>%
+  summarize(mean_proportion_4582 = mean(Proportion))
+
+# Step 2: Create the stacked bar plot
+#with the percent label below 
+ggplot(data_long_EWS4064, aes(x = Cell_Type, y = Proportion, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Cell Types", y = "Proportion", title = "EWS4064 Stacked Bar Plot") +
+  theme(text = element_text(size = 7),
+        axis.text.x = element_text(size = 10, angle = 90, vjust = 0.5, hjust = 1))  +
+  guides(fill = FALSE) +
+  scale_y_continuous(labels = scales::percent_format(scale = 100))+
+  geom_text(data = mean_proportions_EWS4064, aes(label = scales::percent(mean_proportions_EWS4064), y = mean_proportions_EWS4064), 
+            position = position_stack(vjust = 0.5))
+ggsave(filename = "EWS4064_stacked.png", device = "png") 
+
+#to remove the Y axis scale#
+ggplot(data_long_EWS4064, aes(x = Cell_Type, y = Proportion, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Cell Types", y = "Proportion", title = "EWS4064 Stacked Bar Plot") +
+  theme(
+    text = element_text(size = 7),
+    axis.text.x = element_text(size = 10, angle = 90, vjust = 0.5, hjust = 1),
+    axis.title.y = element_text(),  # Remove y-axis title
+    axis.text.y = element_blank(),   # Remove y-axis tick labels
+    axis.ticks.y = element_blank()   # Remove y-axis ticks
+  ) +
+  guides(fill = FALSE) +
+  scale_y_continuous(labels = scales::percent_format(scale = 100)) +
+  geom_text(data = mean_proportions_EWS4064, 
+            aes(label = scales::percent(mean_proportions_EWS4064), y = mean_proportions_EWS4064), 
+            position = position_stack(vjust = 0.5))
+ggsave(filename = "EWS4064_stacked.png", device = "png")
+#manually doing it on Prism# 011124
+write.csv(mean_proportions_EWS4064, "EWS4064.csv", row.names = FALSE)
+
+#with the percent label in the bar graph 
+ggplot(data = mean_proportions_EWS4064, aes(x = Cell_Type, y = mean_proportions_EWS4064, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Cell Types", y = "Proportion", title = "EWS4064 Bar Plot") +
+  theme(text = element_text(size = 7),
+        axis.text.x = element_text(size = 10, angle = 90, vjust = 0.5, hjust = 1))+
+  guides(fill = FALSE) +
+  scale_y_continuous(labels = scales::percent_format(scale = 100)) +
+  geom_text(aes(label = scales::percent(mean_proportions_EWS4064), y = mean_proportions_EWS4064), 
+            position = position_stack(vjust = 0.5), size = 3)
+ggsave(filename = "EWS4064_barplot.png", device = "png")
+###single barplot
+
+# Step 2: Create the stacked bar plot
+#with no legend 
+ggplot(mean_proportions_EWS4064, aes(x = "", y = mean_proportions_EWS4064, fill = Cell_Type)) +
+  geom_bar(stat = "identity") +
+  labs(x = "EWS4512", y = "Proportion", title = "EWS4064 Stacked Bar Plot") +
+  theme_minimal() +
+  guides(fill = FALSE) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+  geom_text(aes(label = scales::percent(mean_proportions_EWS4064)), 
+            position = position_stack(vjust = 0.5), show.legend = TRUE)
+
+
+#with legend 
+ggplot(mean_proportions_EWS4064, aes(x = "", y = mean_proportions_EWS4064, fill = Cell_Type)) +
+  geom_bar(stat = "identity") +
+  labs(x = "EWS4512", y = "Proportion", title = "mean_proportions_EWS4064") +
+  theme_minimal() +
+  guides(fill = guide_legend()) +
+  scale_y_continuous(labels = scales::percent_format(scale = 100)) +
+  geom_text(aes(label = scales::percent(mean_proportions_EWS4064)), 
+            position = position_stack(vjust = 0.5))
+ggsave(filename = "EWS4064_stackedone.png", device = "png") 
+
+#####combo graph####
+# Step 1: Combine all data frames into one long data frame
+all_mean_proportions <- bind_rows(
+  mean_proportions_EWS4064 %>% mutate(Sample = "EWS4064"),
+  mean_proportions_4512 %>% mutate(Sample = "EWS4512"),
+  mean_proportions_4521 %>% mutate(Sample = "EWS4521"),
+  mean_proportions_4523 %>% mutate(Sample = "EWS4523"),
+  mean_proportions_4531 %>% mutate(Sample = "EWS4531"),
+  mean_proportions_4539 %>% mutate(Sample = "EWS4539"),
+  mean_proportions_4550 %>% mutate(Sample = "EWS4550"),
+  mean_proportions_4554 %>% mutate(Sample = "EWS4554"),
+  mean_proportions_4556 %>% mutate(Sample = "EWS4556"),
+  mean_proportions_4557 %>% mutate(Sample = "EWS4557"),
+  mean_proportions_4559 %>% mutate(Sample = "EWS4559"),
+  mean_proportions_4564 %>% mutate(Sample = "EWS4564"),
+  mean_proportions_4553 %>% mutate(Sample = "EWS4553"),
+  mean_proportions_4577 %>% mutate(Sample = "EWS4577"),
+  mean_proportions_4578 %>% mutate(Sample = "EWS4578"),
+  mean_proportions_4582 %>% mutate(Sample = "EWS4582"),
+)
+
+#write CSV file
+write.csv(all_mean_proportions, "allproportions.csv", row.names = FALSE)
+
+#rename#
+
+# Step 1: Combine all data frames into one long data frame
+all_mean_proportions <- bind_rows(
+  mean_proportions_EWS4064 %>% rename(mean_proportion = mean_proportions_EWS4064) %>% mutate(Sample = "EWS4064"),
+  mean_proportions_4512 %>% rename(mean_proportion = mean_proportions_4512) %>% mutate(Sample = "EWS4512"),
+  mean_proportions_4521 %>% rename(mean_proportion = mean_proportion_4521) %>% mutate(Sample = "EWS4521"),
+  mean_proportions_4523 %>% rename(mean_proportion = mean_proportion_4523) %>% mutate(Sample = "EWS4523"),
+  mean_proportions_4577 %>% rename(mean_proportion = mean_proportion_4577) %>% mutate(Sample = "EWS4577"),
+  mean_proportions_4578 %>% rename(mean_proportion = mean_proportion_4578) %>% mutate(Sample = "EWS4578"),
+  mean_proportions_4531 %>% rename(mean_proportion = mean_proportion_4531) %>% mutate(Sample = "EWS4531"),
+  mean_proportions_4539 %>% rename(mean_proportion = mean_proportion_4539) %>% mutate(Sample = "EWS4539"),
+  mean_proportions_4550 %>% rename(mean_proportion = mean_proportion_4550) %>% mutate(Sample = "EWS4550"),
+  mean_proportions_4554 %>% rename(mean_proportion = mean_proportion_4554) %>% mutate(Sample = "EWS4554"),
+  mean_proportions_4556 %>% rename(mean_proportion = mean_proportions_4556) %>% mutate(Sample = "EWS4556"),
+  mean_proportions_4557 %>% rename(mean_proportion = mean_proportions_4557) %>% mutate(Sample = "EWS4557"),
+  mean_proportions_4559 %>% rename(mean_proportion = mean_proportion_4559) %>% mutate(Sample = "EWS4559"),
+  mean_proportions_4564 %>% rename(mean_proportion = mean_proportion_4564) %>% mutate(Sample = "EWS4564"),
+  mean_proportions_4553 %>% rename(mean_proportion = mean_proportion_4553) %>% mutate(Sample = "EWS4553"),
+  mean_proportions_4582 %>% rename(mean_proportion = mean_proportion_4582) %>% mutate(Sample = "EWS4582")
+  
+  
+)
+
+library(scales)
+# Create the stacked barplot with label
+ggplot(all_mean_proportions, aes(x = Sample, y = mean_proportion, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(x = "Sample", y = "Mean_proportion", fill = "Cell_type") +
+  theme(axis.text.x = element_text(size = 6, angle = 90, vjust = 0.5)) +
+  geom_text(aes(label = scales::percent(mean_proportion), y = mean_proportion), 
+            position = position_stack(vjust = 0.5), size = 2)
+
+
+#now with 100% 
+ggplot(all_mean_proportions, aes(x = Sample, y = mean_proportion, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(x = "Sample", y = "Mean Proportion", fill = "Cell Type") +
+  theme(axis.text.x = element_text(size = 6, angle = 90, vjust = 0.5)) +
+  scale_y_continuous(labels = scales::percent_format(scale = 100)) +  # Set scale to 100%
+  geom_text(aes(label = scales::percent(mean_proportion), y = mean_proportion), 
+            position = position_stack(vjust = 0.5), size = 2)
+ggsave(filename = "all_stacked.png", device = "png") 
+
+#without label 
+ggplot(all_mean_proportions, aes(x = Sample, y = mean_proportion, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(x = "Sample", y = "Mean_proportion", fill = "Cell_type") +
+  theme(axis.text.x = element_text(size = 6, angle = 90, vjust = 0.5)) 
+ggsave(filename = "alltumors_stacked.png", device = "png") 
+#now with 100%
+ggplot(all_mean_proportions, aes(x = Sample, y = mean_proportion, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(x = "Sample", y = "Mean_proportion", fill = "Cell_type") +
+  theme(axis.text.x = element_text(size = 6, angle = 90, vjust = 0.5)) +
+  scale_y_continuous(labels = scales::percent_format(scale = 100))  # Set scale to 100%
+ggsave(filename = "Allstacked_nolabel_100.png", device = "png") 
+
+#testing regroup####
+# Sample grouping # ranking from the most abundant Ewing to the least 
+all_mean_proportions_ranked <- all_mean_proportions %>%
+  group_by(Sample) %>%
+  mutate(rank = rank(-mean_proportion))
+
+# Find the most abundant Ewing.sarcoma for each Sample
+most_abundant_ewing_sarcoma <- all_mean_proportions %>%
+  filter(Cell_Type == "Ewing.sarcoma") %>%
+  arrange(Sample, desc(mean_proportion)) %>%
+  group_by(Sample) %>%
+  slice(1)  # Keep only one row for each sample
+
+# Order the Samples based on the most abundant Ewing.sarcoma and its abundance
+order_samples <- most_abundant_ewing_sarcoma %>%
+  arrange(desc(mean_proportion)) %>%
+  pull(Sample)
+
+# Reorder the 'Sample' factor based on the order_samples
+all_mean_proportions <- mutate(all_mean_proportions, Sample = factor(Sample, levels = order_samples))
+
+# Create the stacked bar plot
+ggplot(all_mean_proportions, aes(x = Sample, y = mean_proportion, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(x = "Sample", y = "Mean_proportion", fill = "Cell_type") +
+  theme(axis.text.x = element_text(size = 6, angle = 90, vjust = 0.5)) +
+  scale_y_continuous(labels = scales::percent_format(scale = 100))  # Set scale to 100%
+
+
+########grpahing out most abundant Osteoclast cells to the least ####
+all_mean_proportions_ranked <- all_mean_proportions %>%
+  group_by(Sample) %>%
+  mutate(rank = rank(-mean_proportion))
+
+# Find the most abundant Ewing.sarcoma for each Sample
+most_abundant_ewing_sarcoma <- all_mean_proportions %>%
+  filter(Cell_Type == "B") %>%
+  arrange(Sample, desc(mean_proportion)) %>%
+  group_by(Sample) %>%
+  slice(1)  # Keep only one row for each sample
+
+# Order the Samples based on the most abundant Ewing.sarcoma and its abundance
+order_samples <- most_abundant_ewing_sarcoma %>%
+  arrange(desc(mean_proportion)) %>%
+  pull(Sample)
+
+# Reorder the 'Sample' factor based on the order_samples
+all_mean_proportions <- mutate(all_mean_proportions, Sample = factor(Sample, levels = order_samples))
+
+# Create the stacked bar plot
+ggplot(all_mean_proportions, aes(x = Sample, y = mean_proportion, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(x = "Sample", y = "Mean_proportion", fill = "Cell_type") +
+  theme(axis.text.x = element_text(size = 6, angle = 90, vjust = 0.5)) +
+  scale_y_continuous(labels = scales::percent_format(scale = 100))  # Set scale to 100%
+ 
+
+
+#ggplot(data_long, aes(x = Cell_Type, y = Proportion, fill = Cell_Type)) +
+#  geom_bar(stat = "identity") +
+#  labs(x = "Cell Types", y = "Proportion", title = "Stacked Bar Plot") +
+#  theme_minimal() +
+#  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+#  guides(fill = FALSE)  # To remove the legend for the fill color
+
+library(ggplot2)
+library(dplyr)
+library(scales)
+
+# Calculate the overall mean proportion for each Cell_Type across all samples
+# This helps determine the order for stacking
+global_order <- all_mean_proportions %>%
+  group_by(Cell_Type) %>%
+  summarize(overall_mean = mean(mean_proportion)) %>%
+  arrange(desc(overall_mean)) %>%
+  pull(Cell_Type)  # Order from most to least abundant globally
+
+# Reorder Cell_Type so that Ewing.sarcoma comes first
+ewing_first <- c("Ewing.sarcoma", setdiff(global_order, "Ewing.sarcoma"))
+all_mean_proportions$Cell_Type <- factor(all_mean_proportions$Cell_Type, levels = ewing_first)
+
+# Reorder the 'Sample' factor based on the most abundant Ewing.sarcoma
+order_samples <- all_mean_proportions %>%
+  filter(Cell_Type == "Ewing.sarcoma") %>%
+  arrange(desc(mean_proportion)) %>%
+  pull(Sample)
+
+all_mean_proportions$Sample <- factor(all_mean_proportions$Sample, levels = order_samples)
+
+# Create the stacked bar plot with Ewing.sarcoma on top
+ggplot(all_mean_proportions, aes(x = Sample, y = mean_proportion, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = position_stack(reverse = FALSE)) +
+  labs(x = "Sample", y = "Mean Proportion", fill = "Cell Type") +
+  theme(axis.text.x = element_text(size = 6, angle = 90, vjust = 0.5)) +
+  scale_y_continuous(labels = percent_format(scale = 1))  # Ensure percentages are correctly formatted
+
+
+# Define custom colors for each Cell_Type
+custom_colors <- c(
+  "B" = "#7f7f7f", 
+  "CD14..complement.macrophage" = "#aec7e8",
+  "CD4.IL7R..T" = "#ff7f0e",
+  "CD8..Effector.T" = "#ffbb78",
+  "Endothelial" = "#2ca02c",
+  "Ewing.sarcoma" = "#1f77b4",
+  "FCN1..inflammatory.monocyte" = "#d62728",
+  "IL1B..inflammatory.monocyte" = "#ff9896",
+  "Inflammatory.CAF" = "#9467bd",
+  "Matrix.CAF" = "#c5b0d5",
+  "Non.inflammatory.CD1C..Dendritic" = "#8c564b",
+  "Osteoclast" = "#c49c94",
+  "Regulatory.T" = "#e377c2",
+  "Tissue.Resident.Memory.T" = "#f7b6d2"
+)
+
+# Create the stacked bar plot with Ewing.sarcoma on top and custom colors
+ggplot(all_mean_proportions, aes(x = Sample, y = mean_proportion, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = position_stack(reverse = FALSE)) +
+  labs(x = "Sample", y = "Mean Proportion", fill = "Cell Type") +
+  theme(axis.text.x = element_text(size = 6, angle = 90, vjust = 0.5)) +
+  scale_y_continuous(labels = percent_format(scale = 100)) +
+  scale_fill_manual(values = custom_colors)  # Apply custom colors
+
+
+# Create the stacked bar plot with customized theme settings
+ggplot(all_mean_proportions, aes(x = Sample, y = mean_proportion, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = position_stack(reverse = FALSE)) +
+  labs(x = "Sample", y = "Mean Proportion", fill = "Cell Type") +
+  theme(
+    axis.text.x = element_text(size = 6, angle = 90, vjust = 0.5),
+    panel.background = element_blank(),    # Remove background fill
+    panel.grid.major = element_blank(),    # Remove major grid lines
+    panel.grid.minor = element_blank(),    # Remove minor grid lines
+    panel.border = element_rect(fill = NA, color = "black"),  # Add border around the plot
+    axis.line = element_line(color = "black")  # Add axis lines
+  ) +
+  scale_y_continuous(labels = percent_format(scale = 100)) +
+  scale_fill_manual(values = custom_colors)  # Apply custom colors
+
+#Adjust based on CD8
+
+# Reorder the 'Sample' factor based on the abundance of CD8..Effector.T cells
+order_samples_cd8 <- all_mean_proportions %>%
+  filter(Cell_Type == "CD8..Effector.T") %>%
+  arrange(desc(mean_proportion)) %>%
+  pull(Sample)
+
+all_mean_proportions$Sample <- factor(all_mean_proportions$Sample, levels = order_samples_cd8)
+
+# Reorder Cell_Type so that CD8..Effector.T comes first
+cd8_first <- c("CD8..Effector.T", setdiff(all_mean_proportions$Cell_Type, "CD8..Effector.T"))
+all_mean_proportions$Cell_Type <- factor(all_mean_proportions$Cell_Type, levels = cd8_first)
+
+# Create the stacked bar plot with CD8..Effector.T on top
+ggplot(all_mean_proportions, aes(x = Sample, y = mean_proportion, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = position_stack(reverse = FALSE)) +
+  labs(x = "Sample", y = "Mean Proportion", fill = "Cell Type") +
+  theme(axis.text.x = element_text(size = 6, angle = 90, vjust = 0.5)) +
+  scale_y_continuous(labels = percent_format(scale = 100)) +
+  scale_fill_manual(values = custom_colors)  # Apply custom colors
+
+
+##### now adjust matrix CAF #####
+
+library(dplyr)
+library(ggplot2)
+library(scales)
+
+# Reorder the 'Sample' factor based on the abundance of Matrix.CAF cells
+order_samples_matrix_caf <- all_mean_proportions %>%
+  filter(Cell_Type == "Matrix.CAF") %>%
+  arrange(desc(mean_proportion)) %>%
+  pull(Sample)
+
+all_mean_proportions$Sample <- factor(all_mean_proportions$Sample, levels = order_samples_matrix_caf)
+
+# Reorder Cell_Type so that Matrix.CAF comes first
+matrix_caf_first <- c("Matrix.CAF", setdiff(all_mean_proportions$Cell_Type, "Matrix.CAF"))
+all_mean_proportions$Cell_Type <- factor(all_mean_proportions$Cell_Type, levels = matrix_caf_first)
+
+# Create the stacked bar plot with Matrix.CAF at the bottom
+ggplot(all_mean_proportions, aes(x = Sample, y = mean_proportion, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = position_stack(reverse = FALSE)) +
+  labs(x = "Sample", y = "Mean Proportion", fill = "Cell Type") +
+  theme(axis.text.x = element_text(size = 6, angle = 90, vjust = 0.5)) +
+  scale_y_continuous(labels = percent_format(scale = 100)) +
+  scale_fill_manual(values = custom_colors)  # Apply custom colors
+
+
+#now order by inflammatory caf
+
+# Reorder the 'Sample' factor based on the abundance of Inflammatory.CAF cells
+order_samples_inflammatory_caf <- all_mean_proportions %>%
+  filter(Cell_Type == "Inflammatory.CAF") %>%
+  arrange(desc(mean_proportion)) %>%
+  pull(Sample)
+
+# Reorder Cell_Type so that Inflammatory.CAF comes first
+inflammatory_caf_first <- c("Inflammatory.CAF", setdiff(all_mean_proportions$Cell_Type, "Inflammatory.CAF"))
+all_mean_proportions$Cell_Type <- factor(all_mean_proportions$Cell_Type, levels = inflammatory_caf_first)
+
+all_mean_proportions$Sample <- factor(all_mean_proportions$Sample, levels = order_samples_inflammatory_caf)
+
+# Create the stacked bar plot with Inflammatory.CAF prioritized
+ggplot(all_mean_proportions, aes(x = Sample, y = mean_proportion, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = position_stack(reverse = FALSE)) +  # Change reverse to TRUE if you want it on top
+  labs(x = "Sample", y = "Mean Proportion", fill = "Cell Type") +
+  theme(axis.text.x = element_text(size = 6, angle = 90, vjust = 0.5)) +
+  scale_y_continuous(labels = percent_format(scale = 100)) +
+  scale_fill_manual(values = custom_colors)  # Apply custom colors
+
+
+## B cell now 
+
+
+# Reorder the 'Sample' factor based on the abundance of B cells
+order_samples_b_cells <- all_mean_proportions %>%
+  filter(Cell_Type == "B") %>%
+  arrange(desc(mean_proportion)) %>%
+  pull(Sample)
+
+all_mean_proportions$Sample <- factor(all_mean_proportions$Sample, levels = order_samples_b_cells)
+
+# Reorder Cell_Type so that B cells come first
+b_cells_first <- c("B", setdiff(all_mean_proportions$Cell_Type, "B"))
+all_mean_proportions$Cell_Type <- factor(all_mean_proportions$Cell_Type, levels = b_cells_first)
+
+
+# Create the stacked bar plot with B cells prioritized
+ggplot(all_mean_proportions, aes(x = Sample, y = mean_proportion, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = position_stack(reverse = FALSE)) +  # Change reverse to TRUE if you want it on top
+  labs(x = "Sample", y = "Mean Proportion", fill = "Cell Type") +
+  theme(axis.text.x = element_text(size = 6, angle = 90, vjust = 0.5)) +
+  scale_y_continuous(labels = percent_format(scale = 100)) +
+  scale_fill_manual(values = custom_colors)  # Apply custom colors
+
+#inflammatory monocyte
+
+# Reorder the 'Sample' factor based on the abundance of IL1B..inflammatory.monocyte cells
+order_samples_il1b <- all_mean_proportions %>%
+  filter(Cell_Type == "IL1B..inflammatory.monocyte") %>%
+  arrange(desc(mean_proportion)) %>%
+  pull(Sample)
+
+all_mean_proportions$Sample <- factor(all_mean_proportions$Sample, levels = order_samples_il1b)
+
+# Reorder Cell_Type so that IL1B..inflammatory.monocyte comes first
+il1b_first <- c("IL1B..inflammatory.monocyte", setdiff(all_mean_proportions$Cell_Type, "IL1B..inflammatory.monocyte"))
+all_mean_proportions$Cell_Type <- factor(all_mean_proportions$Cell_Type, levels = il1b_first)
+
+# Create the stacked bar plot with IL1B..inflammatory.monocyte prioritized
+ggplot(all_mean_proportions, aes(x = Sample, y = mean_proportion, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = position_stack(reverse = FALSE)) +  # Change reverse to TRUE if you want it on top
+  labs(x = "Sample", y = "Mean Proportion", fill = "Cell Type") +
+  theme(axis.text.x = element_text(size = 6, angle = 90, vjust = 0.5)) +
+  scale_y_continuous(labels = percent_format(scale = 100)) +
+  scale_fill_manual(values = custom_colors)  # Apply custom colors
+
+### FCN1 inflammatory monocyte #### 
+# Reorder the 'Sample' factor based on the abundance of FCN1..inflammatory.monocyte cells
+order_samples_fcn1 <- all_mean_proportions %>%
+  filter(Cell_Type == "FCN1..inflammatory.monocyte") %>%
+  arrange(desc(mean_proportion)) %>%
+  pull(Sample)
+
+all_mean_proportions$Sample <- factor(all_mean_proportions$Sample, levels = order_samples_fcn1)
+
+# Reorder Cell_Type so that FCN1..inflammatory.monocyte comes first
+fcn1_first <- c("FCN1..inflammatory.monocyte", setdiff(all_mean_proportions$Cell_Type, "FCN1..inflammatory.monocyte"))
+all_mean_proportions$Cell_Type <- factor(all_mean_proportions$Cell_Type, levels = fcn1_first)
+
+# Create the stacked bar plot with FCN1..inflammatory.monocyte prioritized
+ggplot(all_mean_proportions, aes(x = Sample, y = mean_proportion, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = position_stack(reverse = FALSE)) +  # Change reverse to TRUE if you want it on top
+  labs(x = "Sample", y = "Mean Proportion", fill = "Cell Type") +
+  theme(axis.text.x = element_text(size = 6, angle = 90, vjust = 0.5)) +
+  scale_y_continuous(labels = percent_format(scale = 100)) +
+  scale_fill_manual(values = custom_colors)  # Apply custom colors
+
+
+####Osteoclast ###
+# Reorder the 'Sample' factor based on the abundance of Osteoclast cells
+order_samples_osteoclast <- all_mean_proportions %>%
+  filter(Cell_Type == "Osteoclast") %>%
+  arrange(desc(mean_proportion)) %>%
+  pull(Sample)
+
+all_mean_proportions$Sample <- factor(all_mean_proportions$Sample, levels = order_samples_osteoclast)
+
+
+# Reorder Cell_Type so that Osteoclast comes first
+osteoclast_first <- c("Osteoclast", setdiff(all_mean_proportions$Cell_Type, "Osteoclast"))
+all_mean_proportions$Cell_Type <- factor(all_mean_proportions$Cell_Type, levels = osteoclast_first)
+
+
+# Create the stacked bar plot with Osteoclast prioritized
+ggplot(all_mean_proportions, aes(x = Sample, y = mean_proportion, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = position_stack(reverse = FALSE)) +  # Change reverse to TRUE if you want it on top
+  labs(x = "Sample", y = "Mean Proportion", fill = "Cell Type") +
+  theme(axis.text.x = element_text(size = 6, angle = 90, vjust = 0.5)) +
+  scale_y_continuous(labels = percent_format(scale = 100)) +
+  scale_fill_manual(values = custom_colors)  # Apply custom colors
+
