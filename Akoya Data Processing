@@ -1,0 +1,1886 @@
+library(SpatialExperiment)
+library(imcRtools)
+library(dplyr)
+library(ggplot2)
+library(viridis)
+library(pheatmap)
+library(viridis)
+library(cytomapper)
+
+spe <- readRDS("/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/Projects/Akoya\ ab\ design/111424_akoya/spe.rds")
+spe <- buildSpatialGraph(spe, img_id = "sample_id", type = "knn", k = 20)
+spe <- buildSpatialGraph(spe, img_id = "sample_id", type = "expansion", threshold = 20)
+spe <- buildSpatialGraph(spe, img_id = "sample_id", type = "delaunay", max_dist = 20)
+
+#test
+spe_4064backup <- buildSpatialGraph(spe_4064, img_id = "sample_id", type = "knn", k = 5)
+colPairNames(spe)
+
+#now that i picked the PC I need to save the RDS for later downstream analysis:
+results_folder <- '/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Niches_Analysis_041825'
+subDir <- "AkoyaCellCount"
+dir.create(file.path(results_folder, subDir), recursive = T)
+setwd(file.path(results_folder, subDir))
+
+#save the processed RDS after building spatial graph 
+saveRDS(spe, file = "akoya_spe.040625")
+#load the object#
+spe <- readRDS("/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Final_Analysis_040625/RDSObject/akoya_spe.040625")
+
+colPair(spe, "knn_interaction_graph")
+
+#now name the clusters
+cluster_celltype <- recode(spe$cluster_id,
+                           "1" = "NA",
+                           "2" = "EwS",
+                           "3" = "EwS",
+                           "4" = "EwS",
+                           "5" = "EwS",
+                           "6" = "Fibroblast",
+                           "7" = "Endothelial cells",
+                           "8" = "EwS",
+                           "9" = "EwS",
+                           "10" = "EwS",
+                           "11" = "EwS",
+                           "12" = "EwS",
+                           "13" = "EwS",
+                           "14" = "EwS",
+                           "15" = "EwS",
+                           "16" = "EwS",
+                           "17" = "EwS",
+                           "18" = "EwS",
+                           "19" = "CD163+ CD206 + Macrophage",
+                           "20" = "EwS",
+                           "21" = "Neutrophils",
+                           "22" = "EwS",
+                           "23" = "EwS",
+                           "24" = "EwS", 
+                           "25" = "B cells",
+                           "26" = "EwS",
+                           "27" = "CD8/CD4 T cells",
+                           "28" = "EwS",
+                           "29" = "EwS",
+                           "30" = "EwS",
+                           "31" = "EwS",
+                           "32" = "NA",
+                           "33" = "CD68+ Macrophage",
+                           "34" = "NA",
+                           "35" = "EwS",
+                           "36" = "EwS",
+                           "37" = "NA",
+                           "38" = "EwS")
+
+spe$celltype <- cluster_celltype
+
+colnames(colData(spe))
+unique(colData(spe)$sample_id)
+unique(colData(spe)$disease_status)
+#> unique(colData(spe)$sample_id)
+#[1] "4064"  "4512"  "4521"  "4523"  "4531"  "4539"  "4550"  "4553"  "4556"  "4559"  "4564N" "4577N" "4578"  "4582" 
+#[15] "4626"  "4668" 
+
+#linking disease status to sample id 
+# Create a named vector for mapping
+sample_to_status <- c(
+  "4064" = "Metastatic",
+  "4512" = "Metastatic",
+  "4521" = "Metastatic",
+  "4523" = "Metastatic",
+  "4577N" = "Metastatic",
+  "4578" = "Metastatic",
+  "4531" = "Localized",
+  "4539" = "Localized",
+  "4550" = "Localized",
+  "4553" = "Localized",
+  "4556" = "Localized",
+  "4559" = "Localized",
+  "4564N" = "Localized",
+  "4582" = "Localized",
+  "4626" = "Localized",
+  "4668" = "Localized"
+)
+
+# Assign disease status based on sample_id
+colData(spe)$disease_status <- sample_to_status[as.character(colData(spe)$sample_id)]
+
+table(colData(spe)$disease_status, colData(spe)$sample_id)
+
+#save new object#
+saveRDS(spe, file = "akoya_spe.aftercelltype.040625")
+#read RDS file#
+spe <- readRDS("/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Final_Analysis_040625/RDSObject/akoya_spe.aftercelltype.040625")
+
+#Set the color# 
+celltype_colors <- c(
+  "#999999",  muted("#377EB8"), "#4DAF4A", "#984EA3",
+  "#FF7F00", "#FFFF33", "#A65628", "#F781BF", "#E41A1C"
+)
+
+#spatial visualization#
+# Generate the Steinbock interaction graph# original
+#plotSpatial(spe[, spe$sample_id == "4578"], 
+#            node_color_by = "celltype", 
+#            img_id = "sample_id", 
+#            node_size_fix = 0.0001,
+#            draw_edges = TRUE, 
+#            colPairName = "expansion_interaction_graph", 
+#            nodes_first = FALSE, 
+#            edge_color_fix = "grey") + 
+#  scale_color_manual(values = viridis(length(unique(spe$celltype)))) +
+#  ggtitle("Steinbock Interaction Graph")
+
+plotSpatial(spe_4064,  
+            node_color_by = "celltype", 
+            img_id = "sample_id", 
+            node_size_fix = 0.00001,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            edge_color_fix = "grey") + 
+  scale_color_manual(values = celltype_colors) +
+  ggtitle("Steinbock Interaction Graph")
+ggsave(filename = "expansion_interaction_graph_4064.png", device = "png")
+#4521 
+plotSpatial(spe_4521,  
+            node_color_by = "celltype", 
+            img_id = "sample_id", 
+            node_size_fix = 0.00001,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            edge_color_fix = "grey") + 
+  scale_color_manual(values = celltype_colors) +
+  ggtitle("Steinbock Interaction Graph")
+ggsave(filename = "expansion_interaction_graph_4521.png", device = "png")
+
+plotSpatial(spe_4523,  
+            node_color_by = "celltype", 
+            img_id = "sample_id", 
+            node_size_fix = 0.00001,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            edge_color_fix = "grey") + 
+  scale_color_manual(values = celltype_colors) +
+  ggtitle("Steinbock Interaction Graph")
+ggsave(filename = "expansion_interaction_graph_4523.png", device = "png")
+
+plotSpatial(spe_4577,  
+            node_color_by = "celltype", 
+            img_id = "sample_id", 
+            node_size_fix = 0.00001,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            edge_color_fix = "grey") + 
+  scale_color_manual(values = celltype_colors) +
+  ggtitle("Steinbock Interaction Graph")
+ggsave(filename = "expansion_interaction_graph_4577N.png", device = "png")
+
+plotSpatial(spe_4578,  
+                 node_color_by = "celltype", 
+                 img_id = "sample_id", 
+                 node_size_fix = 0.00001,
+                 draw_edges = TRUE, 
+                 colPairName = "expansion_interaction_graph", 
+                 nodes_first = FALSE, 
+                 edge_color_fix = "grey") + 
+  scale_color_manual(values = celltype_colors) +
+  ggtitle("Steinbock Interaction Graph")
+ggsave(filename = "expansion_interaction_graph_4578.png", device = "png")
+
+plotSpatial(spe_4531,  
+            node_color_by = "celltype", 
+            img_id = "sample_id", 
+            node_size_fix = 0.00001,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            edge_color_fix = "grey") + 
+  scale_color_manual(values = celltype_colors) +
+  ggtitle("Steinbock Interaction Graph")
+ggsave(filename = "expansion_interaction_graph_4531.png", device = "png")
+
+plotSpatial(spe_4539,  
+            node_color_by = "celltype", 
+            img_id = "sample_id", 
+            node_size_fix = 0.00001,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            edge_color_fix = "grey") + 
+  scale_color_manual(values = celltype_colors) +
+  ggtitle("Steinbock Interaction Graph")
+ggsave(filename = "expansion_interaction_graph_4539.png", device = "png")
+
+plotSpatial(spe_4550,  
+            node_color_by = "celltype", 
+            img_id = "sample_id", 
+            node_size_fix = 0.00001,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            edge_color_fix = "grey") + 
+  scale_color_manual(values = celltype_colors) +
+  ggtitle("Steinbock Interaction Graph")
+ggsave(filename = "expansion_interaction_graph_4550.png", device = "png")
+
+plotSpatial(spe_4553,  
+            node_color_by = "celltype", 
+            img_id = "sample_id", 
+            node_size_fix = 0.00001,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            edge_color_fix = "grey") + 
+  scale_color_manual(values = celltype_colors) +
+  ggtitle("Steinbock Interaction Graph")
+ggsave(filename = "expansion_interaction_graph_4553.png", device = "png")
+
+plotSpatial(spe_4556,  
+            node_color_by = "celltype", 
+            img_id = "sample_id", 
+            node_size_fix = 0.00001,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            edge_color_fix = "grey") + 
+  scale_color_manual(values = celltype_colors) +
+  ggtitle("Steinbock Interaction Graph")
+ggsave(filename = "expansion_interaction_graph_4556.png", device = "png")
+
+plotSpatial(spe_4559,  
+            node_color_by = "celltype", 
+            img_id = "sample_id", 
+            node_size_fix = 0.00001,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            edge_color_fix = "grey") + 
+  scale_color_manual(values = celltype_colors) +
+  ggtitle("Steinbock Interaction Graph")
+ggsave(filename = "expansion_interaction_graph_4559.png", device = "png")
+
+plotSpatial(spe_4564,  
+            node_color_by = "celltype", 
+            img_id = "sample_id", 
+            node_size_fix = 0.00001,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            edge_color_fix = "grey") + 
+  scale_color_manual(values = celltype_colors) +
+  ggtitle("Steinbock Interaction Graph")
+ggsave(filename = "expansion_interaction_graph_4564N.png", device = "png")
+
+plotSpatial(spe_4582,  
+            node_color_by = "celltype", 
+            img_id = "sample_id", 
+            node_size_fix = 0.00001,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            edge_color_fix = "grey") + 
+  scale_color_manual(values = celltype_colors) +
+  ggtitle("Steinbock Interaction Graph")
+ggsave(filename = "expansion_interaction_graph_4582.png", device = "png")
+
+plotSpatial(spe_4626,  
+            node_color_by = "celltype", 
+            img_id = "sample_id", 
+            node_size_fix = 0.00001,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            edge_color_fix = "grey") + 
+  scale_color_manual(values = celltype_colors) +
+  ggtitle("Steinbock Interaction Graph")
+ggsave(filename = "expansion_interaction_graph_4626.png", device = "png")
+
+plotSpatial(spe_4668,  
+            node_color_by = "celltype", 
+            img_id = "sample_id", 
+            node_size_fix = 0.00001,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            edge_color_fix = "grey") + 
+  scale_color_manual(values = celltype_colors) +
+  ggtitle("Steinbock Interaction Graph")
+ggsave(filename = "expansion_interaction_graph_4668.png", device = "png")
+
+plotSpatial(spe[,spe$sample_id == "4512"],  
+                 node_color_by = "celltype", 
+                 img_id = "sample_id", 
+                 node_size_fix = 0.5,
+                 draw_edges = TRUE, 
+                 colPairName = "expansion_interaction_graph", 
+                 nodes_first = FALSE, 
+                 edge_color_fix = "grey") + 
+  scale_color_manual(values = celltype_colors) +
+  ggtitle("Steinbock Interaction Graph")
+ggsave(filename = "expansion_interaction_graph_4512.png", device = "png")
+
+##MIF Expression##
+#4064 MIF#
+plotSpatial(spe[,spe$sample_id == "4064"], 
+            node_color_by = "CD8", 
+            img_id = "sample_id", 
+            assay_type = "normcounts",
+            node_size_fix = 0.000001,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            directed = FALSE,
+            edge_color_fix = "grey") +
+  ggtitle("CD74 expression")
+ggsave(filename = "CD74_4064_2.png", device = "png")
+
+#4521 MIF 
+plotSpatial(spe[,spe$sample_id == "4521"], 
+            node_color_by = "MIF", 
+            img_id = "sample_id", 
+            assay_type = "normcounts",
+            node_size_fix = 0.5,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            directed = FALSE,
+            edge_color_fix = "grey") +
+  ggtitle("MIF expression")
+ggsave(filename = "MIF_4521.png", device = "png")
+
+#4523 MIF 
+plotSpatial(spe[,spe$sample_id == "4523"], 
+            node_color_by = "MIF", 
+            img_id = "sample_id", 
+            assay_type = "normcounts",
+            node_size_fix = 0.5,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            directed = FALSE,
+            edge_color_fix = "grey") +
+  ggtitle("MIF expression")
+ggsave(filename = "MIF_4523.png", device = "png")
+
+#4577N MIF#
+plotSpatial(spe[,spe$sample_id == "4577N"], 
+            node_color_by = "MIF", 
+            img_id = "sample_id", 
+            assay_type = "normcounts",
+            node_size_fix = 0.0001,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            directed = FALSE,
+            edge_color_fix = "grey") +
+  ggtitle("MIF expression")
+ggsave(filename = "MIF_4577N.png", device = "png")
+
+#4578 MIF#
+plotSpatial(spe[,spe$sample_id == "4578"], 
+            node_color_by = "MIF", 
+            img_id = "sample_id", 
+            assay_type = "normcounts",
+            node_size_fix = 0.0001,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            directed = FALSE,
+            edge_color_fix = "grey") +
+  ggtitle("MIF expression")
+  ggsave(filename = "MIF_4578.png", device = "png")
+
+#4550 MIF#
+plotSpatial(spe[,spe$sample_id == "4550"], 
+            node_color_by = "MIF", 
+            img_id = "sample_id", 
+            assay_type = "normcounts",
+            node_size_fix = 0.0001,
+            draw_edges = TRUE, 
+            colPairName = "expansion_interaction_graph", 
+            nodes_first = FALSE, 
+            directed = FALSE,
+            edge_color_fix = "grey") +
+  ggtitle("MIF expression")
+  ggsave(filename = "MIF_4550.png", device = "png")
+
+#4553 MIF#
+  plotSpatial(spe[,spe$sample_id == "4553"], 
+              node_color_by = "MIF", 
+              img_id = "sample_id", 
+              assay_type = "normcounts",
+              node_size_fix = 0.0001,
+              draw_edges = TRUE, 
+              colPairName = "expansion_interaction_graph", 
+              nodes_first = FALSE, 
+              directed = FALSE,
+              edge_color_fix = "grey") +
+    ggtitle("MIF expression")
+  ggsave(filename = "MIF_4553.png", device = "png")
+  
+#4556 MIF#
+  plotSpatial(spe[,spe$sample_id == "4556"], 
+              node_color_by = "MIF", 
+              img_id = "sample_id", 
+              assay_type = "normcounts",
+              node_size_fix = 0.0001,
+              draw_edges = TRUE, 
+              colPairName = "expansion_interaction_graph", 
+              nodes_first = FALSE, 
+              directed = FALSE,
+              edge_color_fix = "grey") +
+    ggtitle("MIF expression")
+  ggsave(filename = "MIF_4556.png", device = "png")
+  
+#4559 MIF#
+  plotSpatial(spe[,spe$sample_id == "4559"], 
+              node_color_by = "MIF", 
+              img_id = "sample_id", 
+              assay_type = "normcounts",
+              node_size_fix = 0.0001,
+              draw_edges = TRUE, 
+              colPairName = "expansion_interaction_graph", 
+              nodes_first = FALSE, 
+              directed = FALSE,
+              edge_color_fix = "grey") +
+    ggtitle("MIF expression")
+  ggsave(filename = "MIF_4559.png", device = "png")
+  
+  #4564N MIF#
+  plotSpatial(spe[,spe$sample_id == "4564N"], 
+              node_color_by = "MIF", 
+              img_id = "sample_id", 
+              assay_type = "normcounts",
+              node_size_fix = 0.0001,
+              draw_edges = TRUE, 
+              colPairName = "expansion_interaction_graph", 
+              nodes_first = FALSE, 
+              directed = FALSE,
+              edge_color_fix = "grey") +
+    ggtitle("MIF expression")
+  ggsave(filename = "MIF_4564N.png", device = "png")
+
+  #MIF 4539#
+  plotSpatial(spe[,spe$sample_id == "4539"], 
+              node_color_by = "MIF", 
+              img_id = "sample_id", 
+              assay_type = "normcounts",
+              node_size_fix = 0.0001,
+              draw_edges = TRUE, 
+              colPairName = "expansion_interaction_graph", 
+              nodes_first = FALSE, 
+              directed = FALSE,
+              edge_color_fix = "grey") +
+    ggtitle("MIF expression")
+  ggsave(filename = "MIF_4539.png", device = "png")
+  
+  #MIF 4582#
+  plotSpatial(spe[,spe$sample_id == "4582"], 
+              node_color_by = "MIF", 
+              img_id = "sample_id", 
+              assay_type = "normcounts",
+              node_size_fix = 0.0001,
+              draw_edges = TRUE, 
+              colPairName = "expansion_interaction_graph", 
+              nodes_first = FALSE, 
+              directed = FALSE,
+              edge_color_fix = "grey") +
+    ggtitle("MIF expression")
+  ggsave(filename = "MIF_4582.png", device = "png")
+  
+  #MIF 4626#
+  plotSpatial(spe[,spe$sample_id == "4626"], 
+              node_color_by = "MIF", 
+              img_id = "sample_id", 
+              assay_type = "normcounts",
+              node_size_fix = 0.0001,
+              draw_edges = TRUE, 
+              colPairName = "expansion_interaction_graph", 
+              nodes_first = FALSE, 
+              directed = FALSE,
+              edge_color_fix = "grey") +
+    ggtitle("MIF expression")
+  ggsave(filename = "MIF_4626.png", device = "png")
+  
+  #MIF 4668#
+  plotSpatial(spe[,spe$sample_id == "4668"], 
+              node_color_by = "MIF", 
+              img_id = "sample_id", 
+              assay_type = "normcounts",
+              node_size_fix = 0.0001,
+              draw_edges = TRUE, 
+              colPairName = "expansion_interaction_graph", 
+              nodes_first = FALSE, 
+              directed = FALSE,
+              edge_color_fix = "grey") +
+    ggtitle("MIF expression")
+  ggsave(filename = "MIF_4668.png", device = "png")
+  
+  plotSpatial(spe_4668, 
+              node_color_by = "CD74", 
+              img_id = "sample_id", 
+              assay_type = "normcounts",
+              node_size_fix = 0.0001,
+              draw_edges = TRUE, 
+              colPairName = "expansion_interaction_graph", 
+              nodes_first = FALSE, 
+              directed = FALSE,
+              edge_color_fix = "grey") +
+    ggtitle("MIF expression")
+  ggsave(filename = "MIF_4668.png", device = "png")
+  
+  #4512 MIF 
+  plotSpatial(spe[,spe$sample_id == "4512"], 
+              node_color_by = "MIF", 
+              img_id = "sample_id", 
+              assay_type = "normcounts",
+              node_size_fix = 0.5,
+              draw_edges = TRUE, 
+              colPairName = "expansion_interaction_graph", 
+              nodes_first = FALSE, 
+              directed = FALSE,
+              edge_color_fix = "grey") +
+  ggtitle("MIF expression")
+  ggsave(filename = "MIF_4512.png", device = "png")
+  
+  #4512 CD74
+  plotSpatial(spe_4512, 
+              node_color_by = "CD163", 
+              img_id = "sample_id", 
+              assay_type = "normcounts",
+              node_size_fix = 0.5,
+              draw_edges = TRUE, 
+              colPairName = "expansion_interaction_graph", 
+              nodes_first = FALSE, 
+              directed = FALSE,
+              edge_color_fix = "grey") +
+    ggtitle("MIF expression")
+  
+  
+  
+###
+#subset#
+unique(colData(spe)$sample_id)
+
+#subset all of the tumors 
+spe_4064 <- spe[, colData(spe)$sample_id == "4064"]
+spe_4512 <- spe[, colData(spe)$sample_id == "4512"]
+spe_4521 <- spe[, colData(spe)$sample_id == "4521"]
+spe_4523 <- spe[, colData(spe)$sample_id == "4523"]
+spe_4531 <- spe[, colData(spe)$sample_id == "4531"]
+spe_4539 <- spe[, colData(spe)$sample_id == "4539"]
+spe_4550 <- spe[, colData(spe)$sample_id == "4550"]
+spe_4553 <- spe[, colData(spe)$sample_id == "4553"]
+spe_4556 <- spe[, colData(spe)$sample_id == "4556"]
+spe_4559 <- spe[, colData(spe)$sample_id == "4559"]
+spe_4564 <- spe[, colData(spe)$sample_id == "4564N"]
+spe_4577 <- spe[, colData(spe)$sample_id == "4577N"]
+spe_4578 <- spe[, colData(spe)$sample_id == "4578"]
+spe_4582 <- spe[, colData(spe)$sample_id == "4582"]
+spe_4626 <- spe[, colData(spe)$sample_id == "4626"]
+spe_4668 <- spe[, colData(spe)$sample_id == "4668"]
+
+saveRDS(spe_4064, file = "spe_4064.040825")
+saveRDS(spe_4512, file = "spe_4512.040825")
+saveRDS(spe_4521, file = "spe_4521.040825")
+saveRDS(spe_4523, file = "spe_4523.040825")
+saveRDS(spe_4531, file = "spe_4531.040825")
+saveRDS(spe_4539, file = "spe_4539.040825")
+saveRDS(spe_4550, file = "spe_4550.040825")
+saveRDS(spe_4553, file = "spe_4553.040825")
+saveRDS(spe_4556, file = "spe_4556.040825")
+saveRDS(spe_4559, file = "spe_4559.040825")
+saveRDS(spe_4564, file = "spe_4564.040825")
+saveRDS(spe_4577, file = "spe_4577.040825")
+saveRDS(spe_4578, file = "spe_4578.040825")
+saveRDS(spe_4582, file = "spe_4582.040825")
+saveRDS(spe_4626, file = "spe_4626.040825")
+saveRDS(spe_4668, file = "spe_4668.040825")
+
+# By celltypes
+spe_4064 <- aggregateNeighbors(spe_4064, 
+                          colPairName = "knn_interaction_graph", 
+                          aggregate_by = "metadata", 
+                          count_by = "celltype")
+
+spe_4064backup <- aggregateNeighbors(spe_4064, 
+                               colPairName = "knn_interaction_graph", 
+                               aggregate_by = "metadata", 
+                               count_by = "celltype")
+
+spe_4512 <- aggregateNeighbors(spe_4512, 
+                                 colPairName = "knn_interaction_graph", 
+                                 aggregate_by = "metadata", 
+                                 count_by = "celltype")
+
+spe_4521 <- aggregateNeighbors(spe_4521, 
+                                 colPairName = "knn_interaction_graph", 
+                                 aggregate_by = "metadata", 
+                                 count_by = "celltype")
+
+spe_4523 <- aggregateNeighbors(spe_4523, 
+                                 colPairName = "knn_interaction_graph", 
+                                 aggregate_by = "metadata", 
+                                 count_by = "celltype")
+
+spe_4531 <- aggregateNeighbors(spe_4531, 
+                                 colPairName = "knn_interaction_graph", 
+                                 aggregate_by = "metadata", 
+                                 count_by = "celltype")
+
+spe_4539 <- aggregateNeighbors(spe_4539, 
+                                 colPairName = "knn_interaction_graph", 
+                                 aggregate_by = "metadata", 
+                                 count_by = "celltype")
+
+spe_4550 <- aggregateNeighbors(spe_4550, 
+                                 colPairName = "knn_interaction_graph", 
+                                 aggregate_by = "metadata", 
+                                 count_by = "celltype")
+
+spe_4553 <- aggregateNeighbors(spe_4553, 
+                                 colPairName = "knn_interaction_graph", 
+                                 aggregate_by = "metadata", 
+                                 count_by = "celltype")
+
+spe_4556 <- aggregateNeighbors(spe_4556, 
+                                 colPairName = "knn_interaction_graph", 
+                                 aggregate_by = "metadata", 
+                                 count_by = "celltype")
+
+spe_4559 <- aggregateNeighbors(spe_4559, 
+                                 colPairName = "knn_interaction_graph", 
+                                 aggregate_by = "metadata", 
+                                 count_by = "celltype")
+
+spe_4564 <- aggregateNeighbors(spe_4564, 
+                                 colPairName = "knn_interaction_graph", 
+                                 aggregate_by = "metadata", 
+                                 count_by = "celltype")
+
+spe_4577 <- aggregateNeighbors(spe_4577, 
+                                 colPairName = "knn_interaction_graph", 
+                                 aggregate_by = "metadata", 
+                                 count_by = "celltype")
+
+spe_4578 <- aggregateNeighbors(spe_4578, 
+                                 colPairName = "knn_interaction_graph", 
+                                 aggregate_by = "metadata", 
+                                 count_by = "celltype")
+
+spe_4582 <- aggregateNeighbors(spe_4582, 
+                                 colPairName = "knn_interaction_graph", 
+                                 aggregate_by = "metadata", 
+                                 count_by = "celltype")
+
+spe_4626 <- aggregateNeighbors(spe_4626, 
+                                 colPairName = "knn_interaction_graph", 
+                                 aggregate_by = "metadata", 
+                                 count_by = "celltype")
+
+spe_4668 <- aggregateNeighbors(spe_4668, 
+                                 colPairName = "knn_interaction_graph", 
+                                 aggregate_by = "metadata", 
+                                 count_by = "celltype")
+
+#now save these objects
+saveRDS(spe_4064, file = "spe_4064.neighbor.040825")
+saveRDS(spe_4512, file = "spe_4512.neighbor.040825")
+saveRDS(spe_4521, file = "spe_4521.neighbor.040825")
+saveRDS(spe_4523, file = "spe_4523.neighbor.040825")
+saveRDS(spe_4531, file = "spe_4531.neighbor.040825")
+saveRDS(spe_4539, file = "spe_4539.neighbor.040825")
+saveRDS(spe_4550, file = "spe_4550.neighbor.040825")
+saveRDS(spe_4553, file = "spe_4553.neighbor.040825")
+saveRDS(spe_4556, file = "spe_4556.neighbor.040825")
+saveRDS(spe_4559, file = "spe_4559.neighbor.040825")
+saveRDS(spe_4564, file = "spe_4564.neighbor.040825")
+saveRDS(spe_4577, file = "spe_4577.neighbor.040825")
+saveRDS(spe_4578, file = "spe_4578.neighbor.040825")
+saveRDS(spe_4582, file = "spe_4582.neighbor.040825")
+saveRDS(spe_4626, file = "spe_4626.neighbor.040825")
+saveRDS(spe_4668, file = "spe_4668.neighbor.040825")
+
+#load objects
+spe_4668 <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Final_Analysis_040625/RDSObject/spe_4668.neighbor.040825")
+spe_4626 <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Final_Analysis_040625/RDSObject/spe_4626.neighbor.040825")
+spe_4582 <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Final_Analysis_040625/RDSObject/spe_4582.neighbor.040825")
+spe_4578 <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Final_Analysis_040625/RDSObject/spe_4578.neighbor.040825")
+spe_4577 <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Final_Analysis_040625/RDSObject/spe_4577.neighbor.040825")
+spe_4564 <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Final_Analysis_040625/RDSObject/spe_4564.neighbor.040825")
+spe_4559 <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Final_Analysis_040625/RDSObject/spe_4559.neighbor.040825")
+spe_4556 <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Final_Analysis_040625/RDSObject/spe_4556.neighbor.040825")
+spe_4553 <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Final_Analysis_040625/RDSObject/spe_4553.neighbor.040825")
+spe_4550 <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Final_Analysis_040625/RDSObject/spe_4550.neighbor.040825")
+spe_4539 <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Final_Analysis_040625/RDSObject/spe_4539.neighbor.040825")
+spe_4531 <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Final_Analysis_040625/RDSObject/spe_4531.neighbor.040825")
+spe_4523 <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Final_Analysis_040625/RDSObject/spe_4523.neighbor.040825")
+spe_4521 <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Final_Analysis_040625/RDSObject/spe_4521.neighbor.040825")
+spe_4512 <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Final_Analysis_040625/RDSObject/spe_4512.neighbor.040825")
+spe_4064 <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Final_Analysis_040625/RDSObject/spe_4064.neighbor.040825")
+
+set.seed(220705)
+
+####### 4064 neighbor analysis#######
+cn_1 <- kmeans(spe_4064$aggregatedNeighbors, centers = 6)
+spe_4064$cn_celltypes <- as.factor(cn_1$cluster)
+
+plotSpatial(spe_4064, 
+            node_color_by = "cn_celltypes", 
+            img_id = "sample_id", 
+            node_size_fix = 0.5) +
+  scale_color_brewer(palette = "Set3")
+ggsave(filename = "Neighbor_4064_k4.png", device = "png")
+
+#the total number of cells per cell type and CN.#
+for_plot <- table(as.character(spe_4064$cn_celltypes), spe_4064$celltype)
+
+pheatmap(for_plot, 
+         color = viridis(100), display_numbers = TRUE, 
+         number_color = "white", number_format = "%.0f")
+
+#Next, we can observe per cell type the fraction of CN that they are distributed across.#
+for_plot <- prop.table(table(as.character(spe_4064$cn_celltypes), spe_4064$celltype), margin = 2)
+
+pheatmap(for_plot, 
+         color = viridis(100), display_numbers = TRUE, 
+         number_color = "white", number_format = "%.2f")
+
+#Similarly, we can visualize the fraction of each CN made up of each cell type.
+for_plot <- prop.table(table(as.character(spe_4064$cn_celltypes), spe_4064$celltype), margin = 1)
+
+pheatmap(for_plot, 
+         color = viridis(100), display_numbers = TRUE, 
+         number_color = "white", number_format = "%.2f")
+
+#This visualization can also be scaled by column to account for the relative cell type abundance.
+pheatmap(for_plot, 
+         color = colorRampPalette(c("dark blue", "white", "dark red"))(100), 
+         scale = "column")
+
+library(lisaClust)
+regionMap(spe_4064, 
+          cellType = "celltype",
+          region = "cn_celltypes")
+
+spe_4064backup <- patchDetection(spe_4064, 
+                           patch_cells = spe_4064$celltype == "EwS",
+                           img_id = "sample_id",
+                           expand_by = 1,
+                           min_patch_size = 10,
+                           colPairName = "knn_interaction_graph",
+                           BPPARAM = SnowParam(workers = 10))
+
+spe_4064 <- patchDetection(spe_4064, 
+                           patch_cells = spe_4064$celltype == "EwS",
+                           img_id = "sample_id",
+                           expand_by = 1,
+                           min_patch_size = 10,
+                           colPairName = "knn_interaction_graph",
+                           BPPARAM = BiocParallel::MulticoreParam(workers = 10))
+plotSpatial(spe_4064, 
+            node_color_by = "patch_id", 
+            img_id = "sample_id", 
+            node_size_fix = 0.5) +
+  theme(legend.position = "none") +
+  scale_color_manual(values = rev(colors()))
+
+
+
+#patch detection#
+library(tidyverse)
+library(BiocParallel)
+
+spe_4064 <- patchDetection(spe_4064, 
+                      patch_cells = spe_4064$celltype == "EwS",
+                      img_id = "sample_id",
+                      expand_by = 1,
+                      min_patch_size = 10,
+                      colPairName = "knn_interaction_graph",
+                      BPPARAM = BiocParallel::SerialParam())
+
+colData(spe_4064) %>% as_tibble() %>%
+  group_by(patch_id, sample_id) %>%
+  summarize(Tcell_count = sum(celltype == "CD163+ CD206 + Macrophage"),
+            patch_size = n(),
+            Tcell_freq = Tcell_count / patch_size) %>%
+  filter(!is.na(patch_id)) %>%
+  ggplot() +
+  geom_point(aes(log10(patch_size), Tcell_freq, color = sample_id)) +
+  theme_classic()
+
+patch_size <- patchSize(spe_4064, "patch_id")
+
+patch_size <- merge(patch_size, 
+                    colData(spe_4064)[match(patch_size$patch_id, spe_4064$patch_id),], 
+                    by = "patch_id")
+
+ggplot(as.data.frame(patch_size)) + 
+  geom_boxplot(aes(x = "", y = log10(size))) +
+  geom_jitter(aes(x = "", y = log10(size)), width = 0.1)
+
+#memory issue so i can't run this 
+spe_4064 <- minDistToCells(spe_4064, 
+                      x_cells = !is.na(spe_4064$patch_id), 
+                      img_id = "sample_id")
+
+####calculate interaction####
+library(scales)
+
+# Randomly select 45,000 cell column names
+downsampled_cells <- sample(colnames(spe_4064), 45000)
+
+# Subset the SpatialExperiment
+spe_4064_down <- spe_4064[, downsampled_cells]
+
+  outtest <- testInteractions(spe_4064_down, 
+                        group_by = "sample_id",
+                        label = "celltype", 
+                        colPairName = "knn_interaction_graph",
+                        BPPARAM = BiocParallel::MulticoreParam(workers = 14))
+
+  outtest %>% as_tibble() %>%
+  group_by(from_label, to_label) %>%
+  summarize(sum_sigval = sum(sigval, na.rm = TRUE)) %>%
+  ggplot() +
+  geom_tile(aes(from_label, to_label, fill = sum_sigval)) +
+    scale_fill_gradient2(low = muted("blue"), mid = "white", high = muted("red")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+out <- testInteractions(spe_4064, 
+                        group_by = "sample_id",
+                        label = "celltype", 
+                        colPairName = "knn_interaction_graph",
+                        method = "patch", 
+                        patch_size = 3,
+                        BPPARAM = BiocParallel::MulticoreParam(workers = 14))
+
+out %>% as_tibble() %>%
+  group_by(from_label, to_label) %>%
+  summarize(sum_sigval = sum(sigval, na.rm = TRUE)) %>%
+  ggplot() +
+  geom_tile(aes(from_label, to_label, fill = sum_sigval)) +
+  scale_fill_gradient2(low = muted("blue"), mid = "white", high = muted("red")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#######
+####### 4564 neighbor analysis#######
+cn_1 <- kmeans(spe_4564$aggregatedNeighbors, centers = 6)
+spe_4564$cn_celltypes <- as.factor(cn_1$cluster)
+
+plotSpatial(spe_4564, 
+            node_color_by = "cn_celltypes", 
+            img_id = "sample_id", 
+            node_size_fix = 0.5) +
+  scale_color_brewer(palette = "Set3")
+ggsave(filename = "Neighbor_4064_k4.png", device = "png")
+
+#the total number of cells per cell type and CN.#
+for_plot <- table(as.character(spe_4564$cn_celltypes), spe_4564$celltype)
+
+pheatmap(for_plot, 
+         color = viridis(100), display_numbers = TRUE, 
+         number_color = "white", number_format = "%.0f")
+
+#Next, we can observe per cell type the fraction of CN that they are distributed across.#
+for_plot <- prop.table(table(as.character(spe_4564$cn_celltypes), spe_4564$celltype), margin = 2)
+
+pheatmap(for_plot, 
+         color = viridis(100), display_numbers = TRUE, 
+         number_color = "white", number_format = "%.2f")
+
+#Similarly, we can visualize the fraction of each CN made up of each cell type.
+for_plot <- prop.table(table(as.character(spe_4564$cn_celltypes), spe_4564$celltype), margin = 1)
+
+pheatmap(for_plot, 
+         color = viridis(100), display_numbers = TRUE, 
+         number_color = "white", number_format = "%.2f")
+
+#This visualization can also be scaled by column to account for the relative cell type abundance.
+pheatmap(for_plot, 
+         color = colorRampPalette(c("dark blue", "white", "dark red"))(100), 
+         scale = "column")
+
+library(lisaClust)
+regionMap(spe_4564, 
+          cellType = "celltype",
+          region = "cn_celltypes")
+
+spe_4564backup <- patchDetection(spe_4564, 
+                                 patch_cells = spe_4564$celltype == "EwS",
+                                 img_id = "sample_id",
+                                 expand_by = 1,
+                                 min_patch_size = 10,
+                                 colPairName = "knn_interaction_graph",
+                                 BPPARAM = SnowParam(workers = 10))
+
+spe_4564 <- patchDetection(spe_4564, 
+                           patch_cells = spe_4564$celltype == "EwS",
+                           img_id = "sample_id",
+                           expand_by = 1,
+                           min_patch_size = 10,
+                           colPairName = "knn_interaction_graph",
+                           BPPARAM = BiocParallel::MulticoreParam(workers = 10))
+plotSpatial(spe_4564, 
+            node_color_by = "patch_id", 
+            img_id = "sample_id", 
+            node_size_fix = 0.5) +
+  theme(legend.position = "none") +
+  scale_color_manual(values = rev(colors()))
+
+
+
+#patch detection#
+library(tidyverse)
+library(BiocParallel)
+
+spe_4564 <- patchDetection(spe_4564, 
+                           patch_cells = spe_4564$celltype == "EwS",
+                           img_id = "sample_id",
+                           expand_by = 1,
+                           min_patch_size = 10,
+                           colPairName = "knn_interaction_graph",
+                           BPPARAM = BiocParallel::SerialParam())
+
+colData(spe_4564) %>% as_tibble() %>%
+  group_by(patch_id, sample_id) %>%
+  summarize(Tcell_count = sum(celltype == "CD163+ CD206 + Macrophage"),
+            patch_size = n(),
+            Tcell_freq = Tcell_count / patch_size) %>%
+  filter(!is.na(patch_id)) %>%
+  ggplot() +
+  geom_point(aes(log10(patch_size), Tcell_freq, color = sample_id)) +
+  theme_classic()
+
+patch_size <- patchSize(spe_4564, "patch_id")
+
+patch_size <- merge(patch_size, 
+                    colData(spe_4564)[match(patch_size$patch_id, spe_4564$patch_id),], 
+                    by = "patch_id")
+
+ggplot(as.data.frame(patch_size)) + 
+  geom_boxplot(aes(x = "", y = log10(size))) +
+  geom_jitter(aes(x = "", y = log10(size)), width = 0.1)
+
+#memory issue so i can't run this 
+spe_4564 <- minDistToCells(spe_4564, 
+                           x_cells = !is.na(spe_4564$patch_id), 
+                           img_id = "sample_id")
+
+####calculate interaction####
+library(scales)
+
+# Randomly select 45,000 cell column names
+downsampled_cells <- sample(colnames(spe_4564), 45000)
+
+# Subset the SpatialExperiment
+spe_4564_down <- spe_4564[, downsampled_cells]
+
+outtest_4564 <- testInteractions(spe_4564_down, 
+                            group_by = "sample_id",
+                            label = "celltype", 
+                            colPairName = "knn_interaction_graph",
+                            BPPARAM = BiocParallel::MulticoreParam(workers = 14))
+
+outtest_4564 %>% as_tibble() %>%
+  group_by(from_label, to_label) %>%
+  summarize(sum_sigval = sum(sigval, na.rm = TRUE)) %>%
+  ggplot() +
+  geom_tile(aes(from_label, to_label, fill = sum_sigval)) +
+  scale_fill_gradient2(low = muted("blue"), mid = "white", high = muted("red")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+out <- testInteractions(spe_4064, 
+                        group_by = "sample_id",
+                        label = "celltype", 
+                        colPairName = "knn_interaction_graph",
+                        method = "patch", 
+                        patch_size = 3,
+                        BPPARAM = BiocParallel::MulticoreParam(workers = 14))
+
+out %>% as_tibble() %>%
+  group_by(from_label, to_label) %>%
+  summarize(sum_sigval = sum(sigval, na.rm = TRUE)) %>%
+  ggplot() +
+  geom_tile(aes(from_label, to_label, fill = sum_sigval)) +
+  scale_fill_gradient2(low = muted("blue"), mid = "white", high = muted("red")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+#####
+
+# Subset to only the desired cell type
+target_cells_4064 <- spe_4064[, spe_4064$celltype == "CD8/CD4 T cells"]
+target_cells_4512 <- spe_4512[, spe_4512$celltype == "CD8/CD4 T cells"]
+target_cells_4521 <- spe_4521[, spe_4521$celltype == "CD8/CD4 T cells"]
+target_cells_4523 <- spe_4523[, spe_4523$celltype == "CD8/CD4 T cells"]
+target_cells_4531 <- spe_4531[, spe_4531$celltype == "CD8/CD4 T cells"]
+target_cells_4539 <- spe_4539[, spe_4539$celltype == "CD8/CD4 T cells"]
+target_cells_4550 <- spe_4550[, spe_4550$celltype == "CD8/CD4 T cells"]
+target_cells_4553 <- spe_4553[, spe_4553$celltype == "CD8/CD4 T cells"]
+target_cells_4556 <- spe_4556[, spe_4556$celltype == "CD8/CD4 T cells"]
+target_cells_4559 <- spe_4559[, spe_4559$celltype == "CD8/CD4 T cells"]
+target_cells_4564 <- spe_4564[, spe_4564$celltype == "CD8/CD4 T cells"]
+target_cells_4577 <- spe_4577[, spe_4577$celltype == "CD8/CD4 T cells"]
+target_cells_4578 <- spe_4578[, spe_4578$celltype == "CD8/CD4 T cells"]
+target_cells_4582 <- spe_4582[, spe_4582$celltype == "CD8/CD4 T cells"]
+target_cells_4626 <- spe_4626[, spe_4626$celltype == "CD8/CD4 T cells"]
+target_cells_4668 <- spe_4668[, spe_4668$celltype == "CD8/CD4 T cells"]
+
+# Step 2: Count number of such cells per cluster
+#cell_counts <- table(as.character(target_cells$cn_celltypes))
+# # Total count across all clusters
+  #total_cells <- sum(cell_counts)
+#####
+cell_counts_4064 <- table(as.character(target_cells_4064$cn_celltypes))
+cell_counts_4512 <- table(as.character(target_cells_4512$cn_celltypes))
+cell_counts_4521 <- table(as.character(target_cells_4521$cn_celltypes))
+cell_counts_4523 <- table(as.character(target_cells_4523$cn_celltypes))
+cell_counts_4531 <- table(as.character(target_cells_4531$cn_celltypes))
+cell_counts_4539 <- table(as.character(target_cells_4539$cn_celltypes))
+cell_counts_4550 <- table(as.character(target_cells_4550$cn_celltypes))
+cell_counts_4553 <- table(as.character(target_cells_4553$cn_celltypes))
+cell_counts_4556 <- table(as.character(target_cells_4556$cn_celltypes))
+cell_counts_4559 <- table(as.character(target_cells_4559$cn_celltypes))
+cell_counts_4564 <- table(as.character(target_cells_4564$cn_celltypes))
+cell_counts_4577 <- table(as.character(target_cells_4577$cn_celltypes))
+cell_counts_4578 <- table(as.character(target_cells_4578$cn_celltypes))
+cell_counts_4582 <- table(as.character(target_cells_4582$cn_celltypes))
+cell_counts_4626 <- table(as.character(target_cells_4626$cn_celltypes))
+cell_counts_4668 <- table(as.character(target_cells_4668$cn_celltypes))
+
+# Total count across all clusters
+total_cells <- sum(cell_counts_4668)
+print(total_cells)
+
+
+df_total <- data.frame(
+  cell_type = "CD163+ CD206+ Macrophage",
+  count = total_cells
+)
+
+ggplot(df_total, aes(x = cell_type, y = count)) +
+  geom_col() +
+  labs(title = "Total CD163+ CD206+ Macrophage Cells", x = "", y = "Cell Count") +
+  theme_minimal()
+
+# Plot
+ggplot(df_counts, aes(x = patient_id, y = cell_count)) +
+  geom_col() +
+  labs(title = "CD163+ CD206+ Macrophage Cell Count per Patient",
+       x = "Patient ID", y = "Cell Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+########## after processing the large spe and naming the cell type: now will count the cell ##########
+#start with spe_4064# 
+#extract data 
+data_4064 <- colData(spe_4064)
+data_4064 <- as.data.frame(data_4064)
+
+table(data_4064$celltype)
+table4064 <- table(data_4064$celltype)
+Immunecells_4064 <- table4064[c("CD8/CD4 T cells", "EwS", "CD163+ CD206 + Macrophage")]
+Immunecells_4064<- data.frame(Immunecells_4064)
+colnames(Immunecells_4064) <- c("CellType", "EWS4064")
+
+Immunecells_all <- Immunecells_4064
+#####
+prop.table(table(data_4064$celltype))
+sort(prop.table(table(data_4064$celltype)))
+data.frame(fraction=sort(prop.table(table(data_4064$celltype))), sample="4064")
+fraction_4064 <- data.frame(fraction=sort(prop.table(table(data_4064$celltype))), sample="4064")
+
+ggplot(fraction_4064,
+       aes(x = fraction.Var1,
+           y = fraction.Freq, 
+           fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4064") + 
+  labs(x = "Cell Type",
+       y = "Proportions") 
+
+#reorder it horizontally 
+p <- ggplot(fraction_4064,
+       aes(x = reorder(fraction.Var1, -fraction.Freq),
+           y = fraction.Freq, 
+           fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4064 Proportion") + 
+  labs(x = "Cell Type",
+       y = "Proportions") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+
+# Save as PNG
+ggsave("EWS4064_proportion_plot.png", plot = p, width = 10, height = 10, dpi = 300)
+
+####4512###
+#extract data 
+data_4512 <- colData(spe_4512)
+data_4512 <- as.data.frame(data_4512)
+
+table(data_4512$celltype)
+
+table4512<- table(data_4512$celltype)
+Immunecells_4512 <- table4512[c("CD8/CD4 T cells", "EwS", "CD163+ CD206 + Macrophage")]
+Immunecells_4512<- data.frame(Immunecells_4512)
+colnames(Immunecells_4512) <- c("CellType", "EWS4512")
+
+# Then merge into the existing immunecells_all dataframe
+Immunecells_all <- merge(Immunecells_all, Immunecells_4512, by = "CellType", all = TRUE)
+
+prop.table(table(data_4512$celltype))
+sort(prop.table(table(data_4512$celltype)))
+data.frame(fraction=sort(prop.table(table(data_4512$celltype))), sample="4512")
+fraction_4512 <- data.frame(fraction=sort(prop.table(table(data_4512$celltype))), sample="4512")
+
+ggplot(fraction_4512,
+       aes(x = fraction.Var1,
+           y = fraction.Freq, 
+           fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4512") + 
+  labs(x = "Cell Type",
+       y = "Proportions") 
+
+#reorder it horizontally 
+p <- ggplot(fraction_4512,
+            aes(x = reorder(fraction.Var1, -fraction.Freq),
+                y = fraction.Freq, 
+                fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4512 Proportion") + 
+  labs(x = "Cell Type",
+       y = "Proportions") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+
+# Save as PNG
+ggsave("EWS4512_proportion_plot.png", plot = p, width = 10, height = 10, dpi = 300)
+
+
+####4668###
+#extract data 
+data_4668 <- colData(spe_4668)
+data_4668 <- as.data.frame(data_4668)
+
+table(data_4668$celltype)
+
+table4668<- table(data_4668$celltype)
+Immunecells_4668 <- table4668[c("CD8/CD4 T cells", "EwS", "CD163+ CD206 + Macrophage")]
+Immunecells_4668<- data.frame(Immunecells_4668)
+colnames(Immunecells_4668) <- c("CellType", "EWS4668")
+
+# Then merge into the existing immunecells_all dataframe
+Immunecells_all <- merge(Immunecells_all, Immunecells_4668, by = "CellType", all = TRUE)
+
+prop.table(table(data_4668$celltype))
+sort(prop.table(table(data_4668$celltype)))
+data.frame(fraction=sort(prop.table(table(data_4668$celltype))), sample="4668")
+fraction_4668 <- data.frame(fraction=sort(prop.table(table(data_4668$celltype))), sample="4668")
+
+ggplot(fraction_4668,
+       aes(x = fraction.Var1,
+           y = fraction.Freq, 
+           fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4668") + 
+  labs(x = "Cell Type",
+       y = "Proportions") 
+
+#reorder it horizontally 
+p <- ggplot(fraction_4668,
+            aes(x = reorder(fraction.Var1, -fraction.Freq),
+                y = fraction.Freq, 
+                fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4668 Proportion") + 
+  labs(x = "Cell Type",
+       y = "Proportions") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+
+# Save as PNG
+ggsave("EWS4668_proportion_plot.png", plot = p, width = 10, height = 10, dpi = 300)
+
+####4626###
+#extract data 
+data_4626 <- colData(spe_4626)
+data_4626 <- as.data.frame(data_4626)
+
+table(data_4626$celltype)
+
+table4626<- table(data_4626$celltype)
+Immunecells_4626 <- table4626[c("CD8/CD4 T cells", "EwS", "CD163+ CD206 + Macrophage")]
+Immunecells_4626<- data.frame(Immunecells_4626)
+colnames(Immunecells_4626) <- c("CellType", "EWS4626")
+# Then merge into the existing immunecells_all dataframe
+Immunecells_all <- merge(Immunecells_all, Immunecells_4626, by = "CellType", all = TRUE)
+
+prop.table(table(data_4626$celltype))
+sort(prop.table(table(data_4626$celltype)))
+data.frame(fraction=sort(prop.table(table(data_4626$celltype))), sample="4626")
+fraction_4626 <- data.frame(fraction=sort(prop.table(table(data_4626$celltype))), sample="4626")
+
+ggplot(fraction_4626,
+       aes(x = fraction.Var1,
+           y = fraction.Freq, 
+           fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4626") + 
+  labs(x = "Cell Type",
+       y = "Proportions") 
+
+#reorder it horizontally 
+p <- ggplot(fraction_4626,
+            aes(x = reorder(fraction.Var1, -fraction.Freq),
+                y = fraction.Freq, 
+                fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4626 Proportion") + 
+  labs(x = "Cell Type",
+       y = "Proportions") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+
+# Save as PNG
+ggsave("EWS4626_proportion_plot.png", plot = p, width = 10, height = 10, dpi = 300)
+
+####4582###
+#extract data 
+data_4582 <- colData(spe_4582)
+data_4582 <- as.data.frame(data_4582)
+
+table(data_4582$celltype)
+table4582<- table(data_4582$celltype)
+Immunecells_4582 <- table4582[c("CD8/CD4 T cells", "EwS", "CD163+ CD206 + Macrophage")]
+Immunecells_4582<- data.frame(Immunecells_4582)
+colnames(Immunecells_4582) <- c("CellType", "EWS4582")
+# Then merge into the existing immunecells_all dataframe
+Immunecells_all <- merge(Immunecells_all, Immunecells_4582, by = "CellType", all = TRUE)
+
+prop.table(table(data_4582$celltype))
+sort(prop.table(table(data_4582$celltype)))
+data.frame(fraction=sort(prop.table(table(data_4582$celltype))), sample="4582")
+fraction_4582 <- data.frame(fraction=sort(prop.table(table(data_4582$celltype))), sample="4582")
+
+ggplot(fraction_4582,
+       aes(x = fraction.Var1,
+           y = fraction.Freq, 
+           fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4582") + 
+  labs(x = "Cell Type",
+       y = "Proportions") 
+
+#reorder it horizontally 
+p <- ggplot(fraction_4582,
+            aes(x = reorder(fraction.Var1, -fraction.Freq),
+                y = fraction.Freq, 
+                fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4582 Proportion") + 
+  labs(x = "Cell Type",
+       y = "Proportions") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+
+# Save as PNG
+ggsave("EWS4582_proportion_plot.png", plot = p, width = 10, height = 10, dpi = 300)
+
+
+####4564###
+#extract data 
+data_4564 <- colData(spe_4564)
+data_4564 <- as.data.frame(data_4564)
+
+table(data_4564$celltype)
+
+table4564<- table(data_4564$celltype)
+Immunecells_4564 <- table4564[c("CD8/CD4 T cells", "EwS", "CD163+ CD206 + Macrophage")]
+Immunecells_4564<- data.frame(Immunecells_4564)
+colnames(Immunecells_4564) <- c("CellType", "EWS4564")
+# Then merge into the existing immunecells_all dataframe
+Immunecells_all <- merge(Immunecells_all, Immunecells_4564, by = "CellType", all = TRUE)
+
+prop.table(table(data_4564$celltype))
+sort(prop.table(table(data_4564$celltype)))
+data.frame(fraction=sort(prop.table(table(data_4564$celltype))), sample="4564")
+fraction_4564 <- data.frame(fraction=sort(prop.table(table(data_4564$celltype))), sample="4564")
+
+ggplot(fraction_4564,
+       aes(x = fraction.Var1,
+           y = fraction.Freq, 
+           fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4564") + 
+  labs(x = "Cell Type",
+       y = "Proportions") 
+
+#reorder it horizontally 
+p <- ggplot(fraction_4564,
+            aes(x = reorder(fraction.Var1, -fraction.Freq),
+                y = fraction.Freq, 
+                fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4564 Proportion") + 
+  labs(x = "Cell Type",
+       y = "Proportions") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+
+# Save as PNG
+ggsave("EWS4564_proportion_plot.png", plot = p, width = 10, height = 10, dpi = 300)
+
+
+####4559###
+#extract data 
+data_4559 <- colData(spe_4559)
+data_4559 <- as.data.frame(data_4559)
+
+table(data_4559$celltype)
+
+table4559<- table(data_4559$celltype)
+Immunecells_4559 <- table4559[c("CD8/CD4 T cells", "EwS", "CD163+ CD206 + Macrophage")]
+Immunecells_4559<- data.frame(Immunecells_4559)
+colnames(Immunecells_4559) <- c("CellType", "EWS4559")
+# Then merge into the existing immunecells_all dataframe
+Immunecells_all <- merge(Immunecells_all, Immunecells_4559, by = "CellType", all = TRUE)
+
+prop.table(table(data_4559$celltype))
+sort(prop.table(table(data_4559$celltype)))
+data.frame(fraction=sort(prop.table(table(data_4559$celltype))), sample="4559")
+fraction_4559 <- data.frame(fraction=sort(prop.table(table(data_4559$celltype))), sample="4559")
+
+ggplot(fraction_4559,
+       aes(x = fraction.Var1,
+           y = fraction.Freq, 
+           fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4559") + 
+  labs(x = "Cell Type",
+       y = "Proportions") 
+
+#reorder it horizontally 
+p <- ggplot(fraction_4559,
+            aes(x = reorder(fraction.Var1, -fraction.Freq),
+                y = fraction.Freq, 
+                fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4559 Proportion") + 
+  labs(x = "Cell Type",
+       y = "Proportions") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+
+# Save as PNG
+ggsave("EWS4559_proportion_plot.png", plot = p, width = 10, height = 10, dpi = 300)
+
+####4556###
+#extract data 
+data_4556 <- colData(spe_4556)
+data_4556 <- as.data.frame(data_4556)
+
+table(data_4556$celltype)
+table4556<- table(data_4556$celltype)
+Immunecells_4556 <- table4556[c("CD8/CD4 T cells", "EwS", "CD163+ CD206 + Macrophage")]
+Immunecells_4556<- data.frame(Immunecells_4556)
+colnames(Immunecells_4556) <- c("CellType", "EWS4556")
+# Then merge into the existing immunecells_all dataframe
+Immunecells_all <- merge(Immunecells_all, Immunecells_4556, by = "CellType", all = TRUE)
+
+prop.table(table(data_4556$celltype))
+sort(prop.table(table(data_4556$celltype)))
+data.frame(fraction=sort(prop.table(table(data_4556$celltype))), sample="4556")
+fraction_4556 <- data.frame(fraction=sort(prop.table(table(data_4556$celltype))), sample="4556")
+
+ggplot(fraction_4556,
+       aes(x = fraction.Var1,
+           y = fraction.Freq, 
+           fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4556") + 
+  labs(x = "Cell Type",
+       y = "Proportions") 
+
+#reorder it horizontally 
+p <- ggplot(fraction_4556,
+            aes(x = reorder(fraction.Var1, -fraction.Freq),
+                y = fraction.Freq, 
+                fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4556 Proportion") + 
+  labs(x = "Cell Type",
+       y = "Proportions") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+
+# Save as PNG
+ggsave("EWS4556_proportion_plot.png", plot = p, width = 10, height = 10, dpi = 300)
+
+####4553###
+#extract data 
+data_4553 <- colData(spe_4553)
+data_4553 <- as.data.frame(data_4553)
+
+table(data_4553$celltype)
+table4553<- table(data_4553$celltype)
+Immunecells_4553 <- table4553[c("CD8/CD4 T cells", "EwS", "CD163+ CD206 + Macrophage")]
+Immunecells_4553<- data.frame(Immunecells_4553)
+colnames(Immunecells_4553) <- c("CellType", "EWS4553")
+# Then merge into the existing immunecells_all dataframe
+Immunecells_all <- merge(Immunecells_all, Immunecells_4553, by = "CellType", all = TRUE)
+
+prop.table(table(data_4553$celltype))
+sort(prop.table(table(data_4553$celltype)))
+data.frame(fraction=sort(prop.table(table(data_4553$celltype))), sample="4553")
+fraction_4553 <- data.frame(fraction=sort(prop.table(table(data_4553$celltype))), sample="4553")
+
+ggplot(fraction_4553,
+       aes(x = fraction.Var1,
+           y = fraction.Freq, 
+           fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4553") + 
+  labs(x = "Cell Type",
+       y = "Proportions") 
+
+#reorder it horizontally 
+p <- ggplot(fraction_4553,
+            aes(x = reorder(fraction.Var1, -fraction.Freq),
+                y = fraction.Freq, 
+                fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4553 Proportion") + 
+  labs(x = "Cell Type",
+       y = "Proportions") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+
+# Save as PNG
+ggsave("EWS4553_proportion_plot.png", plot = p, width = 10, height = 10, dpi = 300)
+
+####4550###
+#extract data 
+data_4550 <- colData(spe_4550)
+data_4550 <- as.data.frame(data_4550)
+
+table(data_4550$celltype)
+table4550<- table(data_4550$celltype)
+Immunecells_4550 <- table4550[c("CD8/CD4 T cells", "EwS", "CD163+ CD206 + Macrophage")]
+Immunecells_4550<- data.frame(Immunecells_4550)
+colnames(Immunecells_4550) <- c("CellType", "EWS4550")
+# Then merge into the existing immunecells_all dataframe
+Immunecells_all <- merge(Immunecells_all, Immunecells_4550, by = "CellType", all = TRUE)
+
+prop.table(table(data_4550$celltype))
+sort(prop.table(table(data_4550$celltype)))
+data.frame(fraction=sort(prop.table(table(data_4550$celltype))), sample="4550")
+fraction_4550 <- data.frame(fraction=sort(prop.table(table(data_4550$celltype))), sample="4550")
+
+ggplot(fraction_4550,
+       aes(x = fraction.Var1,
+           y = fraction.Freq, 
+           fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4550") + 
+  labs(x = "Cell Type",
+       y = "Proportions") 
+
+#reorder it horizontally 
+p <- ggplot(fraction_4550,
+            aes(x = reorder(fraction.Var1, -fraction.Freq),
+                y = fraction.Freq, 
+                fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4550 Proportion") + 
+  labs(x = "Cell Type",
+       y = "Proportions") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+
+# Save as PNG
+ggsave("EWS4550_proportion_plot.png", plot = p, width = 10, height = 10, dpi = 300)
+
+####4539###
+#extract data 
+data_4539 <- colData(spe_4539)
+data_4539 <- as.data.frame(data_4539)
+
+table(data_4539$celltype)
+table4539 <- table(data_4539$celltype)
+Immunecells_4539 <- table4539[c("CD8/CD4 T cells", "EwS", "CD163+ CD206 + Macrophage")]
+Immunecells_4539<- data.frame(Immunecells_4539)
+colnames(Immunecells_4539) <- c("CellType", "EWS4539")
+# Then merge into the existing immunecells_all dataframe
+Immunecells_all <- merge(Immunecells_all, Immunecells_4539, by = "CellType", all = TRUE)
+
+prop.table(table(data_4539$celltype))
+sort(prop.table(table(data_4539$celltype)))
+data.frame(fraction=sort(prop.table(table(data_4539$celltype))), sample="4539")
+fraction_4539 <- data.frame(fraction=sort(prop.table(table(data_4539$celltype))), sample="4539")
+
+ggplot(fraction_4539,
+       aes(x = fraction.Var1,
+           y = fraction.Freq, 
+           fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4539") + 
+  labs(x = "Cell Type",
+       y = "Proportions") 
+
+#reorder it horizontally 
+p <- ggplot(fraction_4539,
+            aes(x = reorder(fraction.Var1, -fraction.Freq),
+                y = fraction.Freq, 
+                fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4539 Proportion") + 
+  labs(x = "Cell Type",
+       y = "Proportions") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+
+# Save as PNG
+ggsave("EWS4539_proportion_plot.png", plot = p, width = 10, height = 10, dpi = 300)
+
+####4531###
+#extract data 
+data_4531 <- colData(spe_4531)
+data_4531 <- as.data.frame(data_4531)
+
+table(data_4531$celltype)
+table4531 <- table(data_4531$celltype)
+Immunecells_4531 <- table4531[c("CD8/CD4 T cells", "EwS", "CD163+ CD206 + Macrophage")]
+Immunecells_4531<- data.frame(Immunecells_4531)
+colnames(Immunecells_4531) <- c("CellType", "EWS4531")
+# Then merge into the existing immunecells_all dataframe
+Immunecells_all <- merge(Immunecells_all, Immunecells_4531, by = "CellType", all = TRUE)
+
+prop.table(table(data_4531$celltype))
+sort(prop.table(table(data_4531$celltype)))
+data.frame(fraction=sort(prop.table(table(data_4531$celltype))), sample="4531")
+fraction_4531 <- data.frame(fraction=sort(prop.table(table(data_4531$celltype))), sample="4531")
+
+ggplot(fraction_4531,
+       aes(x = fraction.Var1,
+           y = fraction.Freq, 
+           fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4531") + 
+  labs(x = "Cell Type",
+       y = "Proportions") 
+
+#reorder it horizontally 
+p <- ggplot(fraction_4531,
+            aes(x = reorder(fraction.Var1, -fraction.Freq),
+                y = fraction.Freq, 
+                fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4531 Proportion") + 
+  labs(x = "Cell Type",
+       y = "Proportions") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+
+# Save as PNG
+ggsave("EWS4531_proportion_plot.png", plot = p, width = 10, height = 10, dpi = 300)
+
+####4578###
+#extract data 
+data_4578 <- colData(spe_4578)
+data_4578 <- as.data.frame(data_4578)
+
+table(data_4578$celltype)
+table4578 <- table(data_4578$celltype)
+Immunecells_4578 <- table4578[c("CD8/CD4 T cells", "EwS", "CD163+ CD206 + Macrophage")]
+Immunecells_4578<- data.frame(Immunecells_4578)
+colnames(Immunecells_4578) <- c("CellType", "EWS4578")
+# Then merge into the existing immunecells_all dataframe
+Immunecells_all <- merge(Immunecells_all, Immunecells_4578, by = "CellType", all = TRUE)
+
+prop.table(table(data_4578$celltype))
+sort(prop.table(table(data_4578$celltype)))
+data.frame(fraction=sort(prop.table(table(data_4578$celltype))), sample="4578")
+fraction_4578 <- data.frame(fraction=sort(prop.table(table(data_4578$celltype))), sample="4578")
+
+ggplot(fraction_4578,
+       aes(x = fraction.Var1,
+           y = fraction.Freq, 
+           fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4578") + 
+  labs(x = "Cell Type",
+       y = "Proportions") 
+
+#reorder it horizontally 
+p <- ggplot(fraction_4578,
+            aes(x = reorder(fraction.Var1, -fraction.Freq),
+                y = fraction.Freq, 
+                fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4578 Proportion") + 
+  labs(x = "Cell Type",
+       y = "Proportions") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+
+# Save as PNG
+ggsave("EWS4578_proportion_plot.png", plot = p, width = 10, height = 10, dpi = 300)
+
+####4577###
+#extract data 
+data_4577 <- colData(spe_4577)
+data_4577 <- as.data.frame(data_4577)
+
+table(data_4577$celltype)
+table4577 <- table(data_4577$celltype)
+Immunecells_4577 <- table4577[c("CD8/CD4 T cells", "EwS", "CD163+ CD206 + Macrophage")]
+Immunecells_4577<- data.frame(Immunecells_4577)
+colnames(Immunecells_4577) <- c("CellType", "EWS4577")
+# Then merge into the existing immunecells_all dataframe
+Immunecells_all <- merge(Immunecells_all, Immunecells_4577, by = "CellType", all = TRUE)
+
+prop.table(table(data_4577$celltype))
+sort(prop.table(table(data_4577$celltype)))
+data.frame(fraction=sort(prop.table(table(data_4577$celltype))), sample="4577")
+fraction_4577 <- data.frame(fraction=sort(prop.table(table(data_4577$celltype))), sample="4577")
+
+ggplot(fraction_4577,
+       aes(x = fraction.Var1,
+           y = fraction.Freq, 
+           fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4577") + 
+  labs(x = "Cell Type",
+       y = "Proportions") 
+
+#reorder it horizontally 
+p <- ggplot(fraction_4577,
+            aes(x = reorder(fraction.Var1, -fraction.Freq),
+                y = fraction.Freq, 
+                fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4577 Proportion") + 
+  labs(x = "Cell Type",
+       y = "Proportions") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+
+# Save as PNG
+ggsave("EWS4577_proportion_plot.png", plot = p, width = 10, height = 10, dpi = 300)
+
+####4523###
+#extract data 
+data_4523 <- colData(spe_4523)
+data_4523 <- as.data.frame(data_4523)
+
+table(data_4523$celltype)
+table4523 <- table(data_4523$celltype)
+Immunecells_4523 <- table4523[c("CD8/CD4 T cells", "EwS", "CD163+ CD206 + Macrophage")]
+Immunecells_4523<- data.frame(Immunecells_4523)
+colnames(Immunecells_4523) <- c("CellType", "EWS4523")
+# Then merge into the existing immunecells_all dataframe
+Immunecells_all <- merge(Immunecells_all, Immunecells_4523, by = "CellType", all = TRUE)
+
+prop.table(table(data_4523$celltype))
+sort(prop.table(table(data_4523$celltype)))
+data.frame(fraction=sort(prop.table(table(data_4523$celltype))), sample="4523")
+fraction_4523 <- data.frame(fraction=sort(prop.table(table(data_4523$celltype))), sample="4523")
+
+ggplot(fraction_4523,
+       aes(x = fraction.Var1,
+           y = fraction.Freq, 
+           fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4523") + 
+  labs(x = "Cell Type",
+       y = "Proportions") 
+
+#reorder it horizontally 
+p <- ggplot(fraction_4523,
+            aes(x = reorder(fraction.Var1, -fraction.Freq),
+                y = fraction.Freq, 
+                fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4523 Proportion") + 
+  labs(x = "Cell Type",
+       y = "Proportions") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+
+# Save as PNG
+ggsave("EWS4523_proportion_plot.png", plot = p, width = 10, height = 10, dpi = 300)
+
+####4521###
+#extract data 
+data_4521 <- colData(spe_4521)
+data_4521 <- as.data.frame(data_4521)
+
+table(data_4521$celltype)
+table4521 <- table(data_4521$celltype)
+Immunecells_4521 <- table4521[c("CD8/CD4 T cells", "EwS", "CD163+ CD206 + Macrophage")]
+Immunecells_4521<- data.frame(Immunecells_4521)
+colnames(Immunecells_4521) <- c("CellType", "EWS4521")
+# Then merge into the existing immunecells_all dataframe
+Immunecells_all <- merge(Immunecells_all, Immunecells_4521, by = "CellType", all = TRUE)
+
+prop.table(table(data_4521$celltype))
+sort(prop.table(table(data_4521$celltype)))
+data.frame(fraction=sort(prop.table(table(data_4521$celltype))), sample="4521")
+fraction_4521 <- data.frame(fraction=sort(prop.table(table(data_4521$celltype))), sample="4521")
+
+ggplot(fraction_4521,
+       aes(x = fraction.Var1,
+           y = fraction.Freq, 
+           fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4521") + 
+  labs(x = "Cell Type",
+       y = "Proportions") 
+
+#reorder it horizontally 
+p <- ggplot(fraction_4521,
+            aes(x = reorder(fraction.Var1, -fraction.Freq),
+                y = fraction.Freq, 
+                fill = sample)) +
+  geom_bar(stat = "identity") + 
+  theme_classic () +
+  ggtitle("EWS4521 Proportion") + 
+  labs(x = "Cell Type",
+       y = "Proportions") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+
+# Save as PNG
+ggsave("EWS4521_proportion_plot.png", plot = p, width = 10, height = 10, dpi = 300)
+
+
+transposed <- t(Immunecells_all)
+transposed <- data.frame(transposed)
+# 2. Convert to data frame
+transposed_df <- as.data.frame(transposed)
+
+# 3. Add tumor sample names as a new column
+transposed_df$Tumor <- rownames(transposed_df)
+transposed_df <- transposed_df[-1, ]
+colnames(transposed_df) <- c("CD163+ CD206 + Macrophage", "CD8/CD4 T cells
+", "EwS", "Tumor")
+
+transposed_df<- read.csv(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Final_Analysis_041125/AkoyaCellCount/transposed_df.csv")
+disease_status <- c(
+  "EWS4064" = "Metastatic",
+  "EWS4512" = "Metastatic",
+  "EWS4521" = "Metastatic",
+  "EWS4523" = "Metastatic",
+  "EWS4531" = "Localized",
+  "EWS4539" = "Localized",
+  "EWS4550" = "Localized",
+  "EWS4553" = "Localized",
+  "EWS4556" = "Localized",
+  "EWS4559" = "Localized",
+  "EWS4564" = "Localized",
+  "EWS4577" = "Metastatic",
+  "EWS4578" = "Metastatic",
+  "EWS4582" = "Localized",
+  "EWS4626" = "Localized",
+  "EWS4668" = "Localized"
+)
+
+# Add new column based on Tumor ID
+transposed_df$DiseaseStatus <- disease_status[transposed_df$Tumor]
+
+colnames(transposed_df) <- c("Macrophage", "Tcells
+", "EwS", "Tumor", "DiseaseStatus")
+
+
+ggplot(transposed_df, 
+       aes(x= Tumor,
+           y= 'T_cells\n')) +
+  geom_bar(stat = "identity") +
+  
+  theme_classic() +
+  ggtitle("Barplot demo")
+
+
+ggplot(transposed_df, aes(x = Tumor, y = Tcells, fill = DiseaseStatus)) +
+  geom_bar(stat = "identity") +
+  theme_classic() +
+  labs(title = "T Cell Counts per Tumor",
+       x = "Tumor Sample",
+       y = "T cells") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
+
+# Strip leading/trailing spaces and convert to numeric
+transposed_df$Macrophage <- as.numeric(trimws(transposed_df$Macrophage))
+transposed_df$Tcells     <- as.numeric(trimws(transposed_df$Tcells))
+transposed_df$EwS        <- as.numeric(trimws(transposed_df$EwS))
+
+ggplot(transposed_df, aes(x = Tumor, y = Tcells, fill = DiseaseStatus)) +
+  geom_bar(stat = "identity") +
+  theme_classic() +
+  labs(title = "CD8/CD4 T Cell Counts per Tumor",
+       x = "Tumor Sample",
+       y = "T Cell Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
+
+ggplot(transposed_df, aes(x = DiseaseStatus, y = Tcells, fill = DiseaseStatus)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.6) +  # optional: adds individual points
+  theme_classic() +
+  labs(title = "CD8/CD4 T Cells by Disease Status",
+       x = "Disease Status",
+       y = "T Cell Count") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+transposed_df$TcellsNormalized <- transposed_df$Tcells / transposed_df$EwS
+
+ggplot(transposed_df, aes(x = DiseaseStatus, y = TcellsNormalized, fill = DiseaseStatus)) +
+  geom_violin(trim = FALSE, alpha = 0.6) +
+  geom_boxplot(width = 0.1, outlier.shape = NA) +  # overlay boxplot, no outliers shown
+  geom_jitter(width = 0.1, size = 2, alpha = 0.7) +  # individual points
+  theme_classic() +
+  labs(title = "Normalized CD8/CD4 T Cells by Disease Status",
+       x = "Disease Status",
+       y = "T Cells / EwS") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+write.csv(transposed_df, "transposed_df.csv", row.names = FALSE)
