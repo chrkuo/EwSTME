@@ -1,0 +1,216 @@
+# Set WD
+setwd("/Volumes/T7/Chris")
+
+# require packages
+require(Seurat)
+require(ggplot2)
+require(cowplot)
+library(gtools)
+require(dplyr)
+require(poolr)
+require(NICHES)
+
+load('/Volumes/T7/Chris/all_merged.NICHES.Robj')
+
+
+### Add more information to the data
+
+# 1. Metastatic/Localized
+
+Metastatic <- c('EWS4064','EWS4512','EWS4521','EWS4523','EWS4577','EWS4578')
+Localized <- c('EWS4531','EWS4539','EWS4550','EWS4553','EWS4554','EWS4556','EWS4557','EWS4559','EWS4564','EWS4582')
+
+
+SampleType_Classification <- function(x){
+  
+  SampleType <- 'Localized'
+  if(x %in% Metastatic){
+    SampleType <- 'Metastatic'
+  }
+  return(SampleType)
+}
+
+SampleType <- sapply(NICHES.integrated$Sample,SampleType_Classification)
+NICHES.integrated$SampleType <- SampleType
+
+
+# 2. Fusion gene
+
+FLI1 <- c('EWS4064','EWS4512','EWS4523','EWS4577','EWS4578','EWS4539','EWS4550','EWS4553','EWS4554','EWS4557','EWS4559','EWS4564','EWS4582')
+ERG <- c('EWS4521','EWS4531','EWS4556')
+
+
+FusionGene_Classification <- function(x){
+  
+  FusionGene <- 'EWSR1-FLI1'
+  if(x %in% ERG){
+    FusionGene <- 'EWSR1-ERG'
+  }
+  return(FusionGene)
+}
+
+FusionGene <- sapply(NICHES.integrated$Sample,FusionGene_Classification)
+NICHES.integrated$FusionGene <- FusionGene
+
+# 3. Patient Sex
+
+Female <- c('EWS4577','EWS4531','EWS4539','EWS4550','EWS4553','EWS4557','EWS4559')
+Male <- c('EWS4064','EWS4512','EWS4521','EWS4523','EWS4578','EWS4554','EWS4556','EWS4564','EWS4582')
+
+Gender_Classification <- function(x){
+  
+  Gender <- 'F'
+  if(x %in% Male){
+    Gender <- 'M'
+  }
+  return(Gender)
+}
+
+Gender <- sapply(NICHES.integrated$Sample,Gender_Classification)
+NICHES.integrated$Gender <- Gender
+
+save(NICHES.integrated,file='Final_Object.Robj')
+
+
+### item 1: May need the complex heatmap code
+
+DefaultAssay(NICHES.integrated) <- 'NeighborhoodToCell'
+NICHES.integrated <- ScaleData(NICHES.integrated)
+
+source("/Volumes/T7/Heatmap_Code/CustomHeatmapDendrogram.R")
+
+mechanisms <- c('FN1—ITGAV-ITGB1',
+                'LAMA5—ITGA7-ITGB1',
+                'COL4A1—CD93',
+                'COL1A1—CD93',
+                'TGFB1—TGFBR1-TGFBR2',
+                'TGFB3—TGFBR1-TGFBR2',
+                'TGFB1—SDC2',
+                'MIF—CD74',
+                'HSPG2—ITGB1',
+                'HSPG2—LRP1',
+                'COL1A2—ITGB1',
+                'COL4A1—ITGB1',
+                'FBN1—ITGAV',
+                'COL1A2—CD93',
+                'TNC—ITGAV',
+                'COL6A1—ITGB1',
+                'COL6A2—ITGB1',
+                'CD14—ITGB1',
+                'MMP2—SDC2',
+                'CD14—RIPK1',
+                'EFNA1—EPHA2',
+                'ZNRF3—FZD1-LRP5',
+                'CTF1—LIFR',
+                'DKK2—LRP6',
+                'IL1RAP—PTPRF',
+                'APCDD1—FZD1-LRP5',
+                'FGF13—FGFR4',
+                'WNT5A—LRP5',
+                'WNT5A—FZD1',
+                'EFNA3—EPHA4')
+
+plot_label <- c('Microenvironment','Sample Type','Sample ID','Gender','Fusion Gene','Phenotype')
+
+CustomHeatmapDendrogram(object=NICHES.integrated,
+                        data.type = 'NeighborhoodToCell',
+                        primary = 'me.clusters' ,
+                        secondary = 'SampleType' ,
+                        tertiary = 'Sample' ,
+                        quarternary = 'Gender' ,
+                        quinary = 'FusionGene',
+                        senary = 'cell_type',
+                        primary.cols = NULL,
+                        secondary.cols = NULL, # Need to be a named list of colors
+                        tertiary.cols = NULL,
+                        quarternary.cols = NULL,
+                        quinary.cols = NULL,
+                        senary.cols = NULL,
+                        features = mechanisms,
+                        labels = plot_label,
+                        selected.row.anotations=NULL,
+                        selected.label.size = 10,
+                        use.scale.data = T,
+                        range.frac = 0.75,
+                        row.dendrogram = T)
+
+
+plot_label_2 <- c('Sample Type','Microenvironment','Sample ID','Gender','Fusion Gene','Phenotype')
+CustomHeatmapDendrogram(object=NICHES.integrated,
+                        data.type = 'NeighborhoodToCell',
+                        primary = 'SampleType' ,
+                        secondary = 'me.clusters' ,
+                        tertiary = 'Sample' ,
+                        quarternary = 'Gender' ,
+                        quinary = 'FusionGene',
+                        senary = 'cell_type',
+                        primary.cols = NULL,
+                        secondary.cols = NULL, # Need to be a named list of colors
+                        tertiary.cols = NULL,
+                        quarternary.cols = NULL,
+                        quinary.cols = NULL,
+                        senary.cols = NULL,
+                        features = mechanisms,
+                        labels = plot_label_2,
+                        selected.row.anotations=NULL,
+                        selected.label.size = 10,
+                        use.scale.data = T,
+                        range.frac = 0.75,
+                        row.dendrogram = T)
+
+
+### item 2: Look at spatial plots to find patterns
+
+
+DefaultAssay(NICHES.integrated) <- 'Spatial'
+
+colors.ph <- c('0'='#59C9A5','1'='#E072A4','2'='green','3'='#F0CF65','4'='#0267F0','5'='#A034F0')
+colors.me <- c('0'='#59C9A5','1'='#E072A4','2'='green','3'='#F0CF65','4'='#0267F0')
+
+
+my.colors.ph <- colors.ph[order(as.integer(names(colors.ph)))]
+# scales::show_col(my.colors.ph)
+
+my.colors.me <- colors.me[order(as.integer(names(colors.me)))]
+# scales::show_col(my.colors.me)
+
+png(filename='Imputed_Spatial_DimPlot_Phenotype.png',width=10,height = 10,units = 'in',res=300)
+SpatialDimPlot(NICHES.integrated,pt.size.factor = 2,ncol=4,cols=my.colors.ph,group.by='cell_type')
+dev.off()
+png(filename='Imputed_Spatial_DimPlot_Microenvironment.png',width=10,height = 10,units = 'in',res=300)
+SpatialDimPlot(NICHES.integrated,pt.size.factor = 2,ncol=4,cols=my.colors.me,group.by='me.clusters')
+dev.off()
+
+
+# item 3: 
+load("/Volumes/T7/Chris/NICHES_list_all_merged.Robj")
+
+nFeature_NeighborhoodToCell <- NICHES_list$nFeature_NeighborhoodToCell
+names(nFeature_NeighborhoodToCell) <- colnames(NICHES.integrated)
+NICHES.integrated$nFeature_NeighborhoodToCell <- nFeature_NeighborhoodToCell
+
+ph_type_order <- c('0','1','2','3','4','5')
+NICHES.integrated$ph_type <- factor(NICHES.integrated$cell_type,levels = ph_type_order)
+
+me_type_order <- c('0','1','2','3','4')
+NICHES.integrated$me_type <- factor(NICHES.integrated$me.clusters,levels = me_type_order)
+
+VlnPlot(NICHES.integrated,'nFeature_NeighborhoodToCell',group.by='ph_type')
+
+VlnPlot(NICHES.integrated,'nFeature_NeighborhoodToCell',group.by='me_type')
+
+SpatialFeaturePlot(NICHES.integrated,'nFeature_NeighborhoodToCell',ncol=4,max.cutoff=2000)
+
+# test: remove low-information microenvironments (less then 50 or less than 100 features) and THEN integrate and cluster
+
+SpatialFeaturePlot(NICHES.integrated,'nFeature_NeighborhoodToCell',ncol=4,max.cutoff = 2000)
+SpatialDimPlot(NICHES.integrated,group.by = 'integrated_snn_res.0.05' ,ncol=4)
+VlnPlot(NICHES.integrated,
+        features = 'nFeature_NeighborhoodToCell',
+        group.by = 'integrated_snn_res.0.05')
+
+
+
+
+
+
