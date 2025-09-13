@@ -1,0 +1,229 @@
+CustomHeatmapDendrogram <- function(object,
+                                    data.type = 'NeighborhoodToCell',
+                                    primary = 'me.clusters', 
+                                    secondary = 'VitalStatus', 
+                                    tertiary = 'SampleType', 
+                                    quarternary = 'Gender',
+                                    quinary = 'Sample',
+                                    senary = 'FusionGene',
+                                    septenary = 'Tissue', # added by chris
+                                    primary.cols = NULL,
+                                    secondary.cols = NULL, # Need to be a named list of colors
+                                    tertiary.cols = NULL,
+                                    quarternary.cols = NULL,
+                                    quinary.cols = NULL,
+                                    senary.cols = NULL,
+                                    septenary.cols = NULL, # added by chris
+                                    features,
+                                    labels,
+                                    selected.row.anotations=NULL,
+                                    selected.label.size = 10,
+                                    use.scale.data = F,
+                                    range.frac = 1,
+                                    row.dendrogram = T){
+  # Packages
+  require(tidyverse)
+  require(RColorBrewer)
+  require(ggplot2)
+  require(ComplexHeatmap)
+  
+  # Local functions
+  source("/Users/chrkuo/Dropbox/Niches/Graphs June 2024/gg_color_hue.R")
+  
+  # Add randomization column
+  object$random <- sample(ncol(object))
+  
+  # Stash
+  focus <- object
+  
+  # MOI
+  MOI <- features
+  
+  # Get and organize data for fancy heatmap
+  meta.data <- focus@meta.data
+  meta.data$barcode <- rownames(meta.data)
+  
+  # Ensure all required columns exist in meta.data
+  required_cols <- c(primary, secondary, tertiary, quarternary, quinary, senary, septenary, 'random')
+  for (col in required_cols) {
+    if (!col %in% colnames(meta.data)) {
+      stop(paste("Column", col, "not found in meta.data"))
+    }
+  }
+  
+  # Ensure each required column is a vector
+  meta.data <- meta.data %>%
+    mutate(across(all_of(required_cols), as.vector))
+  
+  # Apply custom order to the secondary column
+  custom_secondary_order <- c("Remission", "Died", "RelapsedInTherapy")
+  meta.data[[secondary]] <- factor(meta.data[[secondary]], levels = custom_secondary_order)
+  
+  # Order meta.data based on specified columns
+  meta.data <- meta.data[order(
+    meta.data[[primary]],
+    meta.data[[secondary]], 
+    meta.data[[tertiary]],
+    meta.data[[quarternary]],
+    meta.data[[quinary]],
+    meta.data[[senary]],
+    meta.data[[septenary]], 
+    meta.data[['random']]),]
+  
+  if(use.scale.data == T){
+    to.plot <- as.matrix(focus@assays[[data.type]]@scale.data[MOI, meta.data$barcode])
+  } else {
+    to.plot <- as.matrix(focus@assays[[data.type]]@data[MOI, meta.data$barcode])
+  }
+  
+  # Rownames and Column names
+  rownames(to.plot) <- MOI
+  colnames(to.plot) <- NULL
+  
+  # Colors
+  primary.colors <- if (is.null(primary.cols)) {
+    gg_color_hue(length(unique(meta.data[[primary]])))
+  } else {
+    primary.cols[unique(meta.data[[primary]])]
+  }
+  names(primary.colors) <- unique(meta.data[[primary]])
+  
+  secondary.colors <- if (is.null(secondary.cols)) {
+    cols.2 <- RColorBrewer::brewer.pal(n=9,name='Set1')
+    colorRampPalette(cols.2)(length(unique(meta.data[[secondary]])))
+  } else {
+    secondary.cols[unique(meta.data[[secondary]])]
+  }
+  names(secondary.colors) <- unique(meta.data[[secondary]])
+  
+  tertiary.colors <- if (is.null(tertiary.cols)) {
+    cols.3 <- RColorBrewer::brewer.pal(n=8,name='Accent')
+    colorRampPalette(cols.3)(length(unique(meta.data[[tertiary]])))
+  } else {
+    tertiary.cols[unique(meta.data[[tertiary]])]
+  }
+  names(tertiary.colors) <- unique(meta.data[[tertiary]])
+  
+  quarternary.colors <- if (is.null(quarternary.cols)) {
+    cols.4 <- RColorBrewer::brewer.pal(n=12,name='Paired')
+    colorRampPalette(cols.4)(length(unique(meta.data[[quarternary]])))
+  } else {
+    quarternary.cols[unique(meta.data[[quarternary]])]
+  }
+  names(quarternary.colors) <- unique(meta.data[[quarternary]])
+  
+  quinary.colors <- if (is.null(quinary.cols)) {
+    cols.5 <- RColorBrewer::brewer.pal(n=10,name='Set3')
+    colorRampPalette(cols.5)(length(unique(meta.data[[quinary]])))
+  } else {
+    quinary.cols[unique(meta.data[[quinary]])]
+  }
+  names(quinary.colors) <- unique(meta.data[[quinary]])
+  
+  senary.colors <- if (is.null(senary.cols)) {
+    cols.6 <- RColorBrewer::brewer.pal(n=11,name='Set2')
+    colorRampPalette(cols.6)(length(unique(meta.data[[senary]])))
+  } else {
+    senary.cols[unique(meta.data[[senary]])]
+  }
+  names(senary.colors) <- unique(meta.data[[senary]])
+  
+  septenary.colors <- if (is.null(septenary.cols)) {
+    cols.7 <- RColorBrewer::brewer.pal(n=8,name='Dark2')
+    colorRampPalette(cols.7)(length(unique(meta.data[[septenary]])))
+  } else {
+    septenary.cols[unique(meta.data[[septenary]])]
+  }
+  names(septenary.colors) <- unique(meta.data[[septenary]])
+  
+  # Define annotations
+  stuff <- data.frame(primary = meta.data[[primary]],
+                      secondary = meta.data[[secondary]],
+                      tertiary = meta.data[[tertiary]],
+                      quarternary = meta.data[[quarternary]],
+                      quinary = meta.data[[quinary]],
+                      senary = meta.data[[senary]],
+                      septenary = meta.data[[septenary]], # added by chris
+                      check.names = F)
+  names(stuff) <- labels
+  
+  # Define colors
+  colors <- list(
+    primary = primary.colors,
+    secondary = secondary.colors,
+    tertiary = tertiary.colors,
+    quarternary = quarternary.colors,
+    quinary = quinary.colors,
+    senary = senary.colors,
+    septenary = septenary.colors # added by chris
+  )
+  names(colors) <- labels
+  
+  column_ha <- ComplexHeatmap::HeatmapAnnotation(
+    df = stuff,
+    col = colors,
+    annotation_name_side = "left")
+  
+  # Value colors
+  col_fun <- if (use.scale.data) {
+    circlize::colorRamp2(c(min(to.plot)*range.frac, 0, max(to.plot)*range.frac), c("#440154", '#21918c', "#fde725"))
+  } else {
+    circlize::colorRamp2(c(0, max(to.plot)*range.frac), c("#440154", "#fde725"))
+  }
+  
+  # Legend title
+  legend.title <- if (use.scale.data) 'Scaled Connectivity' else 'Connectivity'
+  
+  # Heatmap with selected rows annotated
+  if (!is.null(selected.row.anotations)) {
+    HAleft <- rowAnnotation(foo = anno_mark(at = which(rownames(to.plot) %in% selected.row.anotations), side = 'left',
+                                            labels = rownames(to.plot)[rownames(to.plot) %in% selected.row.anotations],
+                                            labels_gp = gpar(fontsize = selected.label.size)))
+    row.names.stash <- row.names(to.plot)
+    row.names(to.plot) <- NULL
+    
+    heatmap.object <- Heatmap(to.plot,
+                              column_split = stuff[, 1], # breaks on primary
+                              column_gap = unit(0.3, 'mm'),
+                              col = col_fun,
+                              use_raster = F,
+                              cluster_rows = row.dendrogram,
+                              cluster_columns = F,
+                              show_column_dend = F,
+                              show_row_dend = row.dendrogram,
+                              top_annotation = column_ha,
+                              color_space = colors.inferno,
+                              name = legend.title,
+                              heatmap_legend_param = list(title_position = 'leftcenter-rot'),
+                              row_title = 'Signaling Mechanisms',
+                              column_title = NULL,
+                              left_annotation = HAleft)
+    draw(heatmap.object,
+         heatmap_legend_side = 'right',
+         annotation_legend_side = 'right')
+  } else {
+    # OR Heatmap with all rows annotated
+    heatmap.object <- Heatmap(to.plot,
+                              column_split = stuff[,1], # breaks on primary
+                              column_gap = unit(0.3,'mm'),
+                              col = col_fun,
+                              use_raster = F,
+                              cluster_rows = row.dendrogram,
+                              cluster_columns = F,
+                              show_column_dend = F,
+                              show_row_dend = row.dendrogram,
+                              top_annotation = column_ha,
+                              row_names_side = 'left',
+                              row_names_gp = gpar(fontsize = 10),
+                              color_space = colors.inferno,
+                              name = legend.title,
+                              heatmap_legend_param = list(title_position = 'leftcenter-rot'),
+                              row_title = 'Signaling Mechanisms',
+                              column_title = NULL)
+    draw(heatmap.object,
+         heatmap_legend_side='right',
+         annotation_legend_side='right')
+  }
+  
+  row.order.output <<- row_order(heatmap.object)
+}
