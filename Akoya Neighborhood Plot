@@ -1,0 +1,2587 @@
+
+library(ggplot2)
+
+##### Graph code #####
+spe_4064_niches_output <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Niches/Niches_output_RDS/spe_4064_niches_output.RDS")
+spe_4521_niches_output <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Niches/Niches_output_RDS/spe_4521_niches_output.RDS")
+spe_4523_niches_output <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Niches/Niches_output_RDS/spe_4523_niches_output.RDS")
+spe_4531_niches_output <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Niches/Niches_output_RDS/spe_4531_niches_output.RDS")
+spe_4539_niches_output <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Niches/Niches_output_RDS/spe_4539_niches_output.RDS")
+spe_4550_niches_output <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Niches/Niches_output_RDS/spe_4550_niches_output.RDS")
+spe_4553_niches_output <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Niches/Niches_output_RDS/spe_4553_niches_output.RDS")
+spe_4556_niches_output <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Niches/Niches_output_RDS/spe_4556_niches_output.RDS")
+spe_4559_niches_output <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Niches/Niches_output_RDS/spe_4559_niches_output.RDS")
+spe_4564_niches_output <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Niches/Niches_output_RDS/spe_4564_niches_output.RDS")
+spe_4577_niches_output <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Niches/Niches_output_RDS/spe_4577_niches_output.RDS")
+spe_4578_niches_output <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Niches/Niches_output_RDS/spe_4578_niches_output.RDS")
+spe_4582_niches_output <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Niches/Niches_output_RDS/spe_4582_niches_output.RDS")
+spe_4668_niches_output <- readRDS(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Akoya_Niches/Niches_output_RDS/spe_4668_niches_output.RDS")
+
+###lets extract dataframe info###
+nicheswork <- spe_4064_niches_output[["CellToCellSpatial"]]@meta.data
+CD163 <- nicheswork[nicheswork$SendingType == "CD163+ CD206 + Macrophage",]
+table(CD163$ReceivingType)
+prop.table(table(CD163$ReceivingType))
+sort(prop.table(table(CD163$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4064")
+EWS4064 <- data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4064")
+
+####
+nicheswork <- spe_4521_niches_output[["CellToCellSpatial"]]@meta.data
+CD163 <- nicheswork[nicheswork$SendingType == "CD163+ CD206 + Macrophage",]
+table(CD163$ReceivingType)
+prop.table(table(CD163$ReceivingType))
+sort(prop.table(table(CD163$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4521")
+EWS4521 <- data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4521")
+
+####
+nicheswork <- spe_4523_niches_output[["CellToCellSpatial"]]@meta.data
+CD163 <- nicheswork[nicheswork$SendingType == "CD163+ CD206 + Macrophage",]
+table(CD163$ReceivingType)
+prop.table(table(CD163$ReceivingType))
+sort(prop.table(table(CD163$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4523")
+EWS4523 <- data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4523")
+
+####
+nicheswork <- spe_4531_niches_output[["CellToCellSpatial"]]@meta.data
+CD163 <- nicheswork[nicheswork$SendingType == "CD163+ CD206 + Macrophage",]
+table(CD163$ReceivingType)
+prop.table(table(CD163$ReceivingType))
+sort(prop.table(table(CD163$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4531")
+EWS4531 <- data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4531")
+
+####
+nicheswork <- spe_4539_niches_output[["CellToCellSpatial"]]@meta.data
+CD163 <- nicheswork[nicheswork$SendingType == "CD163+ CD206 + Macrophage",]
+table(CD163$ReceivingType)
+prop.table(table(CD163$ReceivingType))
+sort(prop.table(table(CD163$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4539")
+EWS4539 <- data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4539")
+
+####
+nicheswork <- spe_4550_niches_output[["CellToCellSpatial"]]@meta.data
+CD163 <- nicheswork[nicheswork$SendingType == "CD163+ CD206 + Macrophage",]
+table(CD163$ReceivingType)
+prop.table(table(CD163$ReceivingType))
+sort(prop.table(table(CD163$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4550")
+EWS4550 <- data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4550")
+
+####
+nicheswork <- spe_4553_niches_output[["CellToCellSpatial"]]@meta.data
+CD163 <- nicheswork[nicheswork$SendingType == "CD163+ CD206 + Macrophage",]
+table(CD163$ReceivingType)
+prop.table(table(CD163$ReceivingType))
+sort(prop.table(table(CD163$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4553")
+EWS4553 <- data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4553")
+
+####
+nicheswork <- spe_4556_niches_output[["CellToCellSpatial"]]@meta.data
+CD163 <- nicheswork[nicheswork$SendingType == "CD163+ CD206 + Macrophage",]
+table(CD163$ReceivingType)
+prop.table(table(CD163$ReceivingType))
+sort(prop.table(table(CD163$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4556")
+EWS4556 <- data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4556")
+
+####
+nicheswork <- spe_4559_niches_output[["CellToCellSpatial"]]@meta.data
+CD163 <- nicheswork[nicheswork$SendingType == "CD163+ CD206 + Macrophage",]
+table(CD163$ReceivingType)
+prop.table(table(CD163$ReceivingType))
+sort(prop.table(table(CD163$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4559")
+EWS4559 <- data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4559")
+
+####
+nicheswork <- spe_4564_niches_output[["CellToCellSpatial"]]@meta.data
+CD163 <- nicheswork[nicheswork$SendingType == "CD163+ CD206 + Macrophage",]
+table(CD163$ReceivingType)
+prop.table(table(CD163$ReceivingType))
+sort(prop.table(table(CD163$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4564")
+EWS4564 <- data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4564")
+
+####
+nicheswork <- spe_4577_niches_output[["CellToCellSpatial"]]@meta.data
+CD163 <- nicheswork[nicheswork$SendingType == "CD163+ CD206 + Macrophage",]
+table(CD163$ReceivingType)
+prop.table(table(CD163$ReceivingType))
+sort(prop.table(table(CD163$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4577")
+EWS4577 <- data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4577")
+
+####
+nicheswork <- spe_4578_niches_output[["CellToCellSpatial"]]@meta.data
+CD163 <- nicheswork[nicheswork$SendingType == "CD163+ CD206 + Macrophage",]
+table(CD163$ReceivingType)
+prop.table(table(CD163$ReceivingType))
+sort(prop.table(table(CD163$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4578")
+EWS4578 <- data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4578")
+
+####
+nicheswork <- spe_4582_niches_output[["CellToCellSpatial"]]@meta.data
+CD163 <- nicheswork[nicheswork$SendingType == "CD163+ CD206 + Macrophage",]
+table(CD163$ReceivingType)
+prop.table(table(CD163$ReceivingType))
+sort(prop.table(table(CD163$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4582")
+EWS4582 <- data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4582")
+
+####
+nicheswork <- spe_4668_niches_output[["CellToCellSpatial"]]@meta.data
+CD163 <- nicheswork[nicheswork$SendingType == "CD163+ CD206 + Macrophage",]
+table(CD163$ReceivingType)
+prop.table(table(CD163$ReceivingType))
+sort(prop.table(table(CD163$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4668")
+EWS4668 <- data.frame(fraction=sort(prop.table(table(CD163$ReceivingType))), sample="EWS4668")
+####
+
+library(tidyr)
+
+df_wide_4064 <- pivot_wider(EWS4064, 
+                       names_from = fraction.Var1, 
+                       values_from = fraction.Freq)
+
+df_wide_4521 <- pivot_wider(EWS4521, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+
+df_wide_4523 <- pivot_wider(EWS4523, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4531 <- pivot_wider(EWS4531, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+
+df_wide_4539 <- pivot_wider(EWS4539, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4550 <- pivot_wider(EWS4550, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4553 <- pivot_wider(EWS4553, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4556 <- pivot_wider(EWS4556, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4559 <- pivot_wider(EWS4559, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4564 <- pivot_wider(EWS4564, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4577 <- pivot_wider(EWS4577, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4578 <- pivot_wider(EWS4578, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4582 <- pivot_wider(EWS4582, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4668 <- pivot_wider(EWS4668, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+combined_df <- bind_rows(df_wide_4064, 
+                         df_wide_4521, 
+                         df_wide_4523,
+                         df_wide_4531,
+                         df_wide_4539,
+                         df_wide_4550,
+                         df_wide_4553,
+                         df_wide_4556,
+                         df_wide_4559,
+                         df_wide_4564,
+                         df_wide_4577,
+                         df_wide_4578,
+                         df_wide_4582,
+                         df_wide_4668)
+
+write.csv(combined_df, file = "combined_df.nichesM2mac.csv")
+combined_df <- read.csv(file = "/Users/chrkuo/combined_df.nichesM2mac.csv")
+
+library(tidyr)
+library(dplyr)
+combined_df <- combined_df[, -1]
+df_long <- pivot_longer(combined_df, 
+                        cols = -sample, 
+                        names_to = "cell_type", 
+                        values_to = "fraction")
+#simple graph to start off# 
+#ggplot(df_long, aes(x = sample, y = fraction, fill = cell_type)) +
+#  geom_bar(stat = "identity") +
+#  theme_classic() +
+#  labs(x = "Tumor Sample", y = "Cell Type Fraction", fill = "Cell Type") +
+#  ggtitle("Cell Type Composition (Sorted by Abundance)") +
+#  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+df_long <- df_long %>%
+  group_by(sample) %>%
+  arrange(sample, desc(fraction)) %>%  # Largest on bottom
+  mutate(ymin = cumsum(fraction) - fraction,
+         ymax = cumsum(fraction)) %>%
+  ungroup()
+
+
+# Create a numeric x-axis position
+df_long <- df_long %>%
+  mutate(xnum = as.numeric(factor(sample)))
+
+ggplot(df_long, aes(x = xnum, fill = cell_type)) +
+  geom_rect(aes(ymin = ymin, ymax = ymax,
+                xmin = xnum - 0.4,
+                xmax = xnum + 0.4)) +
+  scale_x_continuous(breaks = unique(df_long$xnum),
+                     labels = unique(df_long$sample)) +
+  labs(x = "Tumor Sample", y = "Cell Type Fraction", fill = "Cell Type") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Cell Type Composition (Largest on Bottom)")
+
+
+library(viridis)
+
+df_long <- df_long %>% 
+  filter(sample != "EWS4553") %>%
+  mutate(xnum = as.numeric(factor(sample)))
+
+
+# Step 2: Define disease status mapping
+disease_status <- c(
+  "EWS4523" = "Metastatic",
+  "EWS4578" = "Metastatic",
+  "EWS4521" = "Metastatic",
+  "EWS4064" = "Metastatic",
+  "EWS4577" = "Metastatic",
+  "EWS4559" = "Localized",
+  "EWS4556" = "Localized",
+  "EWS4564" = "Localized",
+  "EWS4531" = "Localized",
+  "EWS4582" = "Localized",
+  "EWS4539" = "Localized",
+  "EWS4550" = "Localized",
+  "EWS4668" = "Localized"
+)
+
+# Step 3: Add disease status
+df_long$DiseaseStatus <- disease_status[df_long$sample]
+df_long <- df_long %>% filter(!is.na(DiseaseStatus))  # keep only samples with status
+
+library(dplyr)
+
+# 1️⃣ Between-group comparison (Met vs Loc)
+wilcox_group <- df_long %>%
+  group_by(cell_type) %>%
+  summarise(
+    mean_localized  = mean(fraction[DiseaseStatus == "Localized"], na.rm = TRUE),
+    mean_metastatic = mean(fraction[DiseaseStatus == "Metastatic"], na.rm = TRUE),
+    p_value = tryCatch({
+      wilcox.test(
+        fraction[DiseaseStatus == "Localized"],
+        fraction[DiseaseStatus == "Metastatic"],
+        alternative = "two.sided"
+      )$p.value
+    }, error = function(e) NA_real_),
+    .groups = "drop"
+  ) %>%
+  mutate(p_adj = p.adjust(p_value, method = "fdr")) %>%
+  arrange(p_adj)
+
+write.csv(wilcox_group, "wilcox_group.M2MacrophageNeighborhoodassendingbetween_met_vs_loc.csv", row.names = FALSE)
+
+# 2️⃣ Global enrichment test (fraction > 0)
+wilcox_global <- df_long %>%
+  group_by(cell_type) %>%
+  summarise(
+    mean_prop = mean(fraction, na.rm = TRUE),
+    p_value = tryCatch({
+      wilcox.test(fraction, mu = 0, alternative = "greater")$p.value
+    }, error = function(e) NA_real_),
+    .groups = "drop"
+  ) %>%
+  mutate(p_adj = p.adjust(p_value, method = "fdr")) %>%
+  filter(p_adj < 0.05, mean_prop > 0.01) %>%
+  arrange(desc(mean_prop))
+
+write.csv(wilcox_global, "wilcox_global.M2MacrophageNeighborhoodassendingenriched_celltypes.csv", row.names = FALSE)
+
+write.csv(results, file = "M2neighborhood.stats.metvslocal.042225.csv")
+write.csv(df_long, file = "M2neighborhood.testing.042225.csv")
+#######
+ggplot(df_long, aes(x = xnum, fill = cell_type)) +
+  geom_rect(aes(ymin = ymin, ymax = ymax,
+                xmin = xnum - 0.4,
+                xmax = xnum + 0.4)) +
+  scale_x_continuous(breaks = unique(df_long$xnum),
+                     labels = unique(df_long$sample)) +
+  scale_fill_viridis_d(option = "C") +  # Options: "D", "C", "B", "A", "E"
+  labs(x = "Tumor Sample", y = "Receiving Cell Type Proportions", fill = "Cell Type") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Enrichment of cell types within M2 Macrophage neighborhoods")
+
+#####heatmap##### 042225
+
+# Step 1: Pivot data to wide format (samples × cell types)
+df_heatmap <- df_long %>%
+  select(sample, cell_type, fraction) %>%
+  pivot_wider(names_from = cell_type, values_from = fraction, values_fill = 0) %>%
+  column_to_rownames("sample")
+
+# Step 2: Plot heatmap using pheatmap
+pheatmap::pheatmap(as.matrix(df_heatmap),
+                   cluster_rows = FALSE,
+                   cluster_cols = FALSE,
+                   display_numbers = FALSE,
+                   color = viridis::viridis(100),
+                   fontsize_row = 10,
+                   fontsize_col = 10,
+                   main = "Heatmap of Cell Type Proportions in M2 Neighborhoods")
+
+df_long %>%
+  ggplot(aes(x = sample, y = cell_type, fill = fraction)) +
+  geom_tile(color = "white") +
+  scale_fill_viridis_c(option = "C", name = "Fraction") +
+  labs(
+    title = "Heatmap of Cell Type Proportions in M2 Neighborhoods",
+    x = "Cell Type",
+    y = "Tumor Sample"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+df_long %>%
+  ggplot(aes(x = sample, y = cell_type, fill = fraction)) +
+  geom_tile(color = "white") +
+  scale_fill_viridis_c(option = "C", name = "Fraction", limits = c(0, 0.6)) +
+  labs(
+    title = "Heatmap of Cell Type Proportions in M2 Neighborhoods",
+    x = "Tumor Sample",
+    y = "Cell Type"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+df_long %>%
+  ggplot(aes(x = sample, y = cell_type, fill = fraction)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient2(
+    low = "blue", mid = "white", high = "red",
+    midpoint = 0.1, name = "Fraction"
+  ) +
+  labs(
+    title = "Heatmap of Cell Type Proportions in M2 Neighborhoods",
+    x = "Tumor Sample",
+    y = "Cell Type"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+df_long <- df_long %>%
+  filter(cell_type != "NA.")
+
+df_long %>%
+  filter(cell_type != "NA") %>%
+  ggplot(aes(x = sample, y = cell_type, size = fraction, color = fraction)) +
+  geom_point(alpha = 0.8) +
+  scale_color_gradient(low = "lightblue", high = "darkred", name = "Fraction") +
+  scale_size(range = c(1, 8), name = "Fraction") +
+  labs(
+    title = "Dot Plot of Cell Type Proportions",
+    x = "Tumor Sample",
+    y = "Cell Type"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid = element_blank()
+  )
+
+
+# 2. Recalculate fractions per sample
+df_long <- df_long %>%
+  group_by(sample) %>%
+  mutate(fraction = Count / sum(Count, na.rm = TRUE)) %>%
+  ungroup()
+
+
+########################lets do EWS neighborhood 
+###lets extract dataframe info###
+nicheswork <- spe_4064_niches_output[["CellToCellSpatial"]]@meta.data
+EwS <- nicheswork[nicheswork$SendingType == "EwS",]
+table(EwS$ReceivingType)
+prop.table(table(EwS$ReceivingType))
+sort(prop.table(table(EwS$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4064")
+EWS4064 <- data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4064")
+
+####
+nicheswork <- spe_4521_niches_output[["CellToCellSpatial"]]@meta.data
+EwS <- nicheswork[nicheswork$SendingType == "EwS",]
+table(EwS$ReceivingType)
+prop.table(table(EwS$ReceivingType))
+sort(prop.table(table(EwS$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4521")
+EWS4521 <- data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4521")
+
+####
+nicheswork <- spe_4523_niches_output[["CellToCellSpatial"]]@meta.data
+EwS <- nicheswork[nicheswork$SendingType == "EwS",]
+table(EwS$ReceivingType)
+prop.table(table(EwS$ReceivingType))
+sort(prop.table(table(EwS$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4523")
+EWS4523 <- data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4523")
+
+####
+nicheswork <- spe_4531_niches_output[["CellToCellSpatial"]]@meta.data
+EwS <- nicheswork[nicheswork$SendingType == "EwS",]
+table(EwS$ReceivingType)
+prop.table(table(EwS$ReceivingType))
+sort(prop.table(table(EwS$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4531")
+EWS4531 <- data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4531")
+
+####
+nicheswork <- spe_4539_niches_output[["CellToCellSpatial"]]@meta.data
+EwS <- nicheswork[nicheswork$SendingType == "EwS",]
+table(EwS$ReceivingType)
+prop.table(table(EwS$ReceivingType))
+sort(prop.table(table(EwS$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4539")
+EWS4539 <- data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4539")
+
+####
+nicheswork <- spe_4550_niches_output[["CellToCellSpatial"]]@meta.data
+EwS <- nicheswork[nicheswork$SendingType == "EwS",]
+table(EwS$ReceivingType)
+prop.table(table(EwS$ReceivingType))
+sort(prop.table(table(EwS$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4550")
+EWS4550 <- data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4550")
+
+####
+nicheswork <- spe_4553_niches_output[["CellToCellSpatial"]]@meta.data
+EwS <- nicheswork[nicheswork$SendingType == "EwS",]
+table(EwS$ReceivingType)
+prop.table(table(EwS$ReceivingType))
+sort(prop.table(table(EwS$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4553")
+EWS4553 <- data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4553")
+
+####
+nicheswork <- spe_4556_niches_output[["CellToCellSpatial"]]@meta.data
+EwS <- nicheswork[nicheswork$SendingType == "EwS",]
+table(EwS$ReceivingType)
+prop.table(table(EwS$ReceivingType))
+sort(prop.table(table(EwS$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4556")
+EWS4556 <- data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4556")
+
+####
+nicheswork <- spe_4559_niches_output[["CellToCellSpatial"]]@meta.data
+EwS <- nicheswork[nicheswork$SendingType == "EwS",]
+table(EwS$ReceivingType)
+prop.table(table(EwS$ReceivingType))
+sort(prop.table(table(EwS$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4559")
+EWS4559 <- data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4559")
+
+####
+nicheswork <- spe_4564_niches_output[["CellToCellSpatial"]]@meta.data
+EwS <- nicheswork[nicheswork$SendingType == "EwS",]
+table(EwS$ReceivingType)
+prop.table(table(EwS$ReceivingType))
+sort(prop.table(table(EwS$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4564")
+EWS4564 <- data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4564")
+
+####
+nicheswork <- spe_4577_niches_output[["CellToCellSpatial"]]@meta.data
+EwS <- nicheswork[nicheswork$SendingType == "EwS",]
+table(EwS$ReceivingType)
+prop.table(table(EwS$ReceivingType))
+sort(prop.table(table(EwS$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4577")
+EWS4577 <- data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4577")
+
+####
+nicheswork <- spe_4578_niches_output[["CellToCellSpatial"]]@meta.data
+EwS <- nicheswork[nicheswork$SendingType == "EwS",]
+table(EwS$ReceivingType)
+prop.table(table(EwS$ReceivingType))
+sort(prop.table(table(EwS$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4578")
+EWS4578 <- data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4578")
+
+####
+nicheswork <- spe_4582_niches_output[["CellToCellSpatial"]]@meta.data
+EwS <- nicheswork[nicheswork$SendingType == "EwS",]
+table(EwS$ReceivingType)
+prop.table(table(EwS$ReceivingType))
+sort(prop.table(table(EwS$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4582")
+EWS4582 <- data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4582")
+
+####
+nicheswork <- spe_4668_niches_output[["CellToCellSpatial"]]@meta.data
+EwS <- nicheswork[nicheswork$SendingType == "EwS",]
+table(EwS$ReceivingType)
+prop.table(table(EwS$ReceivingType))
+sort(prop.table(table(EwS$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4668")
+EWS4668 <- data.frame(fraction=sort(prop.table(table(EwS$ReceivingType))), sample="EWS4668")
+####
+
+library(tidyr)
+
+df_wide_4064 <- pivot_wider(EWS4064, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4521 <- pivot_wider(EWS4521, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+
+df_wide_4523 <- pivot_wider(EWS4523, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4531 <- pivot_wider(EWS4531, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+
+df_wide_4539 <- pivot_wider(EWS4539, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4550 <- pivot_wider(EWS4550, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4553 <- pivot_wider(EWS4553, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4556 <- pivot_wider(EWS4556, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4559 <- pivot_wider(EWS4559, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4564 <- pivot_wider(EWS4564, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4577 <- pivot_wider(EWS4577, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4578 <- pivot_wider(EWS4578, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4582 <- pivot_wider(EWS4582, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4668 <- pivot_wider(EWS4668, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+combined_df <- bind_rows(df_wide_4064, 
+                         df_wide_4521, 
+                         df_wide_4523,
+                         df_wide_4531,
+                         df_wide_4539,
+                         df_wide_4550,
+                         df_wide_4553,
+                         df_wide_4556,
+                         df_wide_4559,
+                         df_wide_4564,
+                         df_wide_4577,
+                         df_wide_4578,
+                         df_wide_4582,
+                         df_wide_4668)
+
+write.csv(combined_df, file = "combined_df.nichesEWS.csv")
+
+combined_df <- read.csv(file ="/Users/chrkuo/combined_df.nichesEWS.csv")
+###############
+combined_df <- combined_df[, -1]
+df_long <- pivot_longer(combined_df, 
+                        cols = -sample, 
+                        names_to = "cell_type", 
+                        values_to = "fraction")
+#simple graph to start off# 
+#ggplot(df_long, aes(x = sample, y = fraction, fill = cell_type)) +
+#  geom_bar(stat = "identity") +
+#  theme_classic() +
+#  labs(x = "Tumor Sample", y = "Cell Type Fraction", fill = "Cell Type") +
+#  ggtitle("Cell Type Composition (Sorted by Abundance)") +
+#  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+df_long <- df_long %>%
+  group_by(sample) %>%
+  arrange(sample, desc(fraction)) %>%  # Largest on bottom
+  mutate(ymin = cumsum(fraction) - fraction,
+         ymax = cumsum(fraction)) %>%
+  ungroup()
+
+
+# Create a numeric x-axis position
+df_long <- df_long %>%
+  mutate(xnum = as.numeric(factor(sample)))
+
+df_long <- df_long %>% 
+  filter(sample != "EWS4553") %>%
+  mutate(xnum = as.numeric(factor(sample)))
+
+
+# Step 2: Define disease status mapping
+disease_status <- c(
+  "EWS4523" = "Metastatic",
+  "EWS4578" = "Metastatic",
+  "EWS4521" = "Metastatic",
+  "EWS4064" = "Metastatic",
+  "EWS4577" = "Metastatic",
+  "EWS4559" = "Localized",
+  "EWS4556" = "Localized",
+  "EWS4564" = "Localized",
+  "EWS4531" = "Localized",
+  "EWS4582" = "Localized",
+  "EWS4539" = "Localized",
+  "EWS4550" = "Localized",
+  "EWS4668" = "Localized"
+)
+
+# Step 3: Add disease status
+df_long$DiseaseStatus <- disease_status[df_long$sample]
+df_long <- df_long %>% filter(!is.na(DiseaseStatus))  # keep only samples with status
+
+
+# 1️⃣ Between-group comparison (Met vs Loc)
+wilcox_group <- df_long %>%
+  group_by(cell_type) %>%
+  summarise(
+    mean_localized  = mean(fraction[disease_status == "Localized"], na.rm = TRUE),
+    mean_metastatic = mean(fraction[disease_status == "Metastatic"], na.rm = TRUE),
+    p_value = tryCatch({
+      wilcox.test(
+        fraction[disease_status == "Localized"],
+        fraction[disease_status == "Metastatic"],
+        alternative = "two.sided"
+      )$p.value
+    }, error = function(e) NA_real_),
+    .groups = "drop"
+  ) %>%
+  mutate(p_adj = p.adjust(p_value, method = "fdr")) %>%
+  arrange(p_adj)
+
+write.csv(wilcox_group, "wilcox_group.EWSEnrichedbetween_met_vs_loc.csv", row.names = FALSE)
+
+# 2️⃣ Global enrichment test (fraction > 0)
+wilcox_global <- df_long %>%
+  group_by(cell_type) %>%
+  summarise(
+    mean_prop = mean(fraction, na.rm = TRUE),
+    p_value = tryCatch({
+      wilcox.test(fraction, mu = 0, alternative = "greater")$p.value
+    }, error = function(e) NA_real_),
+    .groups = "drop"
+  ) %>%
+  mutate(p_adj = p.adjust(p_value, method = "fdr")) %>%
+  filter(p_adj < 0.05, mean_prop > 0.01) %>%
+  arrange(desc(mean_prop))
+
+write.csv(wilcox_global, "wilcox_global.EWSenriched_celltypes.csv", row.names = FALSE)
+#####
+library(tidyr)
+library(dplyr)
+
+df_long <- pivot_longer(combined_df, 
+                        cols = -sample, 
+                        names_to = "cell_type", 
+                        values_to = "fraction")
+#simple graph to start off# 
+#ggplot(df_long, aes(x = sample, y = fraction, fill = cell_type)) +
+#  geom_bar(stat = "identity") +
+#  theme_classic() +
+#  labs(x = "Tumor Sample", y = "Cell Type Fraction", fill = "Cell Type") +
+#  ggtitle("Cell Type Composition (Sorted by Abundance)") +
+#  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+df_long <- df_long %>%
+  group_by(sample) %>%
+  arrange(sample, desc(fraction)) %>%  # Largest on bottom
+  mutate(ymin = cumsum(fraction) - fraction,
+         ymax = cumsum(fraction)) %>%
+  ungroup()
+
+
+# Create a numeric x-axis position
+df_long <- df_long %>%
+  mutate(xnum = as.numeric(factor(sample)))
+
+ggplot(df_long, aes(x = xnum, fill = cell_type)) +
+  geom_rect(aes(ymin = ymin, ymax = ymax,
+                xmin = xnum - 0.4,
+                xmax = xnum + 0.4)) +
+  scale_x_continuous(breaks = unique(df_long$xnum),
+                     labels = unique(df_long$sample)) +
+  labs(x = "Tumor Sample", y = "Cell Type Fraction", fill = "Cell Type") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Cell Type Composition (Largest on Bottom)")
+
+
+
+df_long <- df_long %>% 
+  filter(sample != "EWS4553") %>%
+  mutate(xnum = as.numeric(factor(sample)))
+
+
+ggplot(df_long, aes(x = xnum, fill = cell_type)) +
+  geom_rect(aes(ymin = ymin, ymax = ymax,
+                xmin = xnum - 0.4,
+                xmax = xnum + 0.4)) +
+  scale_x_continuous(breaks = unique(df_long$xnum),
+                     labels = unique(df_long$sample)) +
+  scale_fill_viridis_d(option = "C") +  # Options: "D", "C", "B", "A", "E"
+  labs(x = "Tumor Sample", y = "Receiving Cell Type Proportions", fill = "Cell Type") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Enrichment of cell types within EwS neighborhoods")
+
+df_long %>%
+  ggplot(aes(x = sample, y = cell_type, fill = fraction)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient2(
+    low = "blue", mid = "white", high = "red",
+    midpoint = 0.5, name = "Fraction"
+  ) +
+  labs(
+    title = "Heatmap of Cell Type Proportions in M2 Neighborhoods",
+    x = "Tumor Sample",
+    y = "Cell Type"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+#Dotplot
+df_long %>%
+  filter(cell_type != "NA") %>%
+  ggplot(aes(x = sample, y = cell_type, size = fraction, color = fraction)) +
+  geom_point(alpha = 0.8) +
+  scale_color_gradient(low = "lightblue", high = "darkred", name = "Fraction") +
+  scale_size(range = c(1, 8), name = "Fraction") +
+  labs(
+    title = "Dot Plot of Cell Type Proportions",
+    x = "Tumor Sample",
+    y = "Cell Type"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid = element_blank()
+  )
+
+
+#############################
+########################lets do T cells neighborhood ######
+###lets extract dataframe info###
+nicheswork <- spe_4064_niches_output[["CellToCellSpatial"]]@meta.data
+Tcells <- nicheswork[nicheswork$SendingType == "CD8/CD4 T cells",]
+table(Tcells$ReceivingType)
+prop.table(table(Tcells$ReceivingType))
+sort(prop.table(table(Tcells$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4064")
+EWS4064 <- data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4064")
+
+####
+nicheswork <- spe_4521_niches_output[["CellToCellSpatial"]]@meta.data
+Tcells <- nicheswork[nicheswork$SendingType == "CD8/CD4 T cells",]
+table(Tcells$ReceivingType)
+prop.table(table(Tcells$ReceivingType))
+sort(prop.table(table(Tcells$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4521")
+EWS4521 <- data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4521")
+
+####
+nicheswork <- spe_4523_niches_output[["CellToCellSpatial"]]@meta.data
+Tcells <- nicheswork[nicheswork$SendingType == "CD8/CD4 T cells",]
+table(Tcells$ReceivingType)
+prop.table(table(Tcells$ReceivingType))
+sort(prop.table(table(Tcells$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4523")
+EWS4523 <- data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4523")
+
+####
+nicheswork <- spe_4531_niches_output[["CellToCellSpatial"]]@meta.data
+Tcells <- nicheswork[nicheswork$SendingType == "CD8/CD4 T cells",]
+table(Tcells$ReceivingType)
+prop.table(table(Tcells$ReceivingType))
+sort(prop.table(table(Tcells$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4531")
+EWS4531 <- data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4531")
+
+####
+nicheswork <- spe_4539_niches_output[["CellToCellSpatial"]]@meta.data
+Tcells <- nicheswork[nicheswork$SendingType == "CD8/CD4 T cells",]
+table(Tcells$ReceivingType)
+prop.table(table(Tcells$ReceivingType))
+sort(prop.table(table(Tcells$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4539")
+EWS4539 <- data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4539")
+
+####
+nicheswork <- spe_4550_niches_output[["CellToCellSpatial"]]@meta.data
+Tcells <- nicheswork[nicheswork$SendingType == "CD8/CD4 T cells",]
+table(Tcells$ReceivingType)
+prop.table(table(Tcells$ReceivingType))
+sort(prop.table(table(Tcells$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4550")
+EWS4550 <- data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4550")
+
+####
+nicheswork <- spe_4553_niches_output[["CellToCellSpatial"]]@meta.data
+Tcells <- nicheswork[nicheswork$SendingType == "CD8/CD4 T cells",]
+table(Tcells$ReceivingType)
+prop.table(table(Tcells$ReceivingType))
+sort(prop.table(table(Tcells$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4553")
+EWS4553 <- data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4553")
+
+####
+nicheswork <- spe_4556_niches_output[["CellToCellSpatial"]]@meta.data
+Tcells <- nicheswork[nicheswork$SendingType == "CD8/CD4 T cells",]
+table(Tcells$ReceivingType)
+prop.table(table(Tcells$ReceivingType))
+sort(prop.table(table(Tcells$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4556")
+EWS4556 <- data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4556")
+
+####
+nicheswork <- spe_4559_niches_output[["CellToCellSpatial"]]@meta.data
+Tcells <- nicheswork[nicheswork$SendingType == "CD8/CD4 T cells",]
+table(Tcells$ReceivingType)
+prop.table(table(Tcells$ReceivingType))
+sort(prop.table(table(Tcells$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4559")
+EWS4559 <- data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4559")
+
+####
+nicheswork <- spe_4564_niches_output[["CellToCellSpatial"]]@meta.data
+Tcells <- nicheswork[nicheswork$SendingType == "CD8/CD4 T cells",]
+table(Tcells$ReceivingType)
+prop.table(table(Tcells$ReceivingType))
+sort(prop.table(table(Tcells$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4564")
+EWS4564 <- data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4564")
+
+####
+nicheswork <- spe_4577_niches_output[["CellToCellSpatial"]]@meta.data
+Tcells <- nicheswork[nicheswork$SendingType == "CD8/CD4 T cells",]
+table(Tcells$ReceivingType)
+prop.table(table(Tcells$ReceivingType))
+sort(prop.table(table(Tcells$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4577")
+EWS4577 <- data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4577")
+
+####
+nicheswork <- spe_4578_niches_output[["CellToCellSpatial"]]@meta.data
+Tcells <- nicheswork[nicheswork$SendingType == "CD8/CD4 T cells",]
+table(Tcells$ReceivingType)
+prop.table(table(Tcells$ReceivingType))
+sort(prop.table(table(Tcells$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4578")
+EWS4578 <- data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4578")
+
+####
+nicheswork <- spe_4582_niches_output[["CellToCellSpatial"]]@meta.data
+Tcells <- nicheswork[nicheswork$SendingType == "CD8/CD4 T cells",]
+table(Tcells$ReceivingType)
+prop.table(table(Tcells$ReceivingType))
+sort(prop.table(table(Tcells$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4582")
+EWS4582 <- data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4582")
+
+####
+nicheswork <- spe_4668_niches_output[["CellToCellSpatial"]]@meta.data
+Tcells <- nicheswork[nicheswork$SendingType == "CD8/CD4 T cells",]
+table(Tcells$ReceivingType)
+prop.table(table(Tcells$ReceivingType))
+sort(prop.table(table(Tcells$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4668")
+EWS4668 <- data.frame(fraction=sort(prop.table(table(Tcells$ReceivingType))), sample="EWS4668")
+####
+
+library(tidyr)
+
+df_wide_4064 <- pivot_wider(EWS4064, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4521 <- pivot_wider(EWS4521, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+
+df_wide_4523 <- pivot_wider(EWS4523, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4531 <- pivot_wider(EWS4531, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+
+df_wide_4539 <- pivot_wider(EWS4539, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4550 <- pivot_wider(EWS4550, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4553 <- pivot_wider(EWS4553, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4556 <- pivot_wider(EWS4556, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4559 <- pivot_wider(EWS4559, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4564 <- pivot_wider(EWS4564, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4577 <- pivot_wider(EWS4577, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4578 <- pivot_wider(EWS4578, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4582 <- pivot_wider(EWS4582, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4668 <- pivot_wider(EWS4668, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+combined_df <- bind_rows(df_wide_4064, 
+                         df_wide_4521, 
+                         df_wide_4523,
+                         df_wide_4531,
+                         df_wide_4539,
+                         df_wide_4550,
+                         df_wide_4553,
+                         df_wide_4556,
+                         df_wide_4559,
+                         df_wide_4564,
+                         df_wide_4577,
+                         df_wide_4578,
+                         df_wide_4582,
+                         df_wide_4668)
+
+write.csv(combined_df, file = "combined_df.nichesTcells.csv")
+
+library(tidyr)
+library(dplyr)
+
+df_long <- pivot_longer(combined_df, 
+                        cols = -sample, 
+                        names_to = "cell_type", 
+                        values_to = "fraction")
+#simple graph to start off# 
+#ggplot(df_long, aes(x = sample, y = fraction, fill = cell_type)) +
+#  geom_bar(stat = "identity") +
+#  theme_classic() +
+#  labs(x = "Tumor Sample", y = "Cell Type Fraction", fill = "Cell Type") +
+#  ggtitle("Cell Type Composition (Sorted by Abundance)") +
+#  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+df_long <- df_long %>%
+  group_by(sample) %>%
+  arrange(sample, desc(fraction)) %>%  # Largest on bottom
+  mutate(ymin = cumsum(fraction) - fraction,
+         ymax = cumsum(fraction)) %>%
+  ungroup()
+
+
+# Create a numeric x-axis position
+df_long <- df_long %>%
+  mutate(xnum = as.numeric(factor(sample)))
+
+ggplot(df_long, aes(x = xnum, fill = cell_type)) +
+  geom_rect(aes(ymin = ymin, ymax = ymax,
+                xmin = xnum - 0.4,
+                xmax = xnum + 0.4)) +
+  scale_x_continuous(breaks = unique(df_long$xnum),
+                     labels = unique(df_long$sample)) +
+  labs(x = "Tumor Sample", y = "Cell Type Fraction", fill = "Cell Type") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Cell Type Composition (Largest on Bottom)")
+
+
+
+df_long <- df_long %>% 
+  filter(sample != "EWS4553") %>%
+  mutate(xnum = as.numeric(factor(sample)))
+
+
+ggplot(df_long, aes(x = xnum, fill = cell_type)) +
+  geom_rect(aes(ymin = ymin, ymax = ymax,
+                xmin = xnum - 0.4,
+                xmax = xnum + 0.4)) +
+  scale_x_continuous(breaks = unique(df_long$xnum),
+                     labels = unique(df_long$sample)) +
+  scale_fill_viridis_d(option = "C") +  # Options: "D", "C", "B", "A", "E"
+  labs(x = "Tumor Sample", y = "Receiving Cell Type Proportions", fill = "Cell Type") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Enrichment of cell types within T-cells neighborhoods")
+
+df_long %>%
+  filter(is.na(ymin) | is.na(ymax) | is.na(xnum) | is.na(fraction))
+
+#############################
+
+########################lets do Fibroblast cells neighborhood ######
+###lets extract dataframe info###
+nicheswork <- spe_4064_niches_output[["CellToCellSpatial"]]@meta.data
+Fibroblast <- nicheswork[nicheswork$SendingType == "Fibroblast",]
+table(Fibroblast$ReceivingType)
+prop.table(table(Fibroblast$ReceivingType))
+sort(prop.table(table(Fibroblast$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4064")
+EWS4064 <- data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4064")
+
+####
+nicheswork <- spe_4521_niches_output[["CellToCellSpatial"]]@meta.data
+Fibroblast <- nicheswork[nicheswork$SendingType == "Fibroblast",]
+table(Fibroblast$ReceivingType)
+prop.table(table(Fibroblast$ReceivingType))
+sort(prop.table(table(Fibroblast$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4521")
+EWS4521 <- data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4521")
+
+####
+nicheswork <- spe_4523_niches_output[["CellToCellSpatial"]]@meta.data
+Fibroblast <- nicheswork[nicheswork$SendingType == "Fibroblast",]
+table(Fibroblast$ReceivingType)
+prop.table(table(Fibroblast$ReceivingType))
+sort(prop.table(table(Fibroblast$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4523")
+EWS4523 <- data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4523")
+
+####
+nicheswork <- spe_4531_niches_output[["CellToCellSpatial"]]@meta.data
+Fibroblast <- nicheswork[nicheswork$SendingType == "Fibroblast",]
+table(Fibroblast$ReceivingType)
+prop.table(table(Fibroblast$ReceivingType))
+sort(prop.table(table(Fibroblast$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4531")
+EWS4531 <- data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4531")
+
+####
+nicheswork <- spe_4539_niches_output[["CellToCellSpatial"]]@meta.data
+Fibroblast <- nicheswork[nicheswork$SendingType == "Fibroblast",]
+table(Fibroblast$ReceivingType)
+prop.table(table(Fibroblast$ReceivingType))
+sort(prop.table(table(Fibroblast$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4539")
+EWS4539 <- data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4539")
+
+####
+nicheswork <- spe_4550_niches_output[["CellToCellSpatial"]]@meta.data
+Fibroblast <- nicheswork[nicheswork$SendingType == "Fibroblast",]
+table(Fibroblast$ReceivingType)
+prop.table(table(Fibroblast$ReceivingType))
+sort(prop.table(table(Fibroblast$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4550")
+EWS4550 <- data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4550")
+
+####
+nicheswork <- spe_4553_niches_output[["CellToCellSpatial"]]@meta.data
+Fibroblast <- nicheswork[nicheswork$SendingType == "Fibroblast",]
+table(Fibroblast$ReceivingType)
+prop.table(table(Fibroblast$ReceivingType))
+sort(prop.table(table(Fibroblast$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4553")
+EWS4553 <- data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4553")
+
+####
+nicheswork <- spe_4556_niches_output[["CellToCellSpatial"]]@meta.data
+Fibroblast <- nicheswork[nicheswork$SendingType == "Fibroblast",]
+table(Fibroblast$ReceivingType)
+prop.table(table(Fibroblast$ReceivingType))
+sort(prop.table(table(Fibroblast$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4556")
+EWS4556 <- data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4556")
+
+####
+nicheswork <- spe_4559_niches_output[["CellToCellSpatial"]]@meta.data
+Fibroblast <- nicheswork[nicheswork$SendingType == "Fibroblast",]
+table(Fibroblast$ReceivingType)
+prop.table(table(Fibroblast$ReceivingType))
+sort(prop.table(table(Fibroblast$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4559")
+EWS4559 <- data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4559")
+
+####
+nicheswork <- spe_4564_niches_output[["CellToCellSpatial"]]@meta.data
+Fibroblast <- nicheswork[nicheswork$SendingType == "Fibroblast",]
+table(Fibroblast$ReceivingType)
+prop.table(table(Fibroblast$ReceivingType))
+sort(prop.table(table(Fibroblast$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4564")
+EWS4564 <- data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4564")
+
+####
+nicheswork <- spe_4577_niches_output[["CellToCellSpatial"]]@meta.data
+Fibroblast <- nicheswork[nicheswork$SendingType == "Fibroblast",]
+table(Fibroblast$ReceivingType)
+prop.table(table(Fibroblast$ReceivingType))
+sort(prop.table(table(Fibroblast$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4577")
+EWS4577 <- data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4577")
+
+####
+nicheswork <- spe_4578_niches_output[["CellToCellSpatial"]]@meta.data
+Fibroblast <- nicheswork[nicheswork$SendingType == "Fibroblast",]
+table(Fibroblast$ReceivingType)
+prop.table(table(Fibroblast$ReceivingType))
+sort(prop.table(table(Fibroblast$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4578")
+EWS4578 <- data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4578")
+
+####
+nicheswork <- spe_4582_niches_output[["CellToCellSpatial"]]@meta.data
+Fibroblast <- nicheswork[nicheswork$SendingType == "Fibroblast",]
+table(Fibroblast$ReceivingType)
+prop.table(table(Fibroblast$ReceivingType))
+sort(prop.table(table(Fibroblast$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4582")
+EWS4582 <- data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4582")
+
+####
+nicheswork <- spe_4668_niches_output[["CellToCellSpatial"]]@meta.data
+Fibroblast <- nicheswork[nicheswork$SendingType == "Fibroblast",]
+table(Fibroblast$ReceivingType)
+prop.table(table(Fibroblast$ReceivingType))
+sort(prop.table(table(Fibroblast$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4668")
+EWS4668 <- data.frame(fraction=sort(prop.table(table(Fibroblast$ReceivingType))), sample="EWS4668")
+####
+
+library(tidyr)
+
+df_wide_4064 <- pivot_wider(EWS4064, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4521 <- pivot_wider(EWS4521, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+
+df_wide_4523 <- pivot_wider(EWS4523, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4531 <- pivot_wider(EWS4531, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+
+df_wide_4539 <- pivot_wider(EWS4539, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4550 <- pivot_wider(EWS4550, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4553 <- pivot_wider(EWS4553, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4556 <- pivot_wider(EWS4556, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4559 <- pivot_wider(EWS4559, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4564 <- pivot_wider(EWS4564, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4577 <- pivot_wider(EWS4577, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4578 <- pivot_wider(EWS4578, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4582 <- pivot_wider(EWS4582, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4668 <- pivot_wider(EWS4668, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+combined_df <- bind_rows(df_wide_4064, 
+                         df_wide_4521, 
+                         df_wide_4523,
+                         df_wide_4531,
+                         df_wide_4539,
+                         df_wide_4550,
+                         df_wide_4553,
+                         df_wide_4556,
+                         df_wide_4559,
+                         df_wide_4564,
+                         df_wide_4577,
+                         df_wide_4578,
+                         df_wide_4582,
+                         df_wide_4668)
+
+write.csv(combined_df, file = "combined_df.nichesfibroblast.csv")
+
+library(tidyr)
+library(dplyr)
+
+df_long <- pivot_longer(combined_df, 
+                        cols = -sample, 
+                        names_to = "cell_type", 
+                        values_to = "fraction")
+#simple graph to start off# 
+#ggplot(df_long, aes(x = sample, y = fraction, fill = cell_type)) +
+#  geom_bar(stat = "identity") +
+#  theme_classic() +
+#  labs(x = "Tumor Sample", y = "Cell Type Fraction", fill = "Cell Type") +
+#  ggtitle("Cell Type Composition (Sorted by Abundance)") +
+#  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+df_long <- df_long %>%
+  group_by(sample) %>%
+  arrange(sample, desc(fraction)) %>%  # Largest on bottom
+  mutate(ymin = cumsum(fraction) - fraction,
+         ymax = cumsum(fraction)) %>%
+  ungroup()
+
+
+# Create a numeric x-axis position
+df_long <- df_long %>%
+  mutate(xnum = as.numeric(factor(sample)))
+
+ggplot(df_long, aes(x = xnum, fill = cell_type)) +
+  geom_rect(aes(ymin = ymin, ymax = ymax,
+                xmin = xnum - 0.4,
+                xmax = xnum + 0.4)) +
+  scale_x_continuous(breaks = unique(df_long$xnum),
+                     labels = unique(df_long$sample)) +
+  labs(x = "Tumor Sample", y = "Cell Type Fraction", fill = "Cell Type") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Cell Type Composition (Largest on Bottom)")
+
+
+
+df_long <- df_long %>% 
+  filter(sample != "EWS4553") %>%
+  mutate(xnum = as.numeric(factor(sample)))
+
+
+ggplot(df_long, aes(x = xnum, fill = cell_type)) +
+  geom_rect(aes(ymin = ymin, ymax = ymax,
+                xmin = xnum - 0.4,
+                xmax = xnum + 0.4)) +
+  scale_x_continuous(breaks = unique(df_long$xnum),
+                     labels = unique(df_long$sample)) +
+  scale_fill_viridis_d(option = "C") +  # Options: "D", "C", "B", "A", "E"
+  labs(x = "Tumor Sample", y = "Receiving Cell Type Proportions", fill = "Cell Type") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Enrichment of cell types within Fibroblast neighborhoods")
+
+
+#############################
+
+########################lets do B cells neighborhood ######
+###lets extract dataframe info###
+nicheswork <- spe_4064_niches_output[["CellToCellSpatial"]]@meta.data
+B <- nicheswork[nicheswork$SendingType == "B cells",]
+table(B$ReceivingType)
+prop.table(table(B$ReceivingType))
+sort(prop.table(table(B$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4064")
+EWS4064 <- data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4064")
+
+####
+nicheswork <- spe_4521_niches_output[["CellToCellSpatial"]]@meta.data
+B <- nicheswork[nicheswork$SendingType == "B cells",]
+table(B$ReceivingType)
+prop.table(table(B$ReceivingType))
+sort(prop.table(table(B$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4521")
+EWS4521 <- data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4521")
+
+####
+nicheswork <- spe_4523_niches_output[["CellToCellSpatial"]]@meta.data
+B <- nicheswork[nicheswork$SendingType == "B cells",]
+table(B$ReceivingType)
+prop.table(table(B$ReceivingType))
+sort(prop.table(table(B$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4523")
+EWS4523 <- data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4523")
+
+####
+nicheswork <- spe_4531_niches_output[["CellToCellSpatial"]]@meta.data
+B <- nicheswork[nicheswork$SendingType == "B cells",]
+table(B$ReceivingType)
+prop.table(table(B$ReceivingType))
+sort(prop.table(table(B$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4531")
+EWS4531 <- data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4531")
+
+####
+nicheswork <- spe_4539_niches_output[["CellToCellSpatial"]]@meta.data
+B <- nicheswork[nicheswork$SendingType == "B cells",]
+table(B$ReceivingType)
+prop.table(table(B$ReceivingType))
+sort(prop.table(table(B$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4539")
+EWS4539 <- data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4539")
+
+####
+nicheswork <- spe_4550_niches_output[["CellToCellSpatial"]]@meta.data
+B <- nicheswork[nicheswork$SendingType == "B cells",]
+table(B$ReceivingType)
+prop.table(table(B$ReceivingType))
+sort(prop.table(table(B$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4550")
+EWS4550 <- data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4550")
+
+####
+nicheswork <- spe_4553_niches_output[["CellToCellSpatial"]]@meta.data
+B <- nicheswork[nicheswork$SendingType == "B cells",]
+table(B$ReceivingType)
+prop.table(table(B$ReceivingType))
+sort(prop.table(table(B$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4553")
+EWS4553 <- data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4553")
+
+####
+nicheswork <- spe_4556_niches_output[["CellToCellSpatial"]]@meta.data
+B <- nicheswork[nicheswork$SendingType == "B cells",]
+table(B$ReceivingType)
+prop.table(table(B$ReceivingType))
+sort(prop.table(table(B$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4556")
+EWS4556 <- data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4556")
+
+####
+nicheswork <- spe_4559_niches_output[["CellToCellSpatial"]]@meta.data
+B <- nicheswork[nicheswork$SendingType == "B cells",]
+table(B$ReceivingType)
+prop.table(table(B$ReceivingType))
+sort(prop.table(table(B$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4559")
+EWS4559 <- data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4559")
+
+####
+nicheswork <- spe_4564_niches_output[["CellToCellSpatial"]]@meta.data
+B <- nicheswork[nicheswork$SendingType == "B cells",]
+table(B$ReceivingType)
+prop.table(table(B$ReceivingType))
+sort(prop.table(table(B$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4564")
+EWS4564 <- data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4564")
+
+####
+nicheswork <- spe_4577_niches_output[["CellToCellSpatial"]]@meta.data
+B <- nicheswork[nicheswork$SendingType == "B cells",]
+table(B$ReceivingType)
+prop.table(table(B$ReceivingType))
+sort(prop.table(table(B$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4577")
+EWS4577 <- data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4577")
+
+####
+nicheswork <- spe_4578_niches_output[["CellToCellSpatial"]]@meta.data
+B <- nicheswork[nicheswork$SendingType == "B cells",]
+table(B$ReceivingType)
+prop.table(table(B$ReceivingType))
+sort(prop.table(table(B$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4578")
+EWS4578 <- data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4578")
+
+####
+nicheswork <- spe_4582_niches_output[["CellToCellSpatial"]]@meta.data
+B <- nicheswork[nicheswork$SendingType == "B cells",]
+table(B$ReceivingType)
+prop.table(table(B$ReceivingType))
+sort(prop.table(table(B$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4582")
+EWS4582 <- data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4582")
+
+####
+nicheswork <- spe_4668_niches_output[["CellToCellSpatial"]]@meta.data
+B <- nicheswork[nicheswork$SendingType == "B cells",]
+table(B$ReceivingType)
+prop.table(table(B$ReceivingType))
+sort(prop.table(table(B$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4668")
+EWS4668 <- data.frame(fraction=sort(prop.table(table(B$ReceivingType))), sample="EWS4668")
+####
+
+library(tidyr)
+
+df_wide_4064 <- pivot_wider(EWS4064, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4521 <- pivot_wider(EWS4521, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+
+df_wide_4523 <- pivot_wider(EWS4523, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4531 <- pivot_wider(EWS4531, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+
+df_wide_4539 <- pivot_wider(EWS4539, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4550 <- pivot_wider(EWS4550, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4553 <- pivot_wider(EWS4553, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4556 <- pivot_wider(EWS4556, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4559 <- pivot_wider(EWS4559, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4564 <- pivot_wider(EWS4564, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4577 <- pivot_wider(EWS4577, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4578 <- pivot_wider(EWS4578, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4582 <- pivot_wider(EWS4582, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4668 <- pivot_wider(EWS4668, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+combined_df <- bind_rows(df_wide_4064, 
+                         df_wide_4521, 
+                         df_wide_4523,
+                         df_wide_4531,
+                         df_wide_4539,
+                         df_wide_4550,
+                         df_wide_4553,
+                         df_wide_4556,
+                         df_wide_4559,
+                         df_wide_4564,
+                         df_wide_4577,
+                         df_wide_4578,
+                         df_wide_4582,
+                         df_wide_4668)
+
+write.csv(combined_df, file = "combined_df.nichesBcells.csv")
+
+library(tidyr)
+library(dplyr)
+
+df_long <- pivot_longer(combined_df, 
+                        cols = -sample, 
+                        names_to = "cell_type", 
+                        values_to = "fraction")
+#simple graph to start off# 
+#ggplot(df_long, aes(x = sample, y = fraction, fill = cell_type)) +
+#  geom_bar(stat = "identity") +
+#  theme_classic() +
+#  labs(x = "Tumor Sample", y = "Cell Type Fraction", fill = "Cell Type") +
+#  ggtitle("Cell Type Composition (Sorted by Abundance)") +
+#  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+df_long <- df_long %>%
+  group_by(sample) %>%
+  arrange(sample, desc(fraction)) %>%  # Largest on bottom
+  mutate(ymin = cumsum(fraction) - fraction,
+         ymax = cumsum(fraction)) %>%
+  ungroup()
+
+
+# Create a numeric x-axis position
+df_long <- df_long %>%
+  mutate(xnum = as.numeric(factor(sample)))
+
+ggplot(df_long, aes(x = xnum, fill = cell_type)) +
+  geom_rect(aes(ymin = ymin, ymax = ymax,
+                xmin = xnum - 0.4,
+                xmax = xnum + 0.4)) +
+  scale_x_continuous(breaks = unique(df_long$xnum),
+                     labels = unique(df_long$sample)) +
+  labs(x = "Tumor Sample", y = "Cell Type Fraction", fill = "Cell Type") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Cell Type Composition (Largest on Bottom)")
+
+
+
+df_long <- df_long %>% 
+  filter(sample != "EWS4553") %>%
+  mutate(xnum = as.numeric(factor(sample)))
+
+
+ggplot(df_long, aes(x = xnum, fill = cell_type)) +
+  geom_rect(aes(ymin = ymin, ymax = ymax,
+                xmin = xnum - 0.4,
+                xmax = xnum + 0.4)) +
+  scale_x_continuous(breaks = unique(df_long$xnum),
+                     labels = unique(df_long$sample)) +
+  scale_fill_viridis_d(option = "C") +  # Options: "D", "C", "B", "A", "E"
+  labs(x = "Tumor Sample", y = "Receiving Cell Type Proportions", fill = "Cell Type") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Enrichment of cell types within B cells neighborhoods")
+
+
+#############################
+
+########################lets do CD68 cells neighborhood ######
+###lets extract dataframe info###
+nicheswork <- spe_4064_niches_output[["CellToCellSpatial"]]@meta.data
+M1 <- nicheswork[nicheswork$SendingType == "CD68+ Macrophage",]
+table(M1$ReceivingType)
+prop.table(table(M1$ReceivingType))
+sort(prop.table(table(M1$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4064")
+EWS4064 <- data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4064")
+
+####
+nicheswork <- spe_4521_niches_output[["CellToCellSpatial"]]@meta.data
+M1 <- nicheswork[nicheswork$SendingType == "CD68+ Macrophage",]
+table(M1$ReceivingType)
+prop.table(table(M1$ReceivingType))
+sort(prop.table(table(M1$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4521")
+EWS4521 <- data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4521")
+
+####
+nicheswork <- spe_4523_niches_output[["CellToCellSpatial"]]@meta.data
+M1 <- nicheswork[nicheswork$SendingType == "CD68+ Macrophage",]
+table(M1$ReceivingType)
+prop.table(table(M1$ReceivingType))
+sort(prop.table(table(M1$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4523")
+EWS4523 <- data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4523")
+
+####
+nicheswork <- spe_4531_niches_output[["CellToCellSpatial"]]@meta.data
+M1 <- nicheswork[nicheswork$SendingType == "CD68+ Macrophage",]
+table(M1$ReceivingType)
+prop.table(table(M1$ReceivingType))
+sort(prop.table(table(M1$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4531")
+EWS4531 <- data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4531")
+
+####
+nicheswork <- spe_4539_niches_output[["CellToCellSpatial"]]@meta.data
+M1 <- nicheswork[nicheswork$SendingType == "CD68+ Macrophage",]
+table(M1$ReceivingType)
+prop.table(table(M1$ReceivingType))
+sort(prop.table(table(M1$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4539")
+EWS4539 <- data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4539")
+
+####
+nicheswork <- spe_4550_niches_output[["CellToCellSpatial"]]@meta.data
+M1 <- nicheswork[nicheswork$SendingType == "CD68+ Macrophage",]
+table(M1$ReceivingType)
+prop.table(table(M1$ReceivingType))
+sort(prop.table(table(M1$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4550")
+EWS4550 <- data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4550")
+
+####
+nicheswork <- spe_4553_niches_output[["CellToCellSpatial"]]@meta.data
+M1 <- nicheswork[nicheswork$SendingType == "CD68+ Macrophage",]
+table(M1$ReceivingType)
+prop.table(table(M1$ReceivingType))
+sort(prop.table(table(M1$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4553")
+EWS4553 <- data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4553")
+
+####
+nicheswork <- spe_4556_niches_output[["CellToCellSpatial"]]@meta.data
+M1 <- nicheswork[nicheswork$SendingType == "CD68+ Macrophage",]
+table(M1$ReceivingType)
+prop.table(table(M1$ReceivingType))
+sort(prop.table(table(M1$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4556")
+EWS4556 <- data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4556")
+
+####
+nicheswork <- spe_4559_niches_output[["CellToCellSpatial"]]@meta.data
+M1 <- nicheswork[nicheswork$SendingType == "CD68+ Macrophage",]
+table(M1$ReceivingType)
+prop.table(table(M1$ReceivingType))
+sort(prop.table(table(M1$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4559")
+EWS4559 <- data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4559")
+
+####
+nicheswork <- spe_4564_niches_output[["CellToCellSpatial"]]@meta.data
+M1 <- nicheswork[nicheswork$SendingType == "CD68+ Macrophage",]
+table(M1$ReceivingType)
+prop.table(table(M1$ReceivingType))
+sort(prop.table(table(M1$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4564")
+EWS4564 <- data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4564")
+
+####
+nicheswork <- spe_4577_niches_output[["CellToCellSpatial"]]@meta.data
+M1 <- nicheswork[nicheswork$SendingType == "CD68+ Macrophage",]
+table(M1$ReceivingType)
+prop.table(table(M1$ReceivingType))
+sort(prop.table(table(M1$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4577")
+EWS4577 <- data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4577")
+
+####
+nicheswork <- spe_4578_niches_output[["CellToCellSpatial"]]@meta.data
+M1 <- nicheswork[nicheswork$SendingType == "CD68+ Macrophage",]
+table(M1$ReceivingType)
+prop.table(table(M1$ReceivingType))
+sort(prop.table(table(M1$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4578")
+EWS4578 <- data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4578")
+
+####
+nicheswork <- spe_4582_niches_output[["CellToCellSpatial"]]@meta.data
+M1 <- nicheswork[nicheswork$SendingType == "CD68+ Macrophage",]
+table(M1$ReceivingType)
+prop.table(table(M1$ReceivingType))
+sort(prop.table(table(M1$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4582")
+EWS4582 <- data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4582")
+
+####
+nicheswork <- spe_4668_niches_output[["CellToCellSpatial"]]@meta.data
+M1 <- nicheswork[nicheswork$SendingType == "CD68+ Macrophage",]
+table(M1$ReceivingType)
+prop.table(table(M1$ReceivingType))
+sort(prop.table(table(M1$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4668")
+EWS4668 <- data.frame(fraction=sort(prop.table(table(M1$ReceivingType))), sample="EWS4668")
+####
+
+library(tidyr)
+
+df_wide_4064 <- pivot_wider(EWS4064, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4521 <- pivot_wider(EWS4521, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+
+df_wide_4523 <- pivot_wider(EWS4523, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4531 <- pivot_wider(EWS4531, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+
+df_wide_4539 <- pivot_wider(EWS4539, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4550 <- pivot_wider(EWS4550, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4553 <- pivot_wider(EWS4553, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4556 <- pivot_wider(EWS4556, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4559 <- pivot_wider(EWS4559, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4564 <- pivot_wider(EWS4564, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4577 <- pivot_wider(EWS4577, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4578 <- pivot_wider(EWS4578, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4582 <- pivot_wider(EWS4582, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4668 <- pivot_wider(EWS4668, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+combined_df <- bind_rows(df_wide_4064, 
+                         df_wide_4521, 
+                         df_wide_4523,
+                         df_wide_4531,
+                         df_wide_4539,
+                         df_wide_4550,
+                         df_wide_4553,
+                         df_wide_4556,
+                         df_wide_4559,
+                         df_wide_4564,
+                         df_wide_4577,
+                         df_wide_4578,
+                         df_wide_4582,
+                         df_wide_4668)
+
+write.csv(combined_df, file = "combined_df.nichesM1Macrophage.csv")
+
+library(tidyr)
+library(dplyr)
+
+df_long <- pivot_longer(combined_df, 
+                        cols = -sample, 
+                        names_to = "cell_type", 
+                        values_to = "fraction")
+#simple graph to start off# 
+#ggplot(df_long, aes(x = sample, y = fraction, fill = cell_type)) +
+#  geom_bar(stat = "identity") +
+#  theme_classic() +
+#  labs(x = "Tumor Sample", y = "Cell Type Fraction", fill = "Cell Type") +
+#  ggtitle("Cell Type Composition (Sorted by Abundance)") +
+#  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+df_long <- df_long %>%
+  group_by(sample) %>%
+  arrange(sample, desc(fraction)) %>%  # Largest on bottom
+  mutate(ymin = cumsum(fraction) - fraction,
+         ymax = cumsum(fraction)) %>%
+  ungroup()
+
+
+# Create a numeric x-axis position
+df_long <- df_long %>%
+  mutate(xnum = as.numeric(factor(sample)))
+
+ggplot(df_long, aes(x = xnum, fill = cell_type)) +
+  geom_rect(aes(ymin = ymin, ymax = ymax,
+                xmin = xnum - 0.4,
+                xmax = xnum + 0.4)) +
+  scale_x_continuous(breaks = unique(df_long$xnum),
+                     labels = unique(df_long$sample)) +
+  labs(x = "Tumor Sample", y = "Cell Type Fraction", fill = "Cell Type") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Cell Type Composition (Largest on Bottom)")
+
+
+
+df_long <- df_long %>% 
+  filter(sample != "EWS4553") %>%
+  mutate(xnum = as.numeric(factor(sample)))
+
+
+ggplot(df_long, aes(x = xnum, fill = cell_type)) +
+  geom_rect(aes(ymin = ymin, ymax = ymax,
+                xmin = xnum - 0.4,
+                xmax = xnum + 0.4)) +
+  scale_x_continuous(breaks = unique(df_long$xnum),
+                     labels = unique(df_long$sample)) +
+  scale_fill_viridis_d(option = "C") +  # Options: "D", "C", "B", "A", "E"
+  labs(x = "Tumor Sample", y = "Receiving Cell Type Proportions", fill = "Cell Type") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Enrichment of cell types within M1 neighborhoods")
+
+#############################
+
+########################lets do Endothelial cells cells neighborhood ######
+###lets extract dataframe info###
+nicheswork <- spe_4064_niches_output[["CellToCellSpatial"]]@meta.data
+Endo <- nicheswork[nicheswork$SendingType == "Endothelial cells",]
+table(Endo$ReceivingType)
+prop.table(table(Endo$ReceivingType))
+sort(prop.table(table(Endo$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4064")
+EWS4064 <- data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4064")
+
+####
+nicheswork <- spe_4521_niches_output[["CellToCellSpatial"]]@meta.data
+Endo <- nicheswork[nicheswork$SendingType == "Endothelial cells",]
+table(Endo$ReceivingType)
+prop.table(table(Endo$ReceivingType))
+sort(prop.table(table(Endo$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4521")
+EWS4521 <- data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4521")
+
+####
+nicheswork <- spe_4523_niches_output[["CellToCellSpatial"]]@meta.data
+Endo <- nicheswork[nicheswork$SendingType == "Endothelial cells",]
+table(Endo$ReceivingType)
+prop.table(table(Endo$ReceivingType))
+sort(prop.table(table(Endo$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4523")
+EWS4523 <- data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4523")
+
+####
+nicheswork <- spe_4531_niches_output[["CellToCellSpatial"]]@meta.data
+Endo <- nicheswork[nicheswork$SendingType == "Endothelial cells",]
+table(Endo$ReceivingType)
+prop.table(table(Endo$ReceivingType))
+sort(prop.table(table(Endo$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4531")
+EWS4531 <- data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4531")
+
+####
+nicheswork <- spe_4539_niches_output[["CellToCellSpatial"]]@meta.data
+Endo <- nicheswork[nicheswork$SendingType == "Endothelial cells",]
+table(Endo$ReceivingType)
+prop.table(table(Endo$ReceivingType))
+sort(prop.table(table(Endo$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4539")
+EWS4539 <- data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4539")
+
+####
+nicheswork <- spe_4550_niches_output[["CellToCellSpatial"]]@meta.data
+Endo <- nicheswork[nicheswork$SendingType == "Endothelial cells",]
+table(Endo$ReceivingType)
+prop.table(table(Endo$ReceivingType))
+sort(prop.table(table(Endo$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4550")
+EWS4550 <- data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4550")
+
+####
+nicheswork <- spe_4553_niches_output[["CellToCellSpatial"]]@meta.data
+Endo <- nicheswork[nicheswork$SendingType == "Endothelial cells",]
+table(Endo$ReceivingType)
+prop.table(table(Endo$ReceivingType))
+sort(prop.table(table(Endo$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4553")
+EWS4553 <- data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4553")
+
+####
+nicheswork <- spe_4556_niches_output[["CellToCellSpatial"]]@meta.data
+Endo <- nicheswork[nicheswork$SendingType == "Endothelial cells",]
+table(Endo$ReceivingType)
+prop.table(table(Endo$ReceivingType))
+sort(prop.table(table(Endo$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4556")
+EWS4556 <- data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4556")
+
+####
+nicheswork <- spe_4559_niches_output[["CellToCellSpatial"]]@meta.data
+Endo <- nicheswork[nicheswork$SendingType == "Endothelial cells",]
+table(Endo$ReceivingType)
+prop.table(table(Endo$ReceivingType))
+sort(prop.table(table(Endo$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4559")
+EWS4559 <- data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4559")
+
+####
+nicheswork <- spe_4564_niches_output[["CellToCellSpatial"]]@meta.data
+Endo <- nicheswork[nicheswork$SendingType == "Endothelial cells",]
+table(Endo$ReceivingType)
+prop.table(table(Endo$ReceivingType))
+sort(prop.table(table(Endo$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4564")
+EWS4564 <- data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4564")
+
+####
+nicheswork <- spe_4577_niches_output[["CellToCellSpatial"]]@meta.data
+Endo <- nicheswork[nicheswork$SendingType == "Endothelial cells",]
+table(Endo$ReceivingType)
+prop.table(table(Endo$ReceivingType))
+sort(prop.table(table(Endo$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4577")
+EWS4577 <- data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4577")
+
+####
+nicheswork <- spe_4578_niches_output[["CellToCellSpatial"]]@meta.data
+Endo <- nicheswork[nicheswork$SendingType == "Endothelial cells",]
+table(Endo$ReceivingType)
+prop.table(table(Endo$ReceivingType))
+sort(prop.table(table(Endo$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4578")
+EWS4578 <- data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4578")
+
+####
+nicheswork <- spe_4582_niches_output[["CellToCellSpatial"]]@meta.data
+Endo <- nicheswork[nicheswork$SendingType == "Endothelial cells",]
+table(Endo$ReceivingType)
+prop.table(table(Endo$ReceivingType))
+sort(prop.table(table(Endo$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4582")
+EWS4582 <- data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4582")
+
+####
+nicheswork <- spe_4668_niches_output[["CellToCellSpatial"]]@meta.data
+Endo <- nicheswork[nicheswork$SendingType == "Endothelial cells",]
+table(Endo$ReceivingType)
+prop.table(table(Endo$ReceivingType))
+sort(prop.table(table(Endo$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4668")
+EWS4668 <- data.frame(fraction=sort(prop.table(table(Endo$ReceivingType))), sample="EWS4668")
+####
+
+library(tidyr)
+
+df_wide_4064 <- pivot_wider(EWS4064, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4521 <- pivot_wider(EWS4521, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+
+df_wide_4523 <- pivot_wider(EWS4523, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4531 <- pivot_wider(EWS4531, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+
+df_wide_4539 <- pivot_wider(EWS4539, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4550 <- pivot_wider(EWS4550, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4553 <- pivot_wider(EWS4553, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4556 <- pivot_wider(EWS4556, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4559 <- pivot_wider(EWS4559, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4564 <- pivot_wider(EWS4564, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4577 <- pivot_wider(EWS4577, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4578 <- pivot_wider(EWS4578, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4582 <- pivot_wider(EWS4582, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4668 <- pivot_wider(EWS4668, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+combined_df <- bind_rows(df_wide_4064, 
+                         df_wide_4521, 
+                         df_wide_4523,
+                         df_wide_4531,
+                         df_wide_4539,
+                         df_wide_4550,
+                         df_wide_4553,
+                         df_wide_4556,
+                         df_wide_4559,
+                         df_wide_4564,
+                         df_wide_4577,
+                         df_wide_4578,
+                         df_wide_4582,
+                         df_wide_4668)
+
+write.csv(combined_df, file = "combined_df.nichesEndothelial.csv")
+
+library(tidyr)
+library(dplyr)
+
+df_long <- pivot_longer(combined_df, 
+                        cols = -sample, 
+                        names_to = "cell_type", 
+                        values_to = "fraction")
+#simple graph to start off# 
+#ggplot(df_long, aes(x = sample, y = fraction, fill = cell_type)) +
+#  geom_bar(stat = "identity") +
+#  theme_classic() +
+#  labs(x = "Tumor Sample", y = "Cell Type Fraction", fill = "Cell Type") +
+#  ggtitle("Cell Type Composition (Sorted by Abundance)") +
+#  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+df_long <- df_long %>%
+  group_by(sample) %>%
+  arrange(sample, desc(fraction)) %>%  # Largest on bottom
+  mutate(ymin = cumsum(fraction) - fraction,
+         ymax = cumsum(fraction)) %>%
+  ungroup()
+
+
+# Create a numeric x-axis position
+df_long <- df_long %>%
+  mutate(xnum = as.numeric(factor(sample)))
+
+ggplot(df_long, aes(x = xnum, fill = cell_type)) +
+  geom_rect(aes(ymin = ymin, ymax = ymax,
+                xmin = xnum - 0.4,
+                xmax = xnum + 0.4)) +
+  scale_x_continuous(breaks = unique(df_long$xnum),
+                     labels = unique(df_long$sample)) +
+  labs(x = "Tumor Sample", y = "Cell Type Fraction", fill = "Cell Type") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Cell Type Composition (Largest on Bottom)")
+
+
+
+df_long <- df_long %>% 
+  filter(sample != "EWS4553") %>%
+  mutate(xnum = as.numeric(factor(sample)))
+
+
+ggplot(df_long, aes(x = xnum, fill = cell_type)) +
+  geom_rect(aes(ymin = ymin, ymax = ymax,
+                xmin = xnum - 0.4,
+                xmax = xnum + 0.4)) +
+  scale_x_continuous(breaks = unique(df_long$xnum),
+                     labels = unique(df_long$sample)) +
+  scale_fill_viridis_d(option = "C") +  # Options: "D", "C", "B", "A", "E"
+  labs(x = "Tumor Sample", y = "Receiving Cell Type Proportions", fill = "Cell Type") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Enrichment of cell types within Endothelial cells neighborhoods")
+
+#############################
+
+########################lets do Neutrophils cells cells neighborhood ######
+###lets extract dataframe info###
+nicheswork <- spe_4064_niches_output[["CellToCellSpatial"]]@meta.data
+Neut <- nicheswork[nicheswork$SendingType == "Neutrophils",]
+table(Neut$ReceivingType)
+prop.table(table(Neut$ReceivingType))
+sort(prop.table(table(Neut$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4064")
+EWS4064 <- data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4064")
+
+####
+nicheswork <- spe_4521_niches_output[["CellToCellSpatial"]]@meta.data
+Neut <- nicheswork[nicheswork$SendingType == "Neutrophils",]
+table(Neut$ReceivingType)
+prop.table(table(Neut$ReceivingType))
+sort(prop.table(table(Neut$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4521")
+EWS4521 <- data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4521")
+
+####
+nicheswork <- spe_4523_niches_output[["CellToCellSpatial"]]@meta.data
+Neut <- nicheswork[nicheswork$SendingType == "Neutrophils",]
+table(Neut$ReceivingType)
+prop.table(table(Neut$ReceivingType))
+sort(prop.table(table(Neut$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4523")
+EWS4523 <- data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4523")
+
+####
+nicheswork <- spe_4531_niches_output[["CellToCellSpatial"]]@meta.data
+Neut <- nicheswork[nicheswork$SendingType == "Neutrophils",]
+table(Neut$ReceivingType)
+prop.table(table(Neut$ReceivingType))
+sort(prop.table(table(Neut$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4531")
+EWS4531 <- data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4531")
+
+####
+nicheswork <- spe_4539_niches_output[["CellToCellSpatial"]]@meta.data
+Neut <- nicheswork[nicheswork$SendingType == "Neutrophils",]
+table(Neut$ReceivingType)
+prop.table(table(Neut$ReceivingType))
+sort(prop.table(table(Neut$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4539")
+EWS4539 <- data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4539")
+
+####
+nicheswork <- spe_4550_niches_output[["CellToCellSpatial"]]@meta.data
+Neut <- nicheswork[nicheswork$SendingType == "Neutrophils",]
+table(Neut$ReceivingType)
+prop.table(table(Neut$ReceivingType))
+sort(prop.table(table(Neut$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4550")
+EWS4550 <- data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4550")
+
+####
+nicheswork <- spe_4553_niches_output[["CellToCellSpatial"]]@meta.data
+Neut <- nicheswork[nicheswork$SendingType == "Neutrophils",]
+table(Neut$ReceivingType)
+prop.table(table(Neut$ReceivingType))
+sort(prop.table(table(Neut$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4553")
+EWS4553 <- data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4553")
+
+####
+nicheswork <- spe_4556_niches_output[["CellToCellSpatial"]]@meta.data
+Neut <- nicheswork[nicheswork$SendingType == "Neutrophils",]
+table(Neut$ReceivingType)
+prop.table(table(Neut$ReceivingType))
+sort(prop.table(table(Neut$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4556")
+EWS4556 <- data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4556")
+
+####
+nicheswork <- spe_4559_niches_output[["CellToCellSpatial"]]@meta.data
+Neut <- nicheswork[nicheswork$SendingType == "Neutrophils",]
+table(Neut$ReceivingType)
+prop.table(table(Neut$ReceivingType))
+sort(prop.table(table(Neut$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4559")
+EWS4559 <- data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4559")
+
+####
+nicheswork <- spe_4564_niches_output[["CellToCellSpatial"]]@meta.data
+Neut <- nicheswork[nicheswork$SendingType == "Neutrophils",]
+table(Neut$ReceivingType)
+prop.table(table(Neut$ReceivingType))
+sort(prop.table(table(Neut$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4564")
+EWS4564 <- data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4564")
+
+####
+nicheswork <- spe_4577_niches_output[["CellToCellSpatial"]]@meta.data
+Neut <- nicheswork[nicheswork$SendingType == "Neutrophils",]
+table(Neut$ReceivingType)
+prop.table(table(Neut$ReceivingType))
+sort(prop.table(table(Neut$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4577")
+EWS4577 <- data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4577")
+
+####
+nicheswork <- spe_4578_niches_output[["CellToCellSpatial"]]@meta.data
+Neut <- nicheswork[nicheswork$SendingType == "Neutrophils",]
+table(Neut$ReceivingType)
+prop.table(table(Neut$ReceivingType))
+sort(prop.table(table(Neut$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4578")
+EWS4578 <- data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4578")
+
+####
+nicheswork <- spe_4582_niches_output[["CellToCellSpatial"]]@meta.data
+Neut <- nicheswork[nicheswork$SendingType == "Neutrophils",]
+table(Neut$ReceivingType)
+prop.table(table(Neut$ReceivingType))
+sort(prop.table(table(Neut$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4582")
+EWS4582 <- data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4582")
+
+####
+nicheswork <- spe_4668_niches_output[["CellToCellSpatial"]]@meta.data
+Neut <- nicheswork[nicheswork$SendingType == "Neutrophils",]
+table(Neut$ReceivingType)
+prop.table(table(Neut$ReceivingType))
+sort(prop.table(table(Neut$ReceivingType)))
+
+data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4668")
+EWS4668 <- data.frame(fraction=sort(prop.table(table(Neut$ReceivingType))), sample="EWS4668")
+####
+
+library(tidyr)
+
+df_wide_4064 <- pivot_wider(EWS4064, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4521 <- pivot_wider(EWS4521, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+
+df_wide_4523 <- pivot_wider(EWS4523, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4531 <- pivot_wider(EWS4531, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+
+df_wide_4539 <- pivot_wider(EWS4539, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4550 <- pivot_wider(EWS4550, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4553 <- pivot_wider(EWS4553, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4556 <- pivot_wider(EWS4556, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4559 <- pivot_wider(EWS4559, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4564 <- pivot_wider(EWS4564, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4577 <- pivot_wider(EWS4577, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4578 <- pivot_wider(EWS4578, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4582 <- pivot_wider(EWS4582, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+df_wide_4668 <- pivot_wider(EWS4668, 
+                            names_from = fraction.Var1, 
+                            values_from = fraction.Freq)
+
+combined_df <- bind_rows(df_wide_4064, 
+                         df_wide_4521, 
+                         df_wide_4523,
+                         df_wide_4531,
+                         df_wide_4539,
+                         df_wide_4550,
+                         df_wide_4553,
+                         df_wide_4556,
+                         df_wide_4559,
+                         df_wide_4564,
+                         df_wide_4577,
+                         df_wide_4578,
+                         df_wide_4582,
+                         df_wide_4668)
+
+write.csv(combined_df, file = "combined_df.nichesNeutrophils.csv")
+
+library(tidyr)
+library(dplyr)
+
+df_long <- pivot_longer(combined_df, 
+                        cols = -sample, 
+                        names_to = "cell_type", 
+                        values_to = "fraction")
+#simple graph to start off# 
+#ggplot(df_long, aes(x = sample, y = fraction, fill = cell_type)) +
+#  geom_bar(stat = "identity") +
+#  theme_classic() +
+#  labs(x = "Tumor Sample", y = "Cell Type Fraction", fill = "Cell Type") +
+#  ggtitle("Cell Type Composition (Sorted by Abundance)") +
+#  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+df_long <- df_long %>%
+  group_by(sample) %>%
+  arrange(sample, desc(fraction)) %>%  # Largest on bottom
+  mutate(ymin = cumsum(fraction) - fraction,
+         ymax = cumsum(fraction)) %>%
+  ungroup()
+
+
+# Create a numeric x-axis position
+df_long <- df_long %>%
+  mutate(xnum = as.numeric(factor(sample)))
+
+ggplot(df_long, aes(x = xnum, fill = cell_type)) +
+  geom_rect(aes(ymin = ymin, ymax = ymax,
+                xmin = xnum - 0.4,
+                xmax = xnum + 0.4)) +
+  scale_x_continuous(breaks = unique(df_long$xnum),
+                     labels = unique(df_long$sample)) +
+  labs(x = "Tumor Sample", y = "Cell Type Fraction", fill = "Cell Type") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Cell Type Composition (Largest on Bottom)")
+
+
+
+df_long <- df_long %>% 
+  filter(sample != "EWS4553") %>%
+  mutate(xnum = as.numeric(factor(sample)))
+
+
+ggplot(df_long, aes(x = xnum, fill = cell_type)) +
+  geom_rect(aes(ymin = ymin, ymax = ymax,
+                xmin = xnum - 0.4,
+                xmax = xnum + 0.4)) +
+  scale_x_continuous(breaks = unique(df_long$xnum),
+                     labels = unique(df_long$sample)) +
+  scale_fill_viridis_d(option = "C") +  # Options: "D", "C", "B", "A", "E"
+  labs(x = "Tumor Sample", y = "Receiving Cell Type Proportions", fill = "Cell Type") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Enrichment of cell types within Endothelial cells neighborhoods")
+
+#############################
+ggplot(niches_output, aes(x = SendingType, y = ReceivingType, size = interaction_score, color = interaction_score)) +
+  geom_point(alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "Ligand-Receptor Interaction Scores", x = "celltype.Sending", y = "celltype.Receiving") +
+  scale_color_viridis_c()
+######
+
+head(CD163)
+colnames(CD163)
+
+ggplot(CD163, aes(x = x.Sending, y = y.Sending, color = nFeature_CellToCellSpatial)) +
+  geom_point(alpha = 0.5, size = 1, color = "dodgerblue") +
+  coord_fixed() +
+  scale_y_reverse() +
+  theme_minimal() +
+  labs(
+    title = "Spatial Distribution of MIF-CD74 Sending Cells",
+    x = "X Position",
+    y = "Y Position"
+  )
+
+CD163$x.Sending <- as.numeric(as.character(CD163$x.Sending))
+CD163$y.Sending <- as.numeric(as.character(CD163$y.Sending))
+
+nicheswork$x.Sending <- as.numeric(as.character(nicheswork$x.Sending))
+nicheswork$y.Sending <- as.numeric(as.character(nicheswork$y.Sending))
+
+# Plot with color based on interaction strength
+ggplot(CD163, aes(x = x.Sending, y = y.Sending, color = `VectorType`)) +
+  geom_point(size = 1, alpha = 0.8) +
+  coord_fixed() +
+  scale_y_reverse() +
+  theme_minimal() +
+  labs(
+    title = "Receiving",
+    x = "X Position",
+    y = "Y Position",
+    color = "Receiving Cells"
+  )
+
+
+ggplot(demo, 
+       aes(x= fraction.Var1,
+           y= fraction.Freq, 
+           fill= sample)) +
+  geom_bar(stat = "identity") +
+  
+  theme_classic() +
+  ggtitle("Barplot demo")
+
+ggplot(demo, 
+       aes(x = reorder(fraction.Var1, -fraction.Freq),
+           y = fraction.Freq, 
+           fill = sample)) +
+  geom_bar(stat = "identity") +
+  theme_classic() +
+  ggtitle("EWS4668 CD163 Sending cells")+
+  labs(x = "Receiving Cell Type", y = "Interaction Proportion")+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#stacked barplot# 
+ggplot(demo, 
+       aes(x = sample,
+           y = fraction.Freq, 
+           fill = fraction.Var1)) +
+  geom_bar(stat = "identity") +
+  theme_classic() +
+  ggtitle("Stacked Barplot demo")
+
+
