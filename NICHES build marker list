@@ -1,0 +1,175 @@
+
+
+# require packages
+require(Seurat)
+require(ggplot2)
+require(cowplot)
+library(gtools)
+require(dplyr)
+require(poolr)
+
+
+# Load marker list
+load("/Volumes/T7/Chris/Reprocess/me_Marker_List.modified.Robj")
+
+# First define some global variables
+Sample_Name_List <- names(me_Marker_List) # the micro-environment marker list, names of each sample
+sample_num <- length(Sample_Name_List)
+cluster_ID_List <- c('0','1','2')
+
+Metastatic <- c('EWS4064','EWS4512','EWS4521','EWS4523','EWS4577','EWS4578')
+Localized <- c('EWS4531','EWS4539','EWS4550','EWS4553','EWS4554','EWS4556','EWS4557','EWS4559','EWS4564','EWS4582')
+
+# So we can start from Marker_List_in_2_minimum_ClusterN
+
+load("/Volumes/T7/Chris/Reprocess/Marker_List_in_2_minimum_Cluster0_modified.Robj")
+Cluster_0_Markers <- marker_list
+
+load("/Volumes/T7/Chris/Reprocess/Marker_List_in_2_minimum_Cluster1_modified.Robj")
+Cluster_1_Markers <- marker_list
+
+load("/Volumes/T7/Chris/Reprocess/Marker_List_in_2_minimum_Cluster2_modified.Robj")
+Cluster_2_Markers <- marker_list
+
+load("/Volumes/T7/Chris/Reprocess/Marker_List_in_2_minimum_Cluster3_modified.Robj")
+Cluster_3_Markers <- marker_list
+
+# This is the function defining SampleType
+
+SampleType_Classification <- function(x){
+  
+  SampleType <- 'Localized'
+  if(x %in% Metastatic){
+    SampleType <- 'Metastatic'
+  }
+  return(SampleType)
+}
+
+
+# Check each cluster
+for(i in cluster_ID_List){
+  
+  cluster_ID <- i
+  #cluster_table_name <- paste0('Cluster_',cluster_ID,'_Marker_List')
+  Cluster_Markers <- eval(parse(text = paste0('Cluster_',cluster_ID,'_Markers'))) # assign variable names
+  Cluster_Markers <- Cluster_Markers$marker_list
+  
+  result <- data.frame()
+  
+  # Iterate through the sample list to add more rows
+  for (j in 1:sample_num){
+    cur_Sample <- Sample_Name_List[j]
+    cluster_flag <- sapply(me_Marker_List[[cur_Sample]]['cluster'],function(x) x==cluster_ID)
+    selected_cluster <- me_Marker_List[[cur_Sample]][cluster_flag,]
+    selected_flag <- sapply(selected_cluster$gene, function(x) x %in% Cluster_Markers)
+    if(length(selected_flag)>0){
+      selected_genes <- selected_cluster[selected_flag,]
+      if(dim(selected_genes)[1]>0){
+        selected_genes$SampleID <- cur_Sample
+        result <- rbind(result,selected_genes)
+      }
+    }
+  }
+  
+  # We only want significant markers, with p-value < 0.001
+  p_val_flag <- result['p_val_adj']<0.001
+  result <- result[p_val_flag,]
+  
+  SampleType <- sapply(result$SampleID,SampleType_Classification)
+  result$SampleType <- SampleType
+  
+  # Calculate the score for each gene: how many samples contain this gene? how many Metastatic? Localized?
+  gene_score <- result %>% count(gene)
+  names(gene_score)[names(gene_score) == "n"] <- "Score"
+  
+  gene_score_Metastatic <- result[result['SampleType']=='Metastatic',] %>% count(gene)
+  names(gene_score_Metastatic)[names(gene_score_Metastatic) == "n"] <- "Score_Metastatic"
+  
+  gene_score_Localized <- result[result['SampleType']=='Localized',] %>% count(gene)
+  names(gene_score_Localized)[names(gene_score_Localized) == "n"] <- "Score_Localized"
+  
+  # Add score column to our data frame
+  all_with_score <- result %>% 
+    left_join(gene_score, by='gene') %>% 
+    left_join(gene_score_Metastatic, by='gene') %>%
+    left_join(gene_score_Localized, by='gene')
+  
+  # Change NA values to numeric 0
+  all_with_score <- all_with_score %>% replace(is.na(.), 0)
+  
+  # Assign output names and save the R objects
+  
+  if(i=='0'){
+    Marker_List_with_Score <- all_with_score
+  }
+  else{
+    Marker_List_with_Score <- rbind(Marker_List_with_Score,all_with_score)
+  }
+  # assign(cluster_table_name,all_with_score)
+  # Marker_List_with_Score <- eval(parse(text=cluster_table_name))
+  # save(Marker_List_with_Score,file=paste0('Cluster_',cluster_ID,'_Marker_List_with_Score.Robj'))
+  
+}
+
+save(Marker_List_with_Score,file='Marker_List_with_Score_modified.Robj')
+
+load('/Volumes/T7/Chris/Reprocess/Marker_List_with_Score_modified.Robj')
+
+split_marker_list <- split(Marker_List_with_Score,f = Marker_List_with_Score$SampleType)
+
+Marker_List_with_Score_L <- split_marker_list$Localized
+Marker_List_with_Score_M <- split_marker_list$Metastatic
+
+
+Marker_List_with_Score_Summarized <- Marker_List_with_Score %>%    
+  group_by(gene, cluster) %>%    
+  summarize(`Avg pct1` = mean(pct.1),
+            `Avg pct2` = mean(pct.2),
+            `Avg avg_log2FC` = log2(mean(2^avg_log2FC)),
+            `Fisher p value` = fisher(p_val)$p,
+            `Fisher p value adj` = fisher(p_val_adj)$p,
+            `Avg Score` = mean(Score),
+            `Avg Score_Metastatic` = mean(Score_Metastatic),
+            `Avg Score_Localized` = mean(Score_Localized))
+
+Marker_List_with_Score_Summarized$ratio <- Marker_List_with_Score_Summarized$`Avg pct1`/Marker_List_with_Score_Summarized$`Avg pct2`
+Marker_List_with_Score_Summarized$power <- Marker_List_with_Score_Summarized$`Avg avg_log2FC`*Marker_List_with_Score_Summarized$ratio
+
+save(Marker_List_with_Score_Summarized,file='Marker_List_with_Score_Summarized_modified.Robj')
+
+
+
+
+Marker_List_with_Score_Summarized_L <- Marker_List_with_Score_L %>%    
+  group_by(gene, cluster) %>%    
+  summarize(`Avg pct1` = mean(pct.1),
+            `Avg pct2` = mean(pct.2),
+            `Avg avg_log2FC` = log2(mean(2^avg_log2FC)),
+            `Fisher p value` = fisher(p_val)$p,
+            `Fisher p value adj` = fisher(p_val_adj)$p,
+            `Avg Score` = mean(Score),
+            `Avg Score_Metastatic` = mean(Score_Metastatic),
+            `Avg Score_Localized` = mean(Score_Localized))
+
+Marker_List_with_Score_Summarized_L$ratio <- Marker_List_with_Score_Summarized_L$`Avg pct1`/Marker_List_with_Score_Summarized_L$`Avg pct2`
+Marker_List_with_Score_Summarized_L$power <- Marker_List_with_Score_Summarized_L$`Avg avg_log2FC`*Marker_List_with_Score_Summarized_L$ratio
+
+save(Marker_List_with_Score_Summarized_L,file='Marker_List_with_Score_Summarized_L_modified.Robj')
+
+
+
+Marker_List_with_Score_Summarized_M <- Marker_List_with_Score_M %>%    
+  group_by(gene, cluster) %>%    
+  summarize(`Avg pct1` = mean(pct.1),
+            `Avg pct2` = mean(pct.2),
+            `Avg avg_log2FC` = log2(mean(2^avg_log2FC)),
+            `Fisher p value` = fisher(p_val)$p,
+            `Fisher p value adj` = fisher(p_val_adj)$p,
+            `Avg Score` = mean(Score),
+            `Avg Score_Metastatic` = mean(Score_Metastatic),
+            `Avg Score_Localized` = mean(Score_Localized))
+
+Marker_List_with_Score_Summarized_M$ratio <- Marker_List_with_Score_Summarized_M$`Avg pct1`/Marker_List_with_Score_Summarized_M$`Avg pct2`
+Marker_List_with_Score_Summarized_M$power <- Marker_List_with_Score_Summarized_M$`Avg avg_log2FC`*Marker_List_with_Score_Summarized_M$ratio
+
+save(Marker_List_with_Score_Summarized_M,file='Marker_List_with_Score_Summarized_M_modified.Robj')
