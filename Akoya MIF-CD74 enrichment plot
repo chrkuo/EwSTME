@@ -1,0 +1,739 @@
+#This is to look at interaction graphed based on MIF-CD74#
+meta <- spe_4564_niches_output$CellToCellSpatial@meta.data
+head(meta)
+
+library(dplyr)
+library(ggplot2)
+
+# Step 1: Extract metadata cleanly and coerce to data.frame
+meta <- spe_4564_niches_output$CellToCellSpatial@meta.data
+meta <- as.data.frame(meta, stringsAsFactors = FALSE)
+
+# Step 2: Check and fix list columns
+meta[] <- lapply(meta, function(x) {
+  if (is.list(x)) unlist(x) else x
+})
+
+# Step 3: Convert relevant columns to character (if needed)
+meta$celltype.Sending <- as.character(meta$celltype.Sending)
+meta$celltype.Receiving <- as.character(meta$celltype.Receiving)
+
+library(dplyr)
+
+interaction_summary <- dplyr::count(meta, celltype.Sending, celltype.Receiving, name = "interaction_count")
+
+
+library(ggplot2)
+
+ggplot(interaction_summary, aes(x = celltype.Sending, y = celltype.Receiving, fill = interaction_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(
+    low = "blue",
+    mid = "white",
+    high = "red",
+    midpoint = median(interaction_summary$interaction_count),
+    name = "Interaction\nCount"
+  ) +
+  labs(
+    title = "Cell–Cell Interaction Frequency",
+    x = "Sending Cell Type",
+    y = "Receiving Cell Type"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid = element_blank()
+  )
+
+
+interaction_summary$log_count <- log1p(interaction_summary$interaction_count)  # log(1 + count)
+
+ggplot(interaction_summary, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(
+    low = "blue",
+    mid = "white",
+    high = "red",
+    midpoint = median(interaction_summary$log_count),
+    name = "log(1 + Count)"
+  ) +
+  labs(
+    title = "Cell–Cell Interaction Frequency (Log-Scaled)",
+    x = "Sending Cell Type",
+    y = "Receiving Cell Type"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+###################################################
+### clean start do every single tumor from here ###
+###################################################
+#4064#
+meta <- spe_4064_niches_output$CellToCellSpatial@meta.data
+data <- GetAssayData(spe_4064_niches_output$CellToCellSpatial, assay = "CellToCellSpatial", slot = "data")
+mif_cd74_scores <- data["MIF—CD74", ] 
+meta$MIF_CD74_score <- as.numeric(mif_cd74_scores)
+meta_mif_only <- meta
+
+interaction_summary_mif <- dplyr::count(meta_mif_only, celltype.Sending, celltype.Receiving, name = "interaction_count")
+
+interaction_summary_mif$log_count <- log1p(interaction_summary_mif$interaction_count)
+
+ggplot(interaction_summary_mif, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red",
+                       midpoint = median(interaction_summary_mif$log_count),
+                       name = "log(1 + Count)") +
+  labs(title = "EWS4064 MIF–CD74 Interaction Frequency", x = "Sending Cell Type", y = "Receiving Cell Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(interaction_summary_mif, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(
+    low = "blue", mid = "white", high = "red",
+    midpoint = 5,               # midpoint can be any value (e.g., median)
+    limits = c(0, 13.5),           # <-- this sets the scale bar range
+    name = "log(1 + Count)"
+  ) +
+  labs(
+    title = "EWS4064 MIF–CD74 Interaction Frequency",
+    x = "Sending Cell Type",
+    y = "Receiving Cell Type"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+interaction_summary_mif$tumor_id <- "EWS4064"
+interaction_summary_mif$disease_status <- "Metastatic"
+
+write.csv(interaction_summary_mif, file = "EWS4064_mif_interactiondf.csv")
+#####
+###4521####
+meta <- spe_4521_niches_output$CellToCellSpatial@meta.data
+data <- GetAssayData(spe_4521_niches_output$CellToCellSpatial, assay = "CellToCellSpatial", slot = "data")
+mif_cd74_scores <- data["MIF—CD74", ] 
+meta$MIF_CD74_score <- as.numeric(mif_cd74_scores)
+meta_mif_only <- meta
+
+interaction_summary_mif <- dplyr::count(meta_mif_only, celltype.Sending, celltype.Receiving, name = "interaction_count")
+
+interaction_summary_mif$log_count <- log1p(interaction_summary_mif$interaction_count)
+
+interaction_summary_mif_complete <- interaction_summary_mif %>%
+  complete(celltype.Sending, celltype.Receiving, fill = list(interaction_count = 0)) %>%
+  mutate(log_count = log1p(interaction_count))
+
+ggplot(interaction_summary_mif_complete, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(
+    low = "blue", mid = "white", high = "red",
+    midpoint = 5,
+    limits = c(0, 13.6),
+    name = "log(1 + Count)"
+  ) +
+  labs(
+    title = "EWS4521 MIF–CD74 Interaction Frequency",
+    x = "Sending Cell Type",
+    y = "Receiving Cell Type"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+interaction_summary_mif_complete <- interaction_summary_mif %>%
+  complete(celltype.Sending, celltype.Receiving, fill = list(interaction_count = 0)) %>%
+  mutate(log_count = log1p(interaction_count))
+
+ggplot(interaction_summary_mif_complete, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(
+    low = "blue", mid = "white", high = "red",
+    midpoint = 5,
+    limits = c(0, 13.6),
+    name = "log(1 + Count)"
+  ) +
+  labs(
+    title = "EWS4521 MIF–CD74 Interaction Frequency",
+    x = "Sending Cell Type",
+    y = "Receiving Cell Type"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+interaction_summary_mif_complete$tumor_id <- "EWS4521"
+interaction_summary_mif_complete$disease_status <- "Metastatic"
+
+write.csv(interaction_summary_mif_complete, file = "EWS4521_mif_interactiondf.csv")
+
+###4523####
+meta <- spe_4523_niches_output$CellToCellSpatial@meta.data
+data <- GetAssayData(spe_4523_niches_output$CellToCellSpatial, assay = "CellToCellSpatial", slot = "data")
+mif_cd74_scores <- data["MIF—CD74", ] 
+meta$MIF_CD74_score <- as.numeric(mif_cd74_scores)
+meta_mif_only <- meta
+
+interaction_summary_mif <- dplyr::count(meta_mif_only, celltype.Sending, celltype.Receiving, name = "interaction_count")
+
+interaction_summary_mif$log_count <- log1p(interaction_summary_mif$interaction_count)
+
+interaction_summary_mif_complete <- interaction_summary_mif %>%
+  complete(celltype.Sending, celltype.Receiving, fill = list(interaction_count = 0)) %>%
+  mutate(log_count = log1p(interaction_count))
+
+ggplot(interaction_summary_mif_complete, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(
+    low = "blue", mid = "white", high = "red",
+    midpoint = 5,
+    limits = c(0, 13.6),
+    name = "log(1 + Count)"
+  ) +
+  labs(
+    title = "EWS4523 MIF–CD74 Interaction Frequency",
+    x = "Sending Cell Type",
+    y = "Receiving Cell Type"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+interaction_summary_mif_complete$tumor_id <- "EWS4523"
+interaction_summary_mif_complete$disease_status <- "Metastatic"
+
+write.csv(interaction_summary_mif_complete, file = "EWS4523_mif_interactiondf.csv")
+
+###4531####
+meta <- spe_4531_niches_output$CellToCellSpatial@meta.data
+data <- GetAssayData(spe_4531_niches_output$CellToCellSpatial, assay = "CellToCellSpatial", slot = "data")
+mif_cd74_scores <- data["MIF—CD74", ] 
+meta$MIF_CD74_score <- as.numeric(mif_cd74_scores)
+meta_mif_only <- meta
+
+interaction_summary_mif <- dplyr::count(meta_mif_only, celltype.Sending, celltype.Receiving, name = "interaction_count")
+
+interaction_summary_mif$log_count <- log1p(interaction_summary_mif$interaction_count)
+
+ggplot(interaction_summary_mif, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red",
+                       midpoint = median(interaction_summary_mif$log_count),
+                       name = "log(1 + Count)") +
+  labs(title = "EWS4531 MIF–CD74 Interaction Frequency", x = "Sending Cell Type", y = "Receiving Cell Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(interaction_summary_mif, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(
+    low = "blue", mid = "white", high = "red",
+    midpoint = 5,               # midpoint can be any value (e.g., median)
+    limits = c(0, 13.5),           # <-- this sets the scale bar range
+    name = "log(1 + Count)"
+  ) +
+  labs(
+    title = "EWS4531 MIF–CD74 Interaction Frequency",
+    x = "Sending Cell Type",
+    y = "Receiving Cell Type"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+interaction_summary_mif$tumor_id <- "EWS4531"
+interaction_summary_mif$disease_status <- "Localized"
+
+write.csv(interaction_summary_mif, file = "EWS4531_mif_interactiondf.csv")
+
+###4539####
+meta <- spe_4539_niches_output$CellToCellSpatial@meta.data
+data <- GetAssayData(spe_4539_niches_output$CellToCellSpatial, assay = "CellToCellSpatial", slot = "data")
+mif_cd74_scores <- data["MIF—CD74", ] 
+meta$MIF_CD74_score <- as.numeric(mif_cd74_scores)
+meta_mif_only <- meta
+
+interaction_summary_mif <- dplyr::count(meta_mif_only, celltype.Sending, celltype.Receiving, name = "interaction_count")
+
+interaction_summary_mif$log_count <- log1p(interaction_summary_mif$interaction_count)
+
+ggplot(interaction_summary_mif, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red",
+                       midpoint = median(interaction_summary_mif$log_count),
+                       name = "log(1 + Count)") +
+  labs(title = "EWS4539 MIF–CD74 Interaction Frequency", x = "Sending Cell Type", y = "Receiving Cell Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(interaction_summary_mif, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(
+    low = "blue", mid = "white", high = "red",
+    midpoint = 5,               # midpoint can be any value (e.g., median)
+    limits = c(0, 13.5),           # <-- this sets the scale bar range
+    name = "log(1 + Count)"
+  ) +
+  labs(
+    title = "EWS4539 MIF–CD74 Interaction Frequency",
+    x = "Sending Cell Type",
+    y = "Receiving Cell Type"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+interaction_summary_mif$tumor_id <- "EWS4539"
+interaction_summary_mif$disease_status <- "Localized"
+
+write.csv(interaction_summary_mif, file = "EWS4539_mif_interactiondf.csv")
+
+###4550####
+meta <- spe_4550_niches_output$CellToCellSpatial@meta.data
+data <- GetAssayData(spe_4550_niches_output$CellToCellSpatial, assay = "CellToCellSpatial", slot = "data")
+mif_cd74_scores <- data["MIF—CD74", ] 
+meta$MIF_CD74_score <- as.numeric(mif_cd74_scores)
+meta_mif_only <- meta
+
+interaction_summary_mif <- dplyr::count(meta_mif_only, celltype.Sending, celltype.Receiving, name = "interaction_count")
+
+interaction_summary_mif$log_count <- log1p(interaction_summary_mif$interaction_count)
+
+interaction_summary_mif_complete <- interaction_summary_mif %>%
+  complete(celltype.Sending, celltype.Receiving, fill = list(interaction_count = 0)) %>%
+  mutate(log_count = log1p(interaction_count))
+
+
+ggplot(interaction_summary_mif_complete, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(
+    low = "blue", mid = "white", high = "red",
+    midpoint = 5,
+    limits = c(0, 13.6),
+    name = "log(1 + Count)"
+  ) +
+  labs(
+    title = "EWS4550 MIF–CD74 Interaction Frequency",
+    x = "Sending Cell Type",
+    y = "Receiving Cell Type"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+interaction_summary_mif_complete$tumor_id <- "EWS4550"
+interaction_summary_mif_complete$disease_status <- "Localized"
+
+write.csv(interaction_summary_mif_complete, file = "EWS4550_mif_interactiondf.csv")
+
+###4556####
+meta <- spe_4556_niches_output$CellToCellSpatial@meta.data
+data <- GetAssayData(spe_4556_niches_output$CellToCellSpatial, assay = "CellToCellSpatial", slot = "data")
+mif_cd74_scores <- data["MIF—CD74", ] 
+meta$MIF_CD74_score <- as.numeric(mif_cd74_scores)
+meta_mif_only <- meta
+
+interaction_summary_mif <- dplyr::count(meta_mif_only, celltype.Sending, celltype.Receiving, name = "interaction_count")
+
+interaction_summary_mif$log_count <- log1p(interaction_summary_mif$interaction_count)
+
+ggplot(interaction_summary_mif, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red",
+                       midpoint = median(interaction_summary_mif$log_count),
+                       name = "log(1 + Count)") +
+  labs(title = "EWS4556 MIF–CD74 Interaction Frequency", x = "Sending Cell Type", y = "Receiving Cell Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(interaction_summary_mif, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(
+    low = "blue", mid = "white", high = "red",
+    midpoint = 5,               # midpoint can be any value (e.g., median)
+    limits = c(0, 13.6),           # <-- this sets the scale bar range
+    name = "log(1 + Count)"
+  ) +
+  labs(
+    title = "EWS4556 MIF–CD74 Interaction Frequency",
+    x = "Sending Cell Type",
+    y = "Receiving Cell Type"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+interaction_summary_mif$tumor_id <- "EWS4556"
+interaction_summary_mif$disease_status <- "Localized"
+
+write.csv(interaction_summary_mif, file = "EWS4556_mif_interactiondf.csv")
+
+
+###4559####
+meta <- spe_4559_niches_output$CellToCellSpatial@meta.data
+data <- GetAssayData(spe_4559_niches_output$CellToCellSpatial, assay = "CellToCellSpatial", slot = "data")
+mif_cd74_scores <- data["MIF—CD74", ] 
+meta$MIF_CD74_score <- as.numeric(mif_cd74_scores)
+meta_mif_only <- meta
+
+interaction_summary_mif <- dplyr::count(meta_mif_only, celltype.Sending, celltype.Receiving, name = "interaction_count")
+
+interaction_summary_mif$log_count <- log1p(interaction_summary_mif$interaction_count)
+
+ggplot(interaction_summary_mif, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red",
+                       midpoint = median(interaction_summary_mif$log_count),
+                       name = "log(1 + Count)") +
+  labs(title = "EWS4559 MIF–CD74 Interaction Frequency", x = "Sending Cell Type", y = "Receiving Cell Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(interaction_summary_mif, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(
+    low = "blue", mid = "white", high = "red",
+    midpoint = 5,               # midpoint can be any value (e.g., median)
+    limits = c(0, 13.6),           # <-- this sets the scale bar range
+    name = "log(1 + Count)"
+  ) +
+  labs(
+    title = "EWS4559 MIF–CD74 Interaction Frequency",
+    x = "Sending Cell Type",
+    y = "Receiving Cell Type"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+interaction_summary_mif$tumor_id <- "EWS4559"
+interaction_summary_mif$disease_status <- "Localized"
+
+write.csv(interaction_summary_mif, file = "EWS4559_mif_interactiondf.csv")
+
+
+
+
+###4564####
+meta <- spe_4564_niches_output$CellToCellSpatial@meta.data
+data <- GetAssayData(spe_4564_niches_output$CellToCellSpatial, assay = "CellToCellSpatial", slot = "data")
+mif_cd74_scores <- data["MIF—CD74", ] 
+meta$MIF_CD74_score <- as.numeric(mif_cd74_scores)
+meta_mif_only <- meta
+
+interaction_summary_mif <- dplyr::count(meta_mif_only, celltype.Sending, celltype.Receiving, name = "interaction_count")
+
+interaction_summary_mif$log_count <- log1p(interaction_summary_mif$interaction_count)
+
+ggplot(interaction_summary_mif, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red",
+                       midpoint = median(interaction_summary_mif$log_count),
+                       name = "log(1 + Count)") +
+  labs(title = "EWS4564 MIF–CD74 Interaction Frequency", x = "Sending Cell Type", y = "Receiving Cell Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(interaction_summary_mif, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(
+    low = "blue", mid = "white", high = "red",
+    midpoint = 5,               # midpoint can be any value (e.g., median)
+    limits = c(0, 13.6),           # <-- this sets the scale bar range
+    name = "log(1 + Count)"
+  ) +
+  labs(
+    title = "EWS4564 MIF–CD74 Interaction Frequency",
+    x = "Sending Cell Type",
+    y = "Receiving Cell Type"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+interaction_summary_mif$tumor_id <- "EWS4564"
+interaction_summary_mif$disease_status <- "Localized"
+
+write.csv(interaction_summary_mif, file = "EWS4564_mif_interactiondf.csv")
+
+
+###4577####
+meta <- spe_4577_niches_output$CellToCellSpatial@meta.data
+data <- GetAssayData(spe_4577_niches_output$CellToCellSpatial, assay = "CellToCellSpatial", slot = "data")
+mif_cd74_scores <- data["MIF—CD74", ] 
+meta$MIF_CD74_score <- as.numeric(mif_cd74_scores)
+meta_mif_only <- meta
+
+interaction_summary_mif <- dplyr::count(meta_mif_only, celltype.Sending, celltype.Receiving, name = "interaction_count")
+
+interaction_summary_mif$log_count <- log1p(interaction_summary_mif$interaction_count)
+
+ggplot(interaction_summary_mif, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red",
+                       midpoint = median(interaction_summary_mif$log_count),
+                       name = "log(1 + Count)") +
+  labs(title = "EWS4577 MIF–CD74 Interaction Frequency", x = "Sending Cell Type", y = "Receiving Cell Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(interaction_summary_mif, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(
+    low = "blue", mid = "white", high = "red",
+    midpoint = 5,               # midpoint can be any value (e.g., median)
+    limits = c(0, 13.6),           # <-- this sets the scale bar range
+    name = "log(1 + Count)"
+  ) +
+  labs(
+    title = "EWS4577 MIF–CD74 Interaction Frequency",
+    x = "Sending Cell Type",
+    y = "Receiving Cell Type"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+interaction_summary_mif$tumor_id <- "EWS4577"
+interaction_summary_mif$disease_status <- "Metastatic"
+
+write.csv(interaction_summary_mif, file = "EWS4577_mif_interactiondf.csv")
+
+
+
+
+###4578####
+meta <- spe_4578_niches_output$CellToCellSpatial@meta.data
+data <- GetAssayData(spe_4578_niches_output$CellToCellSpatial, assay = "CellToCellSpatial", slot = "data")
+mif_cd74_scores <- data["MIF—CD74", ] 
+meta$MIF_CD74_score <- as.numeric(mif_cd74_scores)
+meta_mif_only <- meta
+
+interaction_summary_mif <- dplyr::count(meta_mif_only, celltype.Sending, celltype.Receiving, name = "interaction_count")
+
+interaction_summary_mif$log_count <- log1p(interaction_summary_mif$interaction_count)
+
+interaction_summary_mif_complete <- interaction_summary_mif %>%
+  complete(celltype.Sending, celltype.Receiving, fill = list(interaction_count = 0)) %>%
+  mutate(log_count = log1p(interaction_count))
+
+
+ggplot(interaction_summary_mif_complete, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(
+    low = "blue", mid = "white", high = "red",
+    midpoint = 5,
+    limits = c(0, 13.6),
+    name = "log(1 + Count)"
+  ) +
+  labs(
+    title = "EWS4578 MIF–CD74 Interaction Frequency",
+    x = "Sending Cell Type",
+    y = "Receiving Cell Type"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+interaction_summary_mif_complete$tumor_id <- "EWS4578"
+interaction_summary_mif_complete$disease_status <- "Metastatic"
+
+write.csv(interaction_summary_mif_complete, file = "EWS4578_mif_interactiondf.csv")
+
+###4582####
+meta <- spe_4582_niches_output$CellToCellSpatial@meta.data
+data <- GetAssayData(spe_4582_niches_output$CellToCellSpatial, assay = "CellToCellSpatial", slot = "data")
+mif_cd74_scores <- data["MIF—CD74", ] 
+meta$MIF_CD74_score <- as.numeric(mif_cd74_scores)
+meta_mif_only <- meta
+
+interaction_summary_mif <- dplyr::count(meta_mif_only, celltype.Sending, celltype.Receiving, name = "interaction_count")
+
+interaction_summary_mif$log_count <- log1p(interaction_summary_mif$interaction_count)
+
+ggplot(interaction_summary_mif, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red",
+                       midpoint = median(interaction_summary_mif$log_count),
+                       name = "log(1 + Count)") +
+  labs(title = "EWS4582 MIF–CD74 Interaction Frequency", x = "Sending Cell Type", y = "Receiving Cell Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(interaction_summary_mif, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(
+    low = "blue", mid = "white", high = "red",
+    midpoint = 5,               # midpoint can be any value (e.g., median)
+    limits = c(0, 13.6),           # <-- this sets the scale bar range
+    name = "log(1 + Count)"
+  ) +
+  labs(
+    title = "EWS4582 MIF–CD74 Interaction Frequency",
+    x = "Sending Cell Type",
+    y = "Receiving Cell Type"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+interaction_summary_mif$tumor_id <- "EWS4582"
+interaction_summary_mif$disease_status <- "Localized"
+
+write.csv(interaction_summary_mif, file = "EWS4582_mif_interactiondf.csv")
+
+###4668####
+meta <- spe_4668_niches_output$CellToCellSpatial@meta.data
+data <- GetAssayData(spe_4668_niches_output$CellToCellSpatial, assay = "CellToCellSpatial", slot = "data")
+mif_cd74_scores <- data["MIF—CD74", ] 
+meta$MIF_CD74_score <- as.numeric(mif_cd74_scores)
+meta_mif_only <- meta
+
+interaction_summary_mif <- dplyr::count(meta_mif_only, celltype.Sending, celltype.Receiving, name = "interaction_count")
+
+interaction_summary_mif$log_count <- log1p(interaction_summary_mif$interaction_count)
+
+ggplot(interaction_summary_mif, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red",
+                       midpoint = median(interaction_summary_mif$log_count),
+                       name = "log(1 + Count)") +
+  labs(title = "EWS4668 MIF–CD74 Interaction Frequency", x = "Sending Cell Type", y = "Receiving Cell Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(interaction_summary_mif, aes(x = celltype.Sending, y = celltype.Receiving, fill = log_count)) +
+  geom_tile(color = "grey90") +
+  scale_fill_gradient2(
+    low = "blue", mid = "white", high = "red",
+    midpoint = 5,               # midpoint can be any value (e.g., median)
+    limits = c(0, 13.6),           # <-- this sets the scale bar range
+    name = "log(1 + Count)"
+  ) +
+  labs(
+    title = "EWS4668 MIF–CD74 Interaction Frequency",
+    x = "Sending Cell Type",
+    y = "Receiving Cell Type"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+interaction_summary_mif$tumor_id <- "EWS4668"
+interaction_summary_mif$disease_status <- "Localized"
+
+write.csv(interaction_summary_mif, file = "EWS4668_mif_interactiondf.csv")
+####
+
+df_long <- read.csv(file = "/Users/chrkuo/Library/CloudStorage/OneDrive-ChildrensHospitalLosAngeles/Chris/EwS\ Visium\ Data/Manuscript/Current\ Version.Edits/Revision_CCR_2025/Full_Combined_MIF_CD74_Interaction_Data.csv")
+
+# Filter to EwS → Immune only
+immune_targets <- c("CD163+ CD206 + Macrophage", "CD68+ Macrophage", 
+                    "CD8/CD4 T cells", "B cells", "Neutrophils")
+
+df_filtered <- df_long %>%
+  filter(celltype.Sending == "EwS", celltype.Receiving %in% immune_targets)
+
+# Pivot to wide format
+df_all <- df_filtered %>%
+  select(Tumor_ID, celltype.Receiving, interaction_count) %>%
+  pivot_wider(names_from = celltype.Receiving, values_from = interaction_count, values_fill = 0) 
+
+###
+
+library(tidyverse)
+library(ggpubr)
+
+# Convert wide to long format
+df_long <- df_all %>%
+  pivot_longer(cols = -Tumor_ID,
+               names_to = "Interaction_Pair",
+               values_to = "Interaction_Count")
+
+# Generate paired boxplot with statistical annotations
+ggplot(df_long, aes(x = Interaction_Pair, y = Interaction_Count)) +
+  geom_boxplot(outlier.shape = NA, fill = "skyblue", alpha = 0.7) +
+  geom_jitter(aes(color = Tumor_ID), width = 0.2, size = 2, show.legend = FALSE) +
+  stat_compare_means(
+    method = "wilcox.test",
+    paired = FALSE,
+    label = "p.signif",
+    comparisons = combn(unique(df_long$Interaction_Pair), 2, simplify = FALSE)
+  ) +
+  labs(
+    title = "MIF–CD74 Interaction: EwS to Immune Cells (Paired by Tumor)",
+    x = "EwS → Immune Interaction",
+    y = "Interaction Count"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+# Paired boxplot with Wilcoxon signed-rank tests
+ggplot(df_long, aes(x = Interaction_Pair, y = Interaction_Count)) +
+  geom_boxplot(outlier.shape = NA, fill = "red", alpha = 0.7) +
+  geom_jitter(aes(color = Tumor_ID), width = 0.2, size = 2, show.legend = FALSE) +
+  stat_compare_means(
+    method = "wilcox.test",
+    paired = TRUE,
+    label = "p.format",
+    comparisons = combn(unique(df_long$Interaction_Pair), 2, simplify = FALSE)
+  ) +
+  labs(
+    title = "MIF–CD74 EwS → Immune Interactions (Paired Wilcoxon Test)",
+    x = "Interaction Pair",
+    y = "Interaction Count"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), panel.border = element_rect(color = "black", fill = NA, linewidth = 1)
+  )
+
+#no grid
+ggplot(df_long, aes(x = Interaction_Pair, y = Interaction_Count)) +
+  geom_boxplot(outlier.shape = NA, fill = "red", alpha = 0.7) +
+  geom_jitter(aes(color = disease_status), width = 0.2, size = 2, show.legend = FALSE) +
+  stat_compare_means(
+    method = "wilcox.test",
+    paired = TRUE,
+    label = "p.format",
+    comparisons = combn(unique(df_long$Interaction_Pair), 2, simplify = FALSE)
+  ) +
+  labs(
+    title = "MIF–CD74 EwS → Immune Interactions (Paired Wilcoxon Test)",
+    x = "Interaction Pair",
+    y = "Interaction Count"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 1),
+    panel.grid = element_blank()
+  )
+
+# Create a named vector for mapping Tumor_IDs to disease status
+disease_status_map <- c(
+  EWS4523 = "Metastatic",
+  EWS4578 = "Metastatic",
+  EWS4521 = "Metastatic",
+  EWS4064 = "Metastatic",
+  EWS4577 = "Metastatic",
+  EWS4559 = "Localized",
+  EWS4556 = "Localized",
+  EWS4564 = "Localized",
+  EWS4531 = "Localized",
+  EWS4582 = "Localized",
+  EWS4539 = "Localized",
+  EWS4550 = "Localized",
+  EWS4668 = "Localized"
+)
+
+df_long <- df_long %>%
+  mutate(disease_status = disease_status_map[Tumor_ID])
+
+write.csv(df_long, file = "MIF_CD74Interaction_Comparisonplot042325.csv")
