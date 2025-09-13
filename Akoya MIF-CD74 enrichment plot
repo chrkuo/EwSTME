@@ -1,0 +1,472 @@
+library(Seurat)
+library(dplyr)
+library(ggplot2)
+library(data.table)
+
+seurat_list <- list(
+  EWS4064 = spe_4064seurat,
+  EWS4521 = spe_4521seurat,
+  EWS4523 = spe_4523seurat,
+  EWS4531 = spe_4531seurat,
+  EWS4539 = spe_4539seurat,
+  EWS4550 = spe_4550seurat,
+  EWS4556 = spe_4556seurat,
+  EWS4564 = spe_4564seurat,
+  EWS4577 = spe_4577seurat,
+  EWS4578 = spe_4578seurat,
+  EWS4582 = spe_4582seurat,
+  EWS4668 = spe_4668seurat,
+  EWS4559 = spe_4559seurat
+)
+
+# 1) Collect your NICHES outputs in a named list
+niches_list <- list(
+  "EWS4064" = spe_4064_niches_output,
+  "EWS4521" = spe_4521_niches_output,
+  "EWS4523" = spe_4523_niches_output,
+  "EWS4531" = spe_4531_niches_output,
+  "EWS4539" = spe_4539_niches_output,
+  "EWS4550" = spe_4550_niches_output,
+  "EWS4556" = spe_4556_niches_output,
+  "EWS4564" = spe_4564_niches_output,
+  "EWS4577" = spe_4577_niches_output,
+  "EWS4578" = spe_4578_niches_output,
+  "EWS4582" = spe_4582_niches_output,
+  "EWS4668" = spe_4668_niches_output,
+  "EWS4559" = spe_4559_niches_output
+)
+
+df_neigh <- rbindlist(lapply(names(niches_list), function(sample_id) {
+  ccs <- niches_list[[sample_id]][["CellToCellSpatial"]]
+  raw <- GetAssayData(ccs, assay="CellToCellSpatial", layer="counts")
+  
+  # Get scores
+  scores <- as.numeric(raw["MIF—CD74", ])
+  
+  # Efficient extraction of receiving spot IDs
+  recv_ids <- vapply(strsplit(rownames(ccs@meta.data), "_", fixed = TRUE),
+                     function(x) x[[length(x)]], character(1L))
+  
+  # Aggregate scores per receiving spot
+  dt_scores <- data.table(recv = recv_ids, score = scores)
+  agg_scores <- dt_scores[, .(total = sum(score, na.rm = TRUE)), by = recv]
+  cutoff <- quantile(agg_scores$total, 0.75, na.rm = TRUE)
+  hot_spots <- agg_scores[total > cutoff, recv]
+  
+  if (length(hot_spots) == 0) return(NULL)
+  
+  # Extract valid neighbor columns only
+  md <- ccs@meta.data
+  neigh_cols <- grep("^aggregatedNeighbors\\..*\\.Receiving$", colnames(md), value = TRUE)
+  neigh_cols <- neigh_cols[!grepl("orig.ident|cluster_id|nCount|nFeature|sample_id|Pos_|x|y|disease_status", neigh_cols)]
+  md_hot <- md[recv_ids %in% hot_spots, neigh_cols, drop = FALSE]
+  
+  # Convert to numeric matrix with safe coercion
+  md_num <- suppressWarnings(data.matrix(sapply(md_hot, function(x) {
+    x_num <- as.numeric(as.character(x))
+    x_num[is.na(x) & !is.na(as.character(x))] <- 0
+    x_num
+  })))
+  
+  counts <- colSums(md_num, na.rm = TRUE)
+  props <- counts / sum(counts)
+  
+  data.frame(
+    sample = sample_id,
+    neighborType = gsub("^aggregatedNeighbors\\.|\\.Receiving$", "", names(props)),
+    prop = props,
+    stringsAsFactors = FALSE
+  )
+}), fill = TRUE)
+
+#############
+df_neigh <- df_neigh %>%
+  group_by(sample) %>%
+  arrange(sample, desc(prop)) %>%
+  mutate(neighborType = factor(neighborType, levels = rev(unique(neighborType)))) %>%
+  ungroup()
+
+
+# 1) Prepare long-format with ymin/ymax for stacking
+df_long <- df_neigh %>%
+  rename(fraction = prop, cell_type = neighborType) %>%
+  group_by(sample) %>%
+  arrange(desc(fraction), .by_group = TRUE) %>%
+  mutate(
+    ymin = cumsum(fraction) - fraction,
+    ymax = cumsum(fraction)
+  ) %>%
+  ungroup() %>%
+  mutate(
+    xnum = as.numeric(factor(sample, levels = unique(sample)))
+  )
+
+disease_status <- c(
+  "EWS4523" = "Metastatic",
+  "EWS4578" = "Metastatic",
+  "EWS4521" = "Metastatic",
+  "EWS4064" = "Metastatic",
+  "EWS4577" = "Metastatic",
+  "EWS4559" = "Localized",
+  "EWS4556" = "Localized",
+  "EWS4564" = "Localized",
+  "EWS4531" = "Localized",
+  "EWS4582" = "Localized",
+  "EWS4539" = "Localized",
+  "EWS4550" = "Localized",
+  "EWS4668" = "Localized"
+)
+
+df_long$disease_status <- disease_status[df_long$sample]
+
+write.csv(df_long, file = "MIFCD74spots_enrichment042125.csv")
+df_long <- read.csv(file = "/Users/chrkuo/MIFCD74spots_enrichment042125receiving.csv")
+library(viridis)
+
+viridis_c_colors <- viridis(n = 10, option = "C")
+print(viridis_c_colors)
+
+[1] "#0D0887FF" "#47039FFF" "#7301A8FF" "#9C179EFF" "#BD3786FF" "#D8576BFF" "#ED7953FF" "#FA9E3BFF" "#FDC926FF"
+[10] "#F0F921FF"
+
+cell_colors <- c(
+  "EwS"                          = "#ED7953FF",#FA9E3BFF
+  "Fibroblast"                  = "#FA9E3BFF",
+  "CD163..CD206...Macrophage"   = "#47039FFF",#D8576BFF
+  "Endothelial.cells"           = "#BD3786FF",#FDC926FF
+  "CD68..Macrophage"            = "#7301A8FF",
+  "Neutrophils"                 = "#F0F921FF",
+  "CD8.CD4.T.cells"             = "#9C179EFF",
+  "B.cells"                     = "#0D0887FF",
+  "NA"  = "#FDC926FF"
+)
+
+df_long$cell_type <- as.character(df_long$cell_type)
+df_long$cell_type[is.na(df_long$cell_type)] <- "NA"
+df_long$cell_type <- factor(df_long$cell_type, levels = names(cell_colors))
+
+ggplot(df_long, aes(x = xnum, fill = cell_type)) +
+  geom_rect(aes(ymin = ymin, ymax = ymax, xmin = xnum - 0.4, xmax = xnum + 0.4)) +
+  scale_x_continuous(breaks = unique(df_long$xnum), labels = unique(df_long$sample)) +
+  scale_y_continuous(labels = scales::percent_format(1)) +
+  scale_fill_manual(values = cell_colors) +  # ✅ manual colors
+  labs(
+    x = "Tumor Sample",
+    y = "Proportion of Neighboring Cell Types",
+    fill = "Cell Type",
+    title = "Cells enriched in MIF-CD74 enriched neighborhoods"
+  ) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+#dotplot
+df_long %>%
+  filter(cell_type != "NA") %>%
+  ggplot(aes(x = sample, y = cell_type, size = ymax - ymin, color = ymax - ymin)) +
+  geom_point(alpha = 1) +
+  scale_color_gradient2(
+    low = "blue",
+    mid = "white",
+    high = "red",
+    midpoint = 0.5,
+    limits = c(0, 1),
+    name = "Proportion"
+  ) +
+  scale_size(range = c(1, 8), name = "Proportion") +
+  labs(
+    title = "Dot Plot of Neighboring Cell Type Proportions in MIF-CD74 Regions",
+    x = "Tumor Sample",
+    y = "Cell Type"
+  ) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+#now to do statistical test:
+library(dplyr)
+
+# Wilcoxon test between groups per cell type
+wilcox_group <- df_long %>%
+  filter(!is.na(disease_status)) %>%
+  group_by(cell_type) %>%
+  summarise(
+    mean_localized  = mean(fraction[disease_status == "Localized"], na.rm = TRUE),
+    mean_metastatic = mean(fraction[disease_status == "Metastatic"], na.rm = TRUE),
+    p_value = tryCatch({
+      wilcox.test(
+        fraction[disease_status == "Localized"],
+        fraction[disease_status == "Metastatic"],
+        alternative = "two.sided"
+      )$p.value
+    }, error = function(e) NA_real_),
+    .groups = "drop"
+  ) %>%
+  mutate(p_adj = p.adjust(p_value, method = "fdr")) %>%
+  arrange(p_adj)
+
+write.csv(wilcox_group, file = "wilcox_group.betweenmetvloc.receivingenrichment.csv")
+
+# Global test: is fraction significantly > 0 (per cell type)
+wilcox_global <- df_long %>%
+  group_by(cell_type) %>%
+  summarise(
+    mean_prop = mean(fraction, na.rm = TRUE),
+    p_value = tryCatch({
+      wilcox.test(fraction, mu = 0, alternative = "greater")$p.value
+    }, error = function(e) NA_real_),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    p_adj = p.adjust(p_value, method = "fdr")
+  ) %>%
+  filter(p_adj < 0.05, mean_prop > 0.01) %>%  # ✅ statistical + biological filter
+  arrange(desc(mean_prop))
+
+write.csv(wilcox_global, file = "wilcox_global.enrichment.csv")
+
+#####now do sending######
+library(Seurat)
+library(dplyr)
+library(ggplot2)
+library(data.table)
+
+df_neigh_sending <- rbindlist(lapply(names(niches_list), function(sample_id) {
+  ccs <- niches_list[[sample_id]][["CellToCellSpatial"]]
+  raw <- GetAssayData(ccs, assay="CellToCellSpatial", layer="counts")
+  
+  # Get scores
+  scores <- as.numeric(raw["MIF—CD74", ])
+  
+  # Extract sending spot IDs (first part before "_")
+  send_ids <- vapply(strsplit(rownames(ccs@meta.data), "_", fixed = TRUE),
+                     function(x) x[[1L]], character(1L))
+  
+  # Aggregate scores per sending spot
+  dt_scores <- data.table(send = send_ids, score = scores)
+  agg_scores <- dt_scores[, .(total = sum(score, na.rm = TRUE)), by = send]
+  cutoff <- quantile(agg_scores$total, 0.75, na.rm = TRUE)
+  hot_spots <- agg_scores[total > cutoff, send]
+  
+  if (length(hot_spots) == 0) return(NULL)
+  
+  # Extract valid neighbor columns (Sending-side)
+  md <- ccs@meta.data
+  neigh_cols <- grep("^aggregatedNeighbors\\..*\\.Sending$", colnames(md), value = TRUE)
+  neigh_cols <- neigh_cols[!grepl("orig.ident|cluster_id|nCount|nFeature|sample_id|Pos_|x|y|disease_status", neigh_cols)]
+  md_hot <- md[send_ids %in% hot_spots, neigh_cols, drop = FALSE]
+  
+  # Convert to numeric matrix with safe coercion
+  md_num <- suppressWarnings(data.matrix(sapply(md_hot, function(x) {
+    x_num <- as.numeric(as.character(x))
+    x_num[is.na(x) & !is.na(as.character(x))] <- 0
+    x_num
+  })))
+  
+  counts <- colSums(md_num, na.rm = TRUE)
+  props <- counts / sum(counts)
+  
+  data.frame(
+    sample = sample_id,
+    neighborType = gsub("^aggregatedNeighbors\\.|\\.Sending$", "", names(props)),
+    prop = props,
+    stringsAsFactors = FALSE
+  )
+}), fill = TRUE)
+
+# Organize factor levels by sample in descending order
+df_neigh_sending <- df_neigh_sending %>%
+  group_by(sample) %>%
+  arrange(sample, desc(prop)) %>%
+  mutate(neighborType = factor(neighborType, levels = rev(unique(neighborType)))) %>%
+  ungroup()
+
+# Prepare for plotting
+df_long <- df_neigh_sending %>%
+  rename(fraction = prop, cell_type = neighborType) %>%
+  group_by(sample) %>%
+  arrange(desc(fraction), .by_group = TRUE) %>%
+  mutate(
+    ymin = cumsum(fraction) - fraction,
+    ymax = cumsum(fraction)
+  ) %>%
+  ungroup() %>%
+  mutate(
+    xnum = as.numeric(factor(sample, levels = unique(sample)))
+  )
+
+disease_status <- c(
+  "EWS4523" = "Metastatic",
+  "EWS4578" = "Metastatic",
+  "EWS4521" = "Metastatic",
+  "EWS4064" = "Metastatic",
+  "EWS4577" = "Metastatic",
+  "EWS4559" = "Localized",
+  "EWS4556" = "Localized",
+  "EWS4564" = "Localized",
+  "EWS4531" = "Localized",
+  "EWS4582" = "Localized",
+  "EWS4539" = "Localized",
+  "EWS4550" = "Localized",
+  "EWS4668" = "Localized"
+)
+
+df_long$disease_status <- disease_status[df_long$sample]
+
+write.csv(df_long, file = "MIFCD74spots_enrichment.sending042125.csv")
+df_long <- read.csv(file = "/Users/chrkuo/MIFCD74spots_enrichment.sending042125.csv")
+
+cell_colors <- c(
+  "EwS"                          = "#ED7953FF",#FA9E3BFF
+  "Fibroblast"                  = "#FA9E3BFF",
+  "CD163..CD206...Macrophage"   = "#47039FFF",#D8576BFF
+  "Endothelial.cells"           = "#BD3786FF",#FDC926FF
+  "CD68..Macrophage"            = "#7301A8FF",
+  "Neutrophils"                 = "#F0F921FF",
+  "CD8.CD4.T.cells"             = "#9C179EFF",
+  "B.cells"                     = "#0D0887FF",
+  "NA"  = "#FDC926FF"
+)
+
+df_long$cell_type <- as.character(df_long$cell_type)
+df_long$cell_type[is.na(df_long$cell_type)] <- "NA"
+df_long$cell_type <- factor(df_long$cell_type, levels = names(cell_colors))
+
+
+
+# Plot
+ggplot(df_long, aes(x = xnum, fill = cell_type)) +
+  geom_rect(aes(
+    ymin = ymin,
+    ymax = ymax,
+    xmin = xnum - 0.4,
+    xmax = xnum + 0.4
+  )) +
+  scale_x_continuous(
+    breaks = unique(df_long$xnum),
+    labels = unique(df_long$sample)
+  ) +
+  scale_y_continuous(labels = scales::percent_format(1)) +
+  scale_fill_manual(values = cell_colors)+  # ✅ darkest = largest
+  labs(
+    x     = "Tumor Sample",
+    y     = "Proportion of Neighboring Cell Types (Sending)",
+    fill  = "Cell Type",
+    title = "Cells enriched in MIF–CD74 enriched neighborhood"
+  ) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#dotplot
+df_long %>%
+  filter(cell_type != "NA") %>%
+  ggplot(aes(x = sample, y = cell_type, size = ymax - ymin, color = ymax - ymin)) +
+  geom_point(alpha = 1) +
+  scale_color_gradient2(
+    low = "blue",
+    mid = "white",
+    high = "red",
+    midpoint = 0.5,
+    limits = c(0, 1),
+    name = "Proportion"
+  ) +
+  scale_size(range = c(1, 8), name = "Proportion") +
+  labs(
+    title = "Dot Plot of Neighboring Cell Type Proportions in MIF-CD74 Regions",
+    x = "Tumor Sample",
+    y = "Cell Type"
+  ) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+#now to do statistical test:
+library(dplyr)
+
+# Wilcoxon test between groups per cell type
+wilcox_group <- df_long %>%
+  filter(!is.na(disease_status)) %>%
+  group_by(cell_type) %>%
+  summarise(
+    mean_localized  = mean(fraction[disease_status == "Localized"], na.rm = TRUE),
+    mean_metastatic = mean(fraction[disease_status == "Metastatic"], na.rm = TRUE),
+    p_value = tryCatch({
+      wilcox.test(
+        fraction[disease_status == "Localized"],
+        fraction[disease_status == "Metastatic"],
+        alternative = "two.sided"
+      )$p.value
+    }, error = function(e) NA_real_),
+    .groups = "drop"
+  ) %>%
+  mutate(p_adj = p.adjust(p_value, method = "fdr")) %>%
+  arrange(p_adj)
+
+write.csv(wilcox_group, file = "wilcox_group.betweenmetvloc.sendingenrichment.csv")
+
+# Global test: is fraction significantly > 0 (per cell type)
+wilcox_global <- df_long %>%
+  group_by(cell_type) %>%
+  summarise(
+    mean_prop = mean(fraction, na.rm = TRUE),
+    p_value = tryCatch({
+      wilcox.test(fraction, mu = 0, alternative = "greater")$p.value
+    }, error = function(e) NA_real_),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    p_adj = p.adjust(p_value, method = "fdr")
+  ) %>%
+  filter(p_adj < 0.05, mean_prop > 0.01) %>%  # ✅ statistical + biological filter
+  arrange(desc(mean_prop))
+
+write.csv(wilcox_global, file = "wilcox_global.sending_enrichment.csv")
+
+### making heatmap
+library(tidyr)
+library(dplyr)
+library(pheatmap)
+library(tibble)
+library(viridis)
+
+# ----- 1. Heatmap for RECEIVING side -----
+df_wide_receiving <- df_neigh %>%
+  pivot_wider(
+    names_from = neighborType,
+    values_from = prop,
+    values_fill = 0
+  ) %>%
+  column_to_rownames("sample")
+
+pheatmap(
+  mat = t(as.matrix(df_wide_receiving)),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  scale = "none",
+  color = viridis(100, option = "C"),
+  breaks = seq(0, 0.1, length.out = 100),
+  main = "Receiving: Cell Types in MIF–CD74 Hotspots"
+)
+
+# ----- 2. Heatmap for SENDING side -----
+df_wide_sending <- df_neigh_sending %>%
+  pivot_wider(
+    names_from = neighborType,
+    values_from = prop,
+    values_fill = 0
+  ) %>%
+  column_to_rownames("sample")
+
+pheatmap(
+  mat = t(as.matrix(df_wide_sending)),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  scale = "none",
+  color = viridis(100, option = "C"),
+  breaks = seq(0, 0.1, length.out = 100),
+  main = "Sending: Cell Types in MIF–CD74 Hotspots"
+)
+
+
+
+
