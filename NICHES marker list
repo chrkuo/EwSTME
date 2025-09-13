@@ -1,0 +1,105 @@
+# Load packages
+library(Seurat)
+library(SeuratData)
+library(SeuratDisk)
+library(ggplot2)
+library(patchwork)
+library(dplyr)
+require(cowplot)
+require(NICHES)
+require(ggrepel)
+
+load('/Volumes/T7/Chris/all_merged.NICHES.Robj')
+
+colors.ph <- c('0'='#59C9A5','1'='#E072A4','2'='green','3'='#F0CF65','4'='#0267F0','5'='#A034F0')
+colors.me <- c('0'='#59C9A5','1'='#E072A4','2'='green','3'='#F0CF65','4'='#0267F0')
+
+
+my.colors.ph <- colors.ph[order(as.integer(names(colors.ph)))]
+# scales::show_col(my.colors.ph)
+
+my.colors.me <- colors.me[order(as.integer(names(colors.me)))]
+# scales::show_col(my.colors.me)
+
+png(filename='Imputed_Spatial_DimPlot_Phenotype.png',width=10,height = 10,units = 'in',res=300)
+SpatialDimPlot(NICHES.integrated,pt.size.factor = 2,ncol=4,cols=my.colors.ph,group.by='cell_type')
+dev.off()
+png(filename='Imputed_Spatial_DimPlot_Microenvironment.png',width=10,height = 10,units = 'in',res=300)
+SpatialDimPlot(NICHES.integrated,pt.size.factor = 2,ncol=4,cols=my.colors.me,group.by='me.clusters')
+dev.off()
+
+integrated.Sample.list <- SplitObject(NICHES.integrated,split.by='Sample')
+
+get_Marker_List <- function(data,min_pct,logfc_threshold,AssayName,IdentName){
+  DefaultAssay(data) <- AssayName
+  Idents(data) <- IdentName
+  mark <- FindAllMarkers(data,min.pct = min_pct,logfc.threshold = logfc_threshold,only.pos = T)
+  mark$ratio <- mark$pct.1/mark$pct.2
+  mark$power <- mark$ratio*mark$avg_log2FC
+  return(mark)
+}
+
+ph_Marker_List <- lapply(integrated.Sample.list,get_Marker_List,min_pct=0.05,logfc_threshold=0.01,AssayName='Spatial',IdentName='cell_type')
+save(ph_Marker_List,file='ph_Marker_List.modified.Robj')
+
+me_Marker_List <- lapply(integrated.Sample.list,get_Marker_List,min_pct=0.05,logfc_threshold=0.01,AssayName='NeighborhoodToCell',IdentName='me.clusters')
+save(me_Marker_List,file='me_Marker_List.modified.Robj')
+
+clear()
+
+load('/Volumes/T7/Chris/me_Marker_List.unimputed.Robj')
+
+# Set Default assay
+DefaultAssay(NICHES.integrated) <- 'NeighborhoodToCell'
+
+# Define some Global parameters
+
+Sample_Name_List <- names(me_Marker_List) # the micro-environment marker list, names of each sample
+sample_num <- length(Sample_Name_List) # the number of samples
+
+# This is the function to find self-defined marker list.
+# least_sample_num: at least this number of samples contain the marker
+# cluster_ID: a character variable defining which cluster we are looking into
+
+Experiment_Marker_List <- function(least_sample_num,cluster_ID){
+  
+  Sample_Comb <- t(combn(Sample_Name_List,least_sample_num)) # create all possible sample combinations
+  comb_num <- length(Sample_Comb)/least_sample_num # get number of combinations
+  
+  cur_list <- c() # initializing......
+  
+  # For loop to iterate all combinations to create a list
+  for(i in 1:comb_num){
+    first_Sample_Name <- Sample_Comb[i,1]
+    first_list_flag <- me_Marker_List[[first_Sample_Name]]['cluster']==cluster_ID&me_Marker_List[[first_Sample_Name]]['p_val_adj']<0.01
+    first_Sample <- me_Marker_List[[first_Sample_Name]][first_list_flag,]
+    select_Sample_Gene <- first_Sample$gene # first list for intersection initializing...
+    for(j in 2:least_sample_num){
+      cur_Sample_Name <- Sample_Comb[i,j]
+      list_flag <- me_Marker_List[[cur_Sample_Name]]['cluster']==cluster_ID&me_Marker_List[[cur_Sample_Name]]['p_val_adj']<0.01
+      cur_Sample <- me_Marker_List[[cur_Sample_Name]][list_flag,]
+      cur_Sample_Gene <- cur_Sample$gene
+      select_Sample_Gene <- intersect(select_Sample_Gene,cur_Sample_Gene)
+    }
+    cur_list <- union(cur_list,select_Sample_Gene)  # use union to exclude repetition
+  }
+  return(cur_list)
+}
+
+# Manually check the threshold of non-empty lists
+
+Save_Marker_List <- function(num,cluster_ID){
+  for(i in 2:num){
+    name <- paste0('Marker_List_in_',i,'_minimum_','Cluster',cluster_ID,'_modified.Robj')
+    marker_list <- Experiment_Marker_List(i,cluster_ID)
+    marker_list <- as.data.frame(marker_list)
+    save(marker_list,file=name)
+  }
+}
+
+Save_Marker_List(2,'0')
+Save_Marker_List(2,'1')
+Save_Marker_List(2,'2')
+Save_Marker_List(2,'3')
+Save_Marker_List(2,'4')
+
