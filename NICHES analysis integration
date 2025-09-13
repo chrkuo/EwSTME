@@ -1,0 +1,495 @@
+
+# Load packages
+library(Seurat)
+library(SeuratData)
+library(SeuratDisk)
+library(ggplot2)
+library(patchwork)
+library(dplyr)
+require(cowplot)
+require(NICHES)
+require(ggrepel)
+
+### Pre-process each data set ###
+
+### Pre-process each data set ###
+### EWS4064 ###
+
+EWS4064 <- readRDS("/Volumes/T7/Chris/SEURAT OBJECTS 01.10.24/EWS4064.normalize.1_15.RDS")
+DefaultAssay(EWS4064) <- 'Spatial'
+
+EWS4064$seurat_clusters <- Idents(EWS4064)
+EWS4064@meta.data$old_clusters <- paste0('EWS4064_',Idents(EWS4064))
+
+EWS4064.coords <- GetTissueCoordinates(EWS4064)
+EWS4064$x <- EWS4064.coords$imagerow
+EWS4064$y <- EWS4064.coords$imagecol
+EWS4064$Sample <- 'EWS4064'
+
+### EWS4512 ###
+EWS4512 <- readRDS("/Volumes/T7/Chris/SEURAT OBJECTS 01.10.24/EWS4512.normalize.1_17.RDS")
+DefaultAssay(EWS4512) <- 'Spatial'
+
+EWS4512$seurat_clusters <- Idents(EWS4512)
+EWS4512@meta.data$old_clusters <- paste0('EWS4512_',Idents(EWS4512))
+
+EWS4512.coords <- GetTissueCoordinates(EWS4512)
+EWS4512$x <- EWS4512.coords$imagerow
+EWS4512$y <- EWS4512.coords$imagecol
+EWS4512$Sample <- 'EWS4512'
+
+### EWS4521 ###
+EWS4521 <- readRDS("/Volumes/T7/Chris/SEURAT OBJECTS 01.10.24/EWS4521.normalize.1_17.RDS")
+DefaultAssay(EWS4521) <- 'Spatial'
+
+EWS4521$seurat_clusters <- Idents(EWS4521)
+EWS4521@meta.data$old_clusters <- paste0('EWS4521_',Idents(EWS4521))
+
+EWS4521.coords <- GetTissueCoordinates(EWS4521)
+EWS4521$x <- EWS4521.coords$imagerow
+EWS4521$y <- EWS4521.coords$imagecol
+EWS4521$Sample <- 'EWS4521'
+
+### EWS4523 ###
+EWS4523 <- readRDS("/Volumes/T7/Chris/SEURAT OBJECTS 01.10.24/EWS4523.normalize.1_15.RDS")
+DefaultAssay(EWS4523) <- 'Spatial'
+
+EWS4523$seurat_clusters <- Idents(EWS4523)
+EWS4523@meta.data$old_clusters <- paste0('EWS4523_',Idents(EWS4523))
+
+EWS4523.coords <- GetTissueCoordinates(EWS4523)
+EWS4523$x <- EWS4523.coords$imagerow
+EWS4523$y <- EWS4523.coords$imagecol
+EWS4523$Sample <- 'EWS4523'
+
+
+### EWS4577 ###
+EWS4577 <- readRDS("/Volumes/T7/Chris/SEURAT OBJECTS 01.10.24/EWS4577.normalize.1_17.RDS")
+DefaultAssay(EWS4577) <- 'Spatial'
+
+EWS4577$seurat_clusters <- Idents(EWS4577)
+EWS4577@meta.data$old_clusters <- paste0('EWS4577_',Idents(EWS4577))
+
+EWS4577.coords <- GetTissueCoordinates(EWS4577)
+EWS4577$x <- EWS4577.coords$imagerow
+EWS4577$y <- EWS4577.coords$imagecol
+EWS4577$Sample <- 'EWS4577'
+
+
+### EWS4578 ###
+EWS4578 <- readRDS("/Volumes/T7/Chris/SEURAT OBJECTS 01.10.24/EWS4578.normalize.1_12.RDS")
+DefaultAssay(EWS4578) <- 'Spatial'
+
+EWS4578$seurat_clusters <- Idents(EWS4578)
+EWS4578@meta.data$old_clusters <- paste0('EWS4578_',Idents(EWS4578))
+
+EWS4578.coords <- GetTissueCoordinates(EWS4578)
+EWS4578$x <- EWS4578.coords$imagerow
+EWS4578$y <- EWS4578.coords$imagecol
+EWS4578$Sample <- 'EWS4578'
+
+### EWS4531 ###
+
+EWS4531 <- readRDS("/Volumes/T7/Chris/SEURAT OBJECTS 01.10.24/EWS4531.normalize.1_17.RDS")
+DefaultAssay(EWS4531) <- 'Spatial'
+
+EWS4531$seurat_clusters <- Idents(EWS4531)
+EWS4531@meta.data$old_clusters <- paste0('EWS4531_',Idents(EWS4531))
+
+EWS4531.coords <- GetTissueCoordinates(EWS4531)
+EWS4531$x <- EWS4531.coords$imagerow
+EWS4531$y <- EWS4531.coords$imagecol
+EWS4531$Sample <- 'EWS4531'
+
+### EWS4539 ###
+EWS4539 <- readRDS("/Volumes/T7/Chris/SEURAT OBJECTS 01.10.24/EWS4539.normalize.1_15.RDS")
+DefaultAssay(EWS4539) <- 'Spatial'
+
+EWS4539$seurat_clusters <- Idents(EWS4539)
+EWS4539@meta.data$old_clusters <- paste0('EWS4539_',Idents(EWS4539))
+
+EWS4539.coords <- GetTissueCoordinates(EWS4539)
+EWS4539$x <- EWS4539.coords$imagerow
+EWS4539$y <- EWS4539.coords$imagecol
+EWS4539$Sample <- 'EWS4539'
+
+### EWS4550 ###
+EWS4550 <- readRDS("/Volumes/T7/Chris/SEURAT OBJECTS 01.10.24/EWS4550.normalize.1_15.RDS")
+DefaultAssay(EWS4550) <- 'Spatial'
+
+EWS4550$seurat_clusters <- Idents(EWS4550)
+EWS4550@meta.data$old_clusters <- paste0('EWS4550_',Idents(EWS4550))
+
+EWS4550.coords <- GetTissueCoordinates(EWS4550)
+EWS4550$x <- EWS4550.coords$imagerow
+EWS4550$y <- EWS4550.coords$imagecol
+EWS4550$Sample <- 'EWS4550'
+
+### EWS4553 ###
+EWS4553 <- readRDS("/Volumes/T7/Chris/SEURAT OBJECTS 01.10.24/EWS4553.normalize.1_17.RDS")
+DefaultAssay(EWS4553) <- 'Spatial'
+
+EWS4553$seurat_clusters <- Idents(EWS4553)
+EWS4553@meta.data$old_clusters <- paste0('EWS4553_',Idents(EWS4553))
+
+EWS4553.coords <- GetTissueCoordinates(EWS4553)
+EWS4553$x <- EWS4553.coords$imagerow
+EWS4553$y <- EWS4553.coords$imagecol
+EWS4553$Sample <- 'EWS4553'
+
+
+### EWS4554 ###
+EWS4554 <- readRDS("/Volumes/T7/Chris/SEURAT OBJECTS 01.10.24/EWS4554.normalize.1_20.RDS")
+DefaultAssay(EWS4554) <- 'Spatial'
+
+EWS4554$seurat_clusters <- Idents(EWS4554)
+EWS4554@meta.data$old_clusters <- paste0('EWS4554_',Idents(EWS4554))
+
+EWS4554.coords <- GetTissueCoordinates(EWS4554)
+EWS4554$x <- EWS4554.coords$imagerow
+EWS4554$y <- EWS4554.coords$imagecol
+EWS4554$Sample <- 'EWS4554'
+
+
+### EWS4556 ###
+EWS4556 <- readRDS("/Volumes/T7/Chris/SEURAT OBJECTS 01.10.24/EWS4556.normalize.1_12.RDS")
+DefaultAssay(EWS4556) <- 'Spatial'
+
+EWS4556$seurat_clusters <- Idents(EWS4556)
+EWS4556@meta.data$old_clusters <- paste0('EWS4556_',Idents(EWS4556))
+
+EWS4556.coords <- GetTissueCoordinates(EWS4556)
+EWS4556$x <- EWS4556.coords$imagerow
+EWS4556$y <- EWS4556.coords$imagecol
+EWS4556$Sample <- 'EWS4556'
+
+
+### EWS4557 ###
+EWS4557 <- readRDS("/Volumes/T7/Chris/SEURAT OBJECTS 01.10.24/EWS4557.normalize.1_15.RDS")
+DefaultAssay(EWS4557) <- 'Spatial'
+
+EWS4557$seurat_clusters <- Idents(EWS4557)
+EWS4557@meta.data$old_clusters <- paste0('EWS4557_',Idents(EWS4557))
+
+EWS4557.coords <- GetTissueCoordinates(EWS4557)
+EWS4557$x <- EWS4557.coords$imagerow
+EWS4557$y <- EWS4557.coords$imagecol
+EWS4557$Sample <- 'EWS4557'
+
+### EWS4559 ###
+EWS4559 <- readRDS("/Volumes/T7/Chris/SEURAT OBJECTS 01.10.24/EWS4559.normalize.1_15.RDS")
+DefaultAssay(EWS4559) <- 'Spatial'
+
+EWS4559$seurat_clusters <- Idents(EWS4559)
+EWS4559@meta.data$old_clusters <- paste0('EWS4559_',Idents(EWS4559))
+
+EWS4559.coords <- GetTissueCoordinates(EWS4559)
+EWS4559$x <- EWS4559.coords$imagerow
+EWS4559$y <- EWS4559.coords$imagecol
+EWS4559$Sample <- 'EWS4559'
+
+### EWS4564 ###
+EWS4564 <- readRDS("/Volumes/T7/Chris/SEURAT OBJECTS 01.10.24/EWS4564.normalize.1_15.RDS")
+DefaultAssay(EWS4564) <- 'Spatial'
+
+EWS4564$seurat_clusters <- Idents(EWS4564)
+EWS4564@meta.data$old_clusters <- paste0('EWS4564_',Idents(EWS4564))
+
+EWS4564.coords <- GetTissueCoordinates(EWS4564)
+EWS4564$x <- EWS4564.coords$imagerow
+EWS4564$y <- EWS4564.coords$imagecol
+EWS4564$Sample <- 'EWS4564'
+
+### EWS4582 ###
+EWS4582 <- readRDS("/Volumes/T7/Chris/SEURAT OBJECTS 01.10.24/EWS4582.normalize.1_15.RDS")
+DefaultAssay(EWS4582) <- 'Spatial'
+
+EWS4582$seurat_clusters <- Idents(EWS4582)
+EWS4582@meta.data$old_clusters <- paste0('EWS4582_',Idents(EWS4582))
+
+EWS4582.coords <- GetTissueCoordinates(EWS4582)
+EWS4582$x <- EWS4582.coords$imagerow
+EWS4582$y <- EWS4582.coords$imagecol
+EWS4582$Sample <- 'EWS4582'
+
+
+
+### merge the data together, Quality Check ###
+# The first 6 are metastatic data, the rest are localized. This is the localized.
+
+
+
+all_merged <- merge(EWS4531, list(EWS4539,EWS4550,EWS4553,EWS4554,EWS4556,EWS4557,EWS4559,EWS4564,EWS4582,EWS4064,EWS4512,EWS4521,EWS4523,EWS4577,EWS4578),
+                   add.cell.ids=c('EWS4531','EWS4539','EWS4550','EWS4553','EWS4554','EWS4556','EWS4557','EWS4559','EWS4564','EWS4582','EWS4064','EWS4512','EWS4521','EWS4523','EWS4577','EWS4578'))
+
+png('all_merged_QC.png',width=10,height=8,units='in',res=300)
+plot1 <- VlnPlot(all_merged, features = "nCount_Spatial", group.by = 'old_clusters',pt.size = 0.1) + NoLegend()
+plot2 <- SpatialFeaturePlot(all_merged, features = "nCount_Spatial",pt.size.factor = 2,stroke = 0) + theme(legend.position = "right")
+plot_grid(plot1, plot2,ncol=1,nrow=2)
+dev.off()
+
+
+### Impute the data and save load it, Imputation method is ALRA ###
+num.cells.per.feature <- 25 # this reduces ALRA false-positives, but it is not a perfect approach
+genes.to.impute <- rownames(all_merged)[rowSums(all_merged@assays$Spatial@counts>0)>num.cells.per.feature]
+options(warn = 1)
+gc()
+all_merged <- SeuratWrappers::RunALRA(all_merged, genes.use = genes.to.impute)
+
+
+# Save imputed data for later
+gc()
+save(all_merged,file= 'all_merged.imputed.Robj')
+load("/Volumes/T7/Chris/all_merged.imputed.Robj")
+
+DefaultAssay(all_merged) <- 'alra'
+
+# Take a look at embedding and clustering results for merged spatial data
+all_merged <- ScaleData(all_merged)
+all_merged <- FindVariableFeatures(all_merged,nfeatures = 2000)
+all_merged<- RunPCA(all_merged,npcs = 100)
+ElbowPlot(all_merged,ndims = 100)
+all_merged <- RunUMAP(all_merged,dims = 1:20)
+DimPlot(all_merged)
+DimPlot(all_merged,split.by = 'Sample')
+all_merged <- FindNeighbors(all_merged,dims = 1:20)
+all_merged <- FindClusters(all_merged,res=0.2)
+DimPlot(all_merged)
+
+# Decide that integration would be necessary
+all_merged.list <- SplitObject(all_merged, split.by = "Sample")
+
+# normalize and identify variable features for each dataset independently
+all_merged.list <- lapply(X = all_merged.list, FUN = function(x) {
+  x <- FindVariableFeatures(x, nfeatures = 2000)
+})
+
+# select features that are repeatedly variable across datasets for integration
+features <- SelectIntegrationFeatures(object.list = all_merged.list)
+all_merged.anchors <- FindIntegrationAnchors(object.list = all_merged.list, anchor.features = features)
+
+save(all_merged.anchors,file= 'all_merged.anchors.Robj')
+load("/Volumes/T7/Chris/all_merged.anchors.Robj")
+
+# this command creates an 'integrated' data assay
+all_merged.combined <- IntegrateData(anchorset = all_merged.anchors)
+
+# Force the images assay the same as original one
+all_merged.combined@images <- all_merged@images
+
+# save and load
+save(all_merged.combined,file= 'all_merged.integrated.Robj')
+load("/Volumes/T7/Chris/all_merged.integrated.Robj")
+
+
+# specify that we will perform downstream analysis on the corrected data note that the
+# original unmodified data still resides in the 'alra' assay
+DefaultAssay(all_merged.combined) <- "integrated"
+
+# Run the standard workflow for visualization and clustering
+all_merged.combined <- ScaleData(all_merged.combined, verbose = FALSE)
+all_merged.combined <- RunPCA(all_merged.combined, npcs = 50)
+ElbowPlot(all_merged.combined)
+all_merged.combined <- RunUMAP(all_merged.combined, reduction = "pca", dims = 1:10)
+all_merged.combined <- FindNeighbors(all_merged.combined, reduction = "pca", dims = 1:10)
+all_merged.combined <- FindClusters(all_merged.combined, resolution = 0.2)
+
+
+
+# Check the plots
+DimPlot(all_merged.combined, reduction = "umap", split.by = "Sample")
+SpatialDimPlot(all_merged.combined,pt.size.factor = 2)
+
+# save phenotype information
+all_merged.combined@meta.data$cell_type <- all_merged.combined$seurat_clusters
+all_merged.combined@reductions$umap.ph <- all_merged.combined@reductions$umap
+
+# Split the integrated data set, run NICHES analysis on each separate sample
+
+integrated.Sample.list <- SplitObject(all_merged.combined,split.by='Sample')
+
+
+# Create an empty list to store NICHES output for each sample
+NICHES_list <- list()
+
+
+# Run NICHES --- Main Part, all_merged different k values later
+for (i in 1:length(integrated.Sample.list)) {
+  x <- integrated.Sample.list[[i]]
+  x_NICHES <- RunNICHES(x, assay = 'alra', # note this change
+                        cell_types = "cell_type", ## Or maybe old cell types? Does not matter
+                        LR.database = 'omnipath',
+                        species = 'human',
+                        position.x = 'x',
+                        position.y = 'y',
+                        k = 7, ## all_merged this value
+                        rad.set = NULL,
+                        meta.data.to.map = names(x@meta.data),
+                        CellToCellSpatial = T,
+                        CellToNeighborhood = T,
+                        NeighborhoodToCell = T,
+                        CellToCell = F,
+                        SystemToCell = F,
+                        CellToSystem = F)
+  x_NToC <- x_NICHES$NeighborhoodToCell
+  NICHES_list<- merge(x_NToC,NICHES_list)
+}
+
+# Need to join layers since the scale.data, counts, integrated, ... are all separated.
+NICHES_list <- JoinLayers(NICHES_list)
+
+save(NICHES_list,file= 'NICHES_list_all_merged.Robj')
+load("/Volumes/T7/Chris/NICHES_list_all_merged.Robj")
+
+
+# Add Niches output as an assay
+me.data <- GetAssayData(object =  NICHES_list$NeighborhoodToCell, layer = 'counts')
+colnames(me.data) <- NICHES_list$ReceivingCell
+me.assay <- CreateAssayObject(data = me.data)
+
+all_merged.combined[['NeighborhoodToCell']] <- me.assay
+
+# Check NICHES output without integration
+
+DefaultAssay(all_merged.combined) <- 'NeighborhoodToCell'
+all_merged.combined <- ScaleData(all_merged.combined)
+all_merged.combined <- FindVariableFeatures(all_merged.combined,nfeatures = 2000)
+all_merged.combined <- RunPCA(all_merged.combined,npcs = 100)
+ElbowPlot(all_merged.combined,ndims = 100)
+all_merged.combined <- RunUMAP(all_merged.combined,dims = 1:10)
+DimPlot(all_merged.combined)
+DimPlot(all_merged.combined,split.by = 'Sample')
+all_merged.combined <- FindNeighbors(all_merged.combined,dims = 1:10)
+all_merged.combined <- FindClusters(all_merged.combined,res=0.2)
+DimPlot(all_merged.combined)
+SpatialDimPlot(all_merged.combined,pt.size.factor = 2)
+
+
+### Now we found that we need to do integration for NICHES results! ###
+DefaultAssay(all_merged.combined) <- 'NeighborhoodToCell'
+NICHES_output.list <- SplitObject(all_merged.combined, split.by = "Sample")
+
+# normalize and identify variable features for each dataset independently
+NICHES_output.list <- lapply(X = NICHES_output.list, FUN = function(x) {
+  x <- FindVariableFeatures(x, nfeatures = 2000)
+})
+
+# select features that are repeatedly variable across datasets for integration
+features <- SelectIntegrationFeatures(object.list = NICHES_output.list)
+NICHES.anchors <- FindIntegrationAnchors(object.list = NICHES_output.list, anchor.features = features)
+
+save(NICHES.anchors,file = "NICHES.anchors.Robj") 
+
+load("/Volumes/T7/Chris/NICHES.anchors.Robj")
+
+# this command creates an 'integrated' data assay
+
+
+NICHES.integrated <- IntegrateData(anchorset = NICHES.anchors)
+
+save(NICHES.integrated,file="NICHES.integrated.Robj")
+load("/Volumes/T7/Chris/NICHES.integrated.Robj")
+
+
+# specify that we will perform downstream analysis on the corrected data note that the
+# original unmodified data still resides in the 'alra' assay
+
+DefaultAssay(NICHES.integrated) <- "integrated"
+
+# Run the standard workflow for visualization and clustering
+NICHES.integrated <- ScaleData(NICHES.integrated, verbose = FALSE)
+NICHES.integrated <- RunPCA(NICHES.integrated, npcs = 100)
+ElbowPlot(NICHES.integrated)
+NICHES.integrated <- RunUMAP(NICHES.integrated, reduction = "pca", dims = 1:10)
+NICHES.integrated <- FindNeighbors(NICHES.integrated, reduction = "pca", dims = 1:10)
+NICHES.integrated <- FindClusters(NICHES.integrated, resolution = 0.2)
+
+# Force the images same as original ones, else there will be many empty duplicates
+NICHES.integrated@images <- all_merged.combined@images
+
+# Check integrated NICHES outputs
+DimPlot(NICHES.integrated, reduction = "umap", split.by = "Sample")
+
+png("all_merged_NICHES_Spatial_after_Integration.png",width=80,height=15,units='in',res=300)
+SpatialDimPlot(NICHES.integrated,pt.size.factor = 2)
+dev.off()
+
+NICHES.integrated$me.clusters <- Idents(NICHES.integrated)
+NICHES.integrated@reductions$umap.me <- NICHES.integrated@reductions$umap
+
+# Save integrated NICHES results!
+
+save(NICHES.integrated,file= 'all_merged.NICHES.Robj')
+
+load('/Volumes/T7/Chris/Lung Biology/Chris/all_merged.NICHES.Robj')
+
+
+# Run FindMarkers to get Ligand-Receptor information
+### sam in mtg
+### table(Idents(NICHES.integrated))
+### mark <- FindMarkers(NICHES.integrated,ident.1 = '1',min.pct = 0.5,logfc.threshold = 0.5)
+### mark$ratio <- mark$pct.1/mark$pct.2
+###
+DefaultAssay(NICHES.integrated) <- 'integrated'
+Idents(NICHES.integrated) <- NICHES.integrated$me.clusters
+mark.me <- FindAllMarkers(NICHES.integrated,min.pct = 0.1,logfc.threshold = 0.01,only.pos = F)
+mark.me$ratio <- mark.me$pct.1/mark.me$pct.2
+mark.me$power <- mark.me$ratio*mark.me$avg_log2FC
+
+
+# Plot function for Ligand-Receptor mechanism visualization
+LRMPlot <- function(object,mechanism){
+  # Define two side of the mechanism
+  mech.L <- strsplit(mechanism,split = '—')[[1]][[1]]
+  mech.R <- strsplit(mechanism,split = '—')[[1]][[2]]
+  # First make transcriptomic plots
+  DefaultAssay(object) <- 'alra'
+  p1 <- SpatialFeaturePlot(object,
+                           features = mech.L,
+                           #layer = 'scale.data',
+                           pt.size.factor = 2,stroke = 0)+ggtitle('Ligand')
+  p2 <- SpatialFeaturePlot(object,
+                           features = mech.R,
+                           #layer = 'scale.data',
+                           pt.size.factor = 2,stroke = 0)+ggtitle('Receptor')
+  # Second make microenvironment plots
+  DefaultAssay(object) <- 'NeighborhoodToCell'
+  p3 <- SpatialFeaturePlot(object,
+                           features = mechanism,
+                           #layer = 'scale.data',
+                           pt.size.factor = 2,stroke = 0)+ggtitle('Mechanism')
+  # Plot Total
+  plot.total <- plot_grid(p1,p2,p3,nrow=3)
+  # Output
+  #png(paste0(top[k],'_Cluster',i-1,'_LR_Plot.png'),width=16,height=22,units='in',res=300)
+  print(plot.total)
+  return(plot.total)
+  plot.total <<- plot.total
+}
+
+LRMPlot(NICHES.integrated,'RSPO2—LGR6')
+
+
+# Simple Check: top 2 L-R mechanism (by ratio) plot for each cluster
+# Actually I do not think ratio is the only factor we consider when looking for mechanisms
+# Also, the min.pct and logfc.threshold in previous section may be adjusted to get more accurate marker data
+
+mark.me.df <- as.data.frame(mark.me)
+
+x <- sort(unique(mark.me.df$cluster))
+for(i in 1:length(x)){
+  mark.me.cluster <- subset(mark.me.df,cluster == x[i])
+  order <- sort(mark.me.cluster$ratio,decreasing = T)
+  top <- {}
+  for(j in 1:2){
+    ind <- which(mark.me.cluster$ratio == order[j])
+    top <- c(top,mark.me.cluster$gene[ind])
+  }
+  for(k in 1:2){
+    png(paste0(top[k],'_Cluster',i-1,'_LR_Plot.png'),width=16,height=22,units='in',res=300)
+    LRMPlot(NICHES.integrated,top[k])
+    dev.off()
+  }
+}
+
+View(mark.me)
