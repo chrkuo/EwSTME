@@ -1,0 +1,643 @@
+# Step 1: Organize your SPE objects into a named list
+spe_list <- list(
+  EWS4668 = spe_4668,
+  EWS4626 = spe_4626,
+  EWS4582 = spe_4582,
+  EWS4578 = spe_4578,
+  EWS4577 = spe_4577,
+  EWS4564 = spe_4564,
+  EWS4559 = spe_4559,
+  EWS4556 = spe_4556,
+  EWS4553 = spe_4553,
+  EWS4550 = spe_4550,
+  EWS4539 = spe_4539,
+  EWS4531 = spe_4531,
+  EWS4523 = spe_4523,
+  EWS4521 = spe_4521,
+  EWS4512 = spe_4512,
+  EWS4064 = spe_4064
+)
+
+# Step 2: Set the reference full celltype list
+all_celltypes <- c(
+  "EwS", "Fibroblast", "Endothelial cells", 
+  "CD163+ CD206 + Macrophage", "Neutrophils", 
+  "CD8/CD4 T cells", "B cells", "CD68+ Macrophage", "NA"
+)
+
+# Step 3: Count celltypes per sample
+celltype_tables <- lapply(names(spe_list), function(sample_id) {
+  spe <- spe_list[[sample_id]]
+  metadata <- as.data.frame(colData(spe))
+  
+  tab <- table(metadata$celltype)
+  
+  # Make sure all celltypes exist
+  counts <- setNames(rep(0, length(all_celltypes)), all_celltypes)
+  counts[names(tab)] <- as.numeric(tab)
+  
+  df <- data.frame(CellType = names(counts), Count = counts)
+  colnames(df)[2] <- sample_id
+  return(df)
+})
+
+# Step 4: Combine into one matrix
+celltype_matrix <- Reduce(function(x, y) full_join(x, y, by = "CellType"), celltype_tables)
+rownames(celltype_matrix) <- celltype_matrix$CellType
+celltype_matrix <- celltype_matrix[, -1]
+
+# Final output
+celltype_matrix <- as.data.frame(celltype_matrix)
+celltype_matrix
+
+# Step 1: Transpose the matrix so samples are rows
+celltype_long <- as.data.frame(t(celltype_matrix))
+
+# Step 2: Add SampleID as a column
+celltype_long$SampleID <- rownames(celltype_long)
+
+# Step 3: Reorder columns to place SampleID first
+celltype_long <- celltype_long[, c(ncol(celltype_long), 1:(ncol(celltype_long)-1))]
+
+# Optional: Rename columns to match uploaded file if needed
+# names(celltype_long)[names(celltype_long) == "CD68+ Macrophage"] <- "Macrophage"
+# names(celltype_long)[names(celltype_long) == "CD8/CD4 T cells"] <- "Tcells"
+
+# View final result
+head(celltype_long)
+
+# Step 1: Create disease status mapping
+disease_status <- data.frame(
+  SampleID = c(
+    "EWS4523", "EWS4578", "EWS4512", "EWS4521", "EWS4064",
+    "EWS4559", "EWS4556", "EWS4564", "EWS4531", "EWS4577",
+    "EWS4582", "EWS4539", "EWS4553", "EWS4550", "EWS4626", "EWS4668"
+  ),
+  DiseaseStatus = c(
+    "Metastatic", "Metastatic", "Metastatic", "Metastatic", "Metastatic",
+    "Localized", "Localized", "Localized", "Localized", "Metastatic",
+    "Localized", "Localized", "Localized", "Localized", "Localized", "Localized"
+  )
+)
+
+# Step 2: Transpose celltype_matrix and add SampleID
+celltype_long <- as.data.frame(t(celltype_matrix))
+celltype_long$SampleID <- rownames(celltype_long)
+celltype_long <- celltype_long[, c(ncol(celltype_long), 1:(ncol(celltype_long)-1))]
+
+# Step 3: Join DiseaseStatus
+merged_df <- merge(celltype_long, disease_status, by = "SampleID")
+
+write.csv(merged_df, file = "totalcellcountsmerged.042225.csv")
+
+# View final result
+head(merged_df)
+
+# Ensure dplyr is loaded
+library(dplyr)
+
+# Step 1: Define the sample IDs you want to keep
+keep_samples <- c(
+  "EWS4523", "EWS4578", "EWS4521", "EWS4064",
+  "EWS4559", "EWS4556", "EWS4564", "EWS4531",
+  "EWS4577", "EWS4582", "EWS4539", "EWS4550", "EWS4668"
+)
+
+# Step 2: Filter merged_df
+filtered_df <- merged_df %>%
+  filter(SampleID %in% keep_samples)
+
+# Step 3: View result
+head(filtered_df)
+
+write.csv(filtered_df, file = "filtered_df.cellcount.042225.csv")
+
+# Required libraries
+library(tidyverse)
+
+# Step 1: Reshape the data to long format for ggplot2
+plot_df <- filtered_df %>%
+  pivot_longer(
+    cols = -c(SampleID, DiseaseStatus),
+    names_to = "CellType",
+    values_to = "Count"
+  )
+
+# Step 2: Stacked bar plot
+ggplot(plot_df, aes(x = SampleID, y = Count, fill = CellType)) +
+  geom_bar(stat = "identity") +
+  #facet_wrap(~DiseaseStatus, scales = "free_x") +  # Optional: separate by disease status
+  labs(
+    title = "Cell Type Composition per Sample",
+    x = "Sample ID",
+    y = "Cell Count"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+
+ggplot(plot_df %>% filter(SampleID %in% keep_samples),
+       aes(x = SampleID, y = Count, fill = CellType)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  labs(title = "Cell Type Counts (Grouped)", y = "Cell Count", x = "Sample ID")
+
+
+
+######
+library(tidyverse)
+library(stringr)
+
+# Define custom cell colors
+cell_colors <- c(
+  "EwS"                          = "#ED7953FF",
+  "Fibroblast"                  = "#FA9E3BFF",
+  "CD163..CD206...Macrophage"   = "#47039FFF",
+  "Endothelial.cells"           = "#BD3786FF",
+  "CD68..Macrophage"            = "#7301A8FF",
+  "Neutrophils"                 = "#F0F921FF",
+  "CD8.CD4.T.cells"             = "#9C179EFF",
+  "B.cells"                     = "#0D0887FF",
+  "NA"                          = "#FDC926FF"
+)
+
+# Prepare data for plotting
+plot_df <- filtered_df %>%
+  pivot_longer(
+    cols = -c(SampleID, DiseaseStatus),
+    names_to = "CellType",
+    values_to = "Count"
+  )
+
+# Normalize CellType names to match color keys
+plot_df$CellType <- plot_df$CellType %>%
+  str_replace_all(" ", ".") %>%
+  str_replace_all("\\+", "") %>%
+  str_replace_all("/", ".") %>%
+  str_replace_all("-", ".") %>%
+  str_replace_all("CD163.*CD206.*Macrophage", "CD163..CD206...Macrophage") %>%
+  str_replace_all("CD68.*Macrophage", "CD68..Macrophage") %>%
+  str_replace_all("CD8.CD4.T.cells", "CD8.CD4.T.cells")
+
+# Replace NAs
+plot_df$CellType[is.na(plot_df$CellType)] <- "NA"
+plot_df$CellType <- factor(plot_df$CellType, levels = names(cell_colors))
+
+# Final stacked bar plot
+ggplot(plot_df, aes(x = SampleID, y = Count, fill = CellType)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = cell_colors) +
+  labs(
+    title = "Cell Type Composition per Sample",
+    x = "Sample ID",
+    y = "Cell Count",
+    fill = "Cell Type"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+##rank cell type:
+# Summarize total counts per CellType across all samples
+celltype_ranking <- plot_df %>%
+  group_by(CellType) %>%
+  summarise(TotalCount = sum(Count, na.rm = TRUE)) %>%
+  arrange(desc(TotalCount))
+write.csv(celltype_ranking, file = "celltype_ranking.total.042225.csv")
+
+print(celltype_ranking)
+
+# Ensure libraries are loaded
+library(tidyverse)
+library(stringr)
+
+# Reuse your cell color mapping
+cell_colors <- c(
+  "EwS"                          = "#ED7953FF",
+  "Fibroblast"                  = "#FA9E3BFF",
+  "CD163..CD206...Macrophage"   = "#47039FFF",
+  "Endothelial.cells"           = "#BD3786FF",
+  "CD68..Macrophage"            = "#7301A8FF",
+  "Neutrophils"                 = "#F0F921FF",
+  "CD8.CD4.T.cells"             = "#9C179EFF",
+  "B.cells"                     = "#0D0887FF",
+  "NA"                          = "#FDC926FF"
+)
+
+# Clean and normalize cell type names
+plot_df$CellType <- plot_df$CellType %>%
+  str_replace_all(" ", ".") %>%
+  str_replace_all("\\+", "") %>%
+  str_replace_all("/", ".") %>%
+  str_replace_all("-", ".") %>%
+  str_replace_all("CD163.*CD206.*Macrophage", "CD163..CD206...Macrophage") %>%
+  str_replace_all("CD68.*Macrophage", "CD68..Macrophage")
+
+# Handle NA and factor levels
+plot_df$CellType[is.na(plot_df$CellType)] <- "NA"
+plot_df$CellType <- factor(plot_df$CellType, levels = names(cell_colors))
+
+# Final grouped bar plot
+ggplot(plot_df %>% filter(SampleID %in% keep_samples),
+       aes(x = SampleID, y = Count, fill = CellType)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.9), width = 0.8) +
+  scale_fill_manual(values = cell_colors) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  labs(
+    title = "Cell Type Counts (Grouped)",
+    y = "Cell Count",
+    x = "Sample ID",
+    fill = "Cell Type"
+  )
+
+ggplot(plot_df %>% filter(SampleID %in% keep_samples),
+       aes(x = SampleID, y = Count, fill = CellType)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.9), width = 0.9) +
+  scale_fill_manual(values = cell_colors) +
+  scale_y_log10() +  # <-- Log scale here
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  labs(
+    title = "Cell Type Counts (Grouped, Log Scale)",
+    y = "Log10 Cell Count",
+    x = "Sample ID",
+    fill = "Cell Type"
+  )
+
+# Step 2: Wilcoxon test per CellType
+celltype_stats <- plot_df %>%
+  group_by(CellType) %>%
+  summarise(
+    mean_metastatic = mean(Count[DiseaseStatus == "Metastatic"], na.rm = TRUE),
+    mean_localized  = mean(Count[DiseaseStatus == "Localized"], na.rm = TRUE),
+    p_value = tryCatch({
+      wilcox.test(
+        Count[DiseaseStatus == "Metastatic"],
+        Count[DiseaseStatus == "Localized"],
+        alternative = "two.sided"
+      )$p.value
+    }, error = function(e) NA_real_),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    p_adj = p.adjust(p_value, method = "fdr")
+  ) %>%
+  arrange(p_adj)
+
+# View results
+print(celltype_stats %>% filter(p_adj < 0.05))
+
+
+###ridge plot
+
+library(ggridges)
+
+# Filter to your samples of interest
+plot_df_ridge <- plot_df %>%
+  filter(SampleID %in% keep_samples)
+
+# Ridge plot: each CellType gets a density ridge of counts across samples
+ggplot(plot_df_ridge, aes(x = Count, y = CellType, fill = CellType)) +
+  geom_density_ridges(scale = 1.2, alpha = 0.8, color = "white", size = 0.3) +
+  scale_fill_manual(values = cell_colors) +
+  labs(
+    title = "Distribution of Cell Type Counts Across Samples",
+    x = "Cell Count",
+    y = "Cell Type"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+#individual barplot 
+ggplot(df_4064, aes(x = Count, y = fct_reorder(CellType, Count), fill = CellType)) +
+  geom_col(width = 0.7, color = "white") +
+  scale_fill_manual(values = cell_colors) +
+  labs(
+    title = "Cell Type Composition – EWS4064",
+    x = "Cell Count",
+    y = "Cell Type"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")+ scale_x_log10()
+#####
+
+########now lets graph box plots 
+
+library(tidyverse)
+library(ggpubr)
+
+# Step 1: Calculate total cell count per sample (excluding metadata cols)
+cell_counts <- filtered_df[, !(names(filtered_df) %in% c("SampleID", "DiseaseStatus"))]
+total_cells <- rowSums(cell_counts)
+
+# Step 2: Build new df with T cell proportion
+tcell_prop_df <- filtered_df[, c("SampleID", "DiseaseStatus", "CD8/CD4 T cells")]
+colnames(tcell_prop_df)[3] <- "Tcells"
+tcell_prop_df$TcellProp <- tcell_prop_df$Tcells / total_cells
+
+# Step 3: Plot Tcell proportion with significance
+ggplot(tcell_prop_df, aes(x = DiseaseStatus, y = TcellProp, fill = DiseaseStatus)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6, alpha = 0.8) +
+  geom_jitter(width = 0.15, color = "black", size = 2, alpha = 1) +
+  stat_summary(fun = median, geom = "crossbar", width = 0.4, fatten = 0.8, color = "black") +
+  stat_compare_means(method = "wilcox.test", label.y = max(tcell_prop_df$TcellProp) * 1.05) +
+  labs(
+    title = "Normalized T cells between Loc-EwS and Met-EwS",
+    x = "Disease Status",
+    y = "T Cell Proportion (Tcells / Total Cells)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+###### with border ####
+ggplot(tcell_prop_df, aes(x = DiseaseStatus, y = TcellProp, fill = DiseaseStatus)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6, alpha = 0.8) +
+  geom_jitter(width = 0.15, color = "black", size = 2, alpha = 1) +
+  stat_summary(fun = median, geom = "crossbar", width = 0.4, fatten = 0.8, color = "black") +
+  stat_compare_means(method = "wilcox.test", label.y = max(tcell_prop_df$TcellProp) * 1.05) +
+  labs(
+    title = "Normalized T cells between Loc-EwS and Met-EwS",
+    x = "Disease Status",
+    y = "T Cell Proportion (Tcells / Total Cells)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "none",
+    panel.grid = element_blank(),           # remove grid
+    panel.border = element_rect(color = "black", fill = NA, size = 1),  # add black border
+    plot.background = element_blank()       # remove gray background
+  )
+
+
+tcell_prop_df %>%
+  group_by(DiseaseStatus) %>%
+  summarize(
+    Median_TcellProp = median(TcellProp),
+    IQR = IQR(TcellProp),
+    N = n()
+  )
+
+#####
+# Step 1: Build dataframe with T cells and EwS
+tcell_ews_df <- filtered_df[, c("SampleID", "DiseaseStatus", "CD8/CD4 T cells", "EwS")]
+colnames(tcell_ews_df) <- c("SampleID", "DiseaseStatus", "Tcells", "EwS")
+
+# Step 2: Calculate Tcell/EwS ratio
+tcell_ews_df$TcellToEwS <- tcell_ews_df$Tcells / tcell_ews_df$EwS
+
+# Step 3: Plot
+ggplot(tcell_ews_df, aes(x = DiseaseStatus, y = TcellToEwS, fill = DiseaseStatus)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6, alpha = 0.8) +
+  geom_jitter(width = 0.15, color = "black", size = 2, alpha = 1) +
+  stat_summary(fun = median, geom = "crossbar", width = 0.4, fatten = 0.8, color = "black") +
+  stat_compare_means(method = "wilcox.test", label.y = max(tcell_ews_df$TcellToEwS) * 1.05) +
+  labs(
+    title = "T Cell Infiltration Normalized by Tumor Burden (Tcells / EwS)",
+    x = "Disease Status",
+    y = "Normalized T Cell Count (Tcells / EwS)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+#no border
+ggplot(tcell_ews_df, aes(x = DiseaseStatus, y = TcellToEwS, fill = DiseaseStatus)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6, alpha = 0.8) +
+  geom_jitter(width = 0.15, color = "black", size = 2, alpha = 1) +
+  stat_summary(fun = median, geom = "crossbar", width = 0.4, fatten = 0.8, color = "black") +
+  stat_compare_means(method = "wilcox.test", label.y = max(tcell_ews_df$TcellToEwS) * 1.05) +
+  labs(
+    title = "T Cell Infiltration Normalized by Tumor Burden (Tcells / EwS)",
+    x = "Disease Status",
+    y = "Normalized T Cell Count (Tcells / EwS)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "none",
+    panel.grid = element_blank(),           # remove grid
+    panel.border = element_rect(color = "black", fill = NA, size = 1),  # add black border
+    plot.background = element_blank()       # remove gray background
+  )
+
+
+tcell_ews_df %>%
+  group_by(DiseaseStatus) %>%
+  summarize(
+    Median_TcellProp = median(TcellToEwS),
+    IQR = IQR(TcellToEwS),
+    N = n()
+  )
+
+
+# Step 1: Extract and rename
+tcell_df <- filtered_df[, c("SampleID", "DiseaseStatus", "CD8/CD4 T cells")]
+colnames(tcell_df)[3] <- "Tcells"
+
+# Step 2: Boxplot with Wilcoxon test
+ggplot(tcell_df, aes(x = DiseaseStatus, y = Tcells, fill = DiseaseStatus)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(width = 0.2, alpha = 0.7, color = "black") +
+  stat_compare_means(
+    method = "wilcox.test",
+    label.y = max(tcell_df$Tcells, na.rm = TRUE) * 1.05
+  ) +
+  labs(
+    title = "T Cell Count by Disease Status",
+    x = "Disease Status",
+    y = "CD8/CD4 T Cell Count"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    panel.grid = element_blank(),           # remove grid
+    panel.border = element_rect(color = "black", fill = NA, size = 1),  # add black border
+    plot.background = element_blank()       # remove gray background
+  )
+
+
+###now lets graph macrophage### 
+library(tidyverse)
+library(ggpubr)
+
+# Step 1: Extract relevant columns
+mac_df <- filtered_df[, c("SampleID", "DiseaseStatus", "CD163+ CD206 + Macrophage", "EwS")]
+colnames(mac_df) <- c("SampleID", "DiseaseStatus", "Macrophages", "EwS")
+
+# Step 2: Calculate total cells per sample
+cell_counts <- filtered_df[, !(names(filtered_df) %in% c("SampleID", "DiseaseStatus"))]
+mac_df$TotalCells <- rowSums(cell_counts)
+
+# Step 3: Normalize
+mac_df$MacToTotal <- mac_df$Macrophages / mac_df$TotalCells
+mac_df$MacToEwS   <- mac_df$Macrophages / mac_df$EwS
+
+# Step 4a: Raw Counts
+ggplot(mac_df, aes(x = DiseaseStatus, y = Macrophages, fill = DiseaseStatus)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(width = 0.2, alpha = 0.7, color = "black") +
+  stat_compare_means(method = "wilcox.test", label.y = max(mac_df$Macrophages) * 1.05) +
+  #scale_fill_manual(values = disease_colors) +
+  labs(title = "Raw Macrophage Count", y = "CD163+ CD206+ Macrophages", x = "Disease Status") +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    panel.grid = element_blank(),           # remove grid
+    panel.border = element_rect(color = "black", fill = NA, size = 1),  # add black border
+    plot.background = element_blank()       # remove gray background
+  )
+
+# Step 4b: Normalized by Total Cells
+ggplot(mac_df, aes(x = DiseaseStatus, y = MacToTotal, fill = DiseaseStatus)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(width = 0.2, alpha = 0.7, color = "black") +
+  stat_compare_means(method = "wilcox.test", label.y = max(mac_df$MacToTotal) * 1.05) +
+  #scale_fill_manual(values = disease_colors) +
+  labs(title = "Macrophages / Total Cells", y = "Proportion", x = "Disease Status") +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    panel.grid = element_blank(),           # remove grid
+    panel.border = element_rect(color = "black", fill = NA, size = 1),  # add black border
+    plot.background = element_blank()       # remove gray background
+  )
+
+# Step 4c: Normalized by EwS
+ggplot(mac_df, aes(x = DiseaseStatus, y = MacToEwS, fill = DiseaseStatus)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(width = 0.2, alpha = 0.7, color = "black") +
+  stat_compare_means(method = "wilcox.test", label.y = max(mac_df$MacToEwS) * 1.05) +
+  #scale_fill_manual(values = disease_colors) +
+  labs(title = "Macrophages / EwS", y = "Normalized Count", x = "Disease Status") +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    panel.grid = element_blank(),           # remove grid
+    panel.border = element_rect(color = "black", fill = NA, size = 1),  # add black border
+    plot.background = element_blank()       # remove gray background
+  )
+
+##now lets do CD68#
+# Step 1: Extract relevant columns
+cd68_df <- filtered_df[, c("SampleID", "DiseaseStatus", "CD68+ Macrophage", "EwS")]
+colnames(cd68_df) <- c("SampleID", "DiseaseStatus", "Macrophages", "EwS")
+
+# Step 2: Calculate total cells per sample
+cell_counts <- filtered_df[, !(names(filtered_df) %in% c("SampleID", "DiseaseStatus"))]
+cd68_df$TotalCells <- rowSums(cell_counts)
+
+# Step 3: Normalize
+cd68_df$MacToTotal <- cd68_df$Macrophages / cd68_df$TotalCells
+cd68_df$MacToEwS   <- cd68_df$Macrophages / cd68_df$EwS
+
+# Step 4a: Raw Counts
+ggplot(cd68_df, aes(x = DiseaseStatus, y = Macrophages, fill = DiseaseStatus)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(width = 0.2, alpha = 0.7, color = "black") +
+  stat_compare_means(method = "wilcox.test", label.y = max(cd68_df$Macrophages, na.rm = TRUE) * 1.05) +
+  labs(title = "Raw CD68+ Macrophage Count", y = "CD68+ Macrophages", x = "Disease Status") +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    panel.grid = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA, size = 1),
+    plot.background = element_blank()
+  )
+
+# Step 4b: Normalized by Total Cells
+ggplot(cd68_df, aes(x = DiseaseStatus, y = MacToTotal, fill = DiseaseStatus)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(width = 0.2, alpha = 0.7, color = "black") +
+  stat_compare_means(method = "wilcox.test", label.y = max(cd68_df$MacToTotal, na.rm = TRUE) * 1.05) +
+  labs(title = "CD68+ Macrophages / Total Cells", y = "Proportion", x = "Disease Status") +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    panel.grid = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA, size = 1),
+    plot.background = element_blank()
+  )
+
+# Step 4c: Normalized by EwS
+ggplot(cd68_df, aes(x = DiseaseStatus, y = MacToEwS, fill = DiseaseStatus)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(width = 0.2, alpha = 0.7, color = "black") +
+  stat_compare_means(method = "wilcox.test", label.y = max(cd68_df$MacToEwS, na.rm = TRUE) * 1.05) +
+  labs(title = "CD68+ Macrophages / EwS", y = "Normalized Count", x = "Disease Status") +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    panel.grid = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA, size = 1),
+    plot.background = element_blank()
+  )
+
+
+#comparing T cells to M2 Macrophage
+
+# Step 1: Extract columns
+tm_df <- filtered_df[, c("SampleID", "DiseaseStatus", "CD8/CD4 T cells", "CD163+ CD206 + Macrophage", "EwS")]
+colnames(tm_df) <- c("SampleID", "DiseaseStatus", "Tcells", "CD163Macs", "EwS")
+
+# Step 2: Calculate total cells
+cell_counts <- filtered_df[, !(names(filtered_df) %in% c("SampleID", "DiseaseStatus"))]
+tm_df$TotalCells <- rowSums(cell_counts)
+
+# Step 3: Compute ratios
+tm_df <- tm_df %>%
+  mutate(
+    TtoMac = Tcells / CD163Macs,
+    TtoMac_EwS = TtoMac / EwS,
+    TtoMac_Total = TtoMac / TotalCells
+  )
+
+# Step 4: Plot T : CD163+ Mac ratio
+ggplot(tm_df, aes(x = DiseaseStatus, y = TtoMac, fill = DiseaseStatus)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(width = 0.2, alpha = 0.7, color = "black") +
+  stat_compare_means(method = "wilcox.test", label.y = max(tm_df$TtoMac, na.rm = TRUE) * 1.05) +
+  labs(title = "T Cell : CD163+ Macrophage Ratio", x = "Disease Status", y = "T / CD163+ Mac Ratio") +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    panel.grid = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA, size = 1),
+    plot.background = element_blank()
+  )
+
+
+####CD163 / T 
+
+# Step 1: Extract necessary columns
+ctm_df <- filtered_df[, c("SampleID", "DiseaseStatus", "CD163+ CD206 + Macrophage", "CD8/CD4 T cells", "EwS")]
+colnames(ctm_df) <- c("SampleID", "DiseaseStatus", "CD163Macs", "Tcells", "EwS")
+
+# Step 2: Calculate total cells
+cell_counts <- filtered_df[, !(names(filtered_df) %in% c("SampleID", "DiseaseStatus"))]
+ctm_df$TotalCells <- rowSums(cell_counts)
+
+# Step 3: Compute ratios
+ctm_df <- ctm_df %>%
+  mutate(
+    MacToT = CD163Macs / Tcells,
+    MacToT_EwS = MacToT / EwS,
+    MacToT_Total = MacToT / TotalCells
+  )
+
+# Step 4: Plot raw Mac/T ratio
+ggplot(ctm_df, aes(x = DiseaseStatus, y = MacToT, fill = DiseaseStatus)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(width = 0.2, alpha = 0.7, color = "black") +
+  stat_compare_means(method = "wilcox.test", label.y = max(ctm_df$MacToT, na.rm = TRUE) * 1.05) +
+  labs(
+    title = "CD163+ Macrophage : T Cell Ratio",
+    x = "Disease Status",
+    y = "CD163+ Mac / T Cell Ratio"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    panel.grid = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA, size = 1),
+    plot.background = element_blank()
+  )
+
