@@ -1,0 +1,103 @@
+
+
+# Load data
+
+marker_list
+
+library(NICHES)
+library(Seurat)
+library(cowplot)
+# require packages
+require(Seurat)
+
+# inspect object
+p1 <- DimPlot(NICHES.integrated)
+p2 <- DimPlot(NICHES.integrated,group.by = 'Sample')
+p3 <- SpatialDimPlot(NICHES.integrated,ncol = 4)
+p.right <- plot_grid(p1,p2,ncol = 1)
+p.total <- plot_grid(p.right,p3,rel_widths = c(1,1.5))
+p.total
+
+# Set Default assay
+DefaultAssay(NICHES.integrated) <- 'integrated'
+
+# Stash idents
+NICHES.integrated$stash <- Idents(NICHES.integrated)
+
+#metastatic samples: 4064 4512 4523 4521 4577 4578 
+#localized samples: 4531 4539 4550 4556 4559 4557 4554 4564 4582 4553
+# Try to find conserved markers in metastatic samples first #cluster 0 
+temp1 <- me_Marker_List$EWS4064[me_Marker_List$EWS4064$cluster=='0'&me_Marker_List$EWS4064$p_val_adj<0.001&me_Marker_List$EWS4064$avg_log2FC>1,]
+temp2 <- me_Marker_List$EWS4512[me_Marker_List$EWS4512$cluster=='0'&me_Marker_List$EWS4512$p_val_adj<0.001&me_Marker_List$EWS4064$avg_log2FC>1,]
+temp3 <- me_Marker_List$EWS4523[me_Marker_List$EWS4523$cluster=='0'&me_Marker_List$EWS4523$p_val_adj<0.001&me_Marker_List$EWS4064$avg_log2FC>1,]
+temp4 <- me_Marker_List$EWS4521[me_Marker_List$EWS4521$cluster=='0'&me_Marker_List$EWS4521$p_val_adj<0.001&me_Marker_List$EWS4064$avg_log2FC>1,]
+temp5 <- me_Marker_List$EWS4577[me_Marker_List$EWS4577$cluster=='0'&me_Marker_List$EWS4577$p_val_adj<0.001&me_Marker_List$EWS4064$avg_log2FC>1,]
+temp6 <- me_Marker_List$EWS4578[me_Marker_List$EWS4578$cluster=='0'&me_Marker_List$EWS4578$p_val_adj<0.001&me_Marker_List$EWS4064$avg_log2FC>1,]
+
+#temp1 <- me_Marker_List$EWS4531[me_Marker_List$EWS4531$cluster=='0'&me_Marker_List$EWS4531$p_val_adj<0.001,]
+#temp2 <- me_Marker_List$EWS4539[me_Marker_List$EWS4539$cluster=='0'&me_Marker_List$EWS4539$p_val_adj<0.001,]
+#temp3 <- me_Marker_List$EWS4550[me_Marker_List$EWS4550$cluster=='0'&me_Marker_List$EWS4550$p_val_adj<0.001,]
+# temp1$gene %in% temp2$gene 
+# temp1$gene[temp1$gene %in% temp2$gene ]
+list1 <- intersect(temp1$gene, c(temp2$gene, temp3$gene, temp4$gene, temp5$gene, temp6$gene))
+
+# Convert list1 into a list #for cluster 0 
+met_tumor_common_list <- as.list(list1)
+write.csv(met_tumor_common_list, file = "met_tumor_common_list.csv")
+
+###cluster 1 in met###
+# Try to find conserved markers in metastatic samples first #cluster 1
+temp1 <- me_Marker_List$EWS4064[me_Marker_List$EWS4064$cluster=='1'&me_Marker_List$EWS4064$p_val_adj<0.001&me_Marker_List$EWS4064$avg_log2FC>1,]
+temp2 <- me_Marker_List$EWS4512[me_Marker_List$EWS4512$cluster=='1'&me_Marker_List$EWS4512$p_val_adj<0.001&me_Marker_List$EWS4064$avg_log2FC>1,]
+temp3 <- me_Marker_List$EWS4523[me_Marker_List$EWS4523$cluster=='1'&me_Marker_List$EWS4523$p_val_adj<0.001&me_Marker_List$EWS4064$avg_log2FC>1,]
+temp4 <- me_Marker_List$EWS4521[me_Marker_List$EWS4521$cluster=='1'&me_Marker_List$EWS4521$p_val_adj<0.001&me_Marker_List$EWS4064$avg_log2FC>1,]
+temp5 <- me_Marker_List$EWS4577[me_Marker_List$EWS4577$cluster=='1'&me_Marker_List$EWS4577$p_val_adj<0.001&me_Marker_List$EWS4064$avg_log2FC>1,]
+temp6 <- me_Marker_List$EWS4578[me_Marker_List$EWS4578$cluster=='1'&me_Marker_List$EWS4578$p_val_adj<0.001&me_Marker_List$EWS4064$avg_log2FC>1,]
+
+list2 <- intersect(temp1$gene, c(temp2$gene, temp3$gene, temp4$gene, temp5$gene, temp6$gene))
+
+# Convert list1 into a list #for cluster 1 
+met_tumor_common_list_cluster1 <- as.list(list2)
+write.csv(met_tumor_common_list_cluster1, file = "met_tumor_common_list_cluster1.csv")
+
+#how to view one image 
+SpatialFeaturePlot(NICHES.integrated,'COL4A1', 'EWS4539', pt.size = 2)
+SpatialDimPlot(NICHES.integrated, group.by = "seurat_clusters", 'EWS4064')
+###
+View(me_Marker_List$EWS4550[list2,])
+
+table(Idents(NICHES.integrated),NICHES.integrated$Sample)
+p1 <- SpatialDimPlot(NICHES.integrated,group.by = 'seurat_clusters',ncol=4)+NoLegend()
+p2 <- SpatialFeaturePlot(NICHES.integrated,'WNT5A—MCAM',ncol=4)
+plot_grid(p1,p2,ncol = 2)
+#TGFB1—TGFBR1-TGFBR2 COL1A1−DDR1
+SpatialFeaturePlot(NICHES.integrated,'HMGB1—TLR4', max.cutoff = 4, pt.size.factor = 700, ncol=8)
+DefaultAssay(NICHES.integrated) <- "Spatial"
+DefaultAssay(NICHES.integrated)
+SpatialFeaturePloturePlot(NICHES.integrated, features = "LGALS3", pt.size.factor = 700, ncol = 8)
+
+DefaultAssay(NICHES.integrated) <- "NeighborhoodToCell"
+#Statistical Test# 
+
+#Test A Object# 
+load("/Users/chrkuo/Dropbox/Niches/Satistical.test.052024/Test_A/Marker_List_with_Score_Summarized_modified.Robj")
+write.csv(Marker_List_with_Score_Summarized, file = "Marker_List_with_Score_Summarized_modified.csv")
+DimPlot(hayashi)
+VlnPlot(hayashi, features = 'COL4A4')
+  FeaturePlot(hayashi, features = 'COL6A1')
+
+  #Test B Object#
+load("/Users/chrkuo/Dropbox/Niches/Satistical.test.052024/Test_B/Marker_Diff_SampleType_L.Robj")
+load("/Users/chrkuo/Dropbox/Niches/Satistical.test.052024/Test_B/Marker_Diff_SampleType_M.Robj")
+
+write.csv(Marker_Diff_SampleType_M, file = "Table6.QB.Met.csv")
+
+#Test C Object#
+setwd("Users/chrkuo/Dropbox/Niches/Satistical.test.052024/Test_C")
+load("/Users/chrkuo/Dropbox/Niches/Satistical.test.052024/Test_C/0_Marker_Diff_SampleType_L.Robj")
+load("/Users/chrkuo/Dropbox/Niches/Satistical.test.052024/Test_C/0_Marker_Diff_SampleType_M.Robj")
+load("/Users/chrkuo/Dropbox/Niches/Satistical.test.052024/Test_C/1_Marker_Diff_SampleType_L.Robj")
+load("/Users/chrkuo/Dropbox/Niches/Satistical.test.052024/Test_C/1_Marker_Diff_SampleType_M.Robj")
+
+
+  
