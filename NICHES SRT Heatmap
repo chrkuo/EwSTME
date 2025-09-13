@@ -1,0 +1,259 @@
+#Subsetting
+#Subset for Question A: What are the representative microenvironmental niches in each cluster 
+cluster_subset <- subset(NICHES.integrated, me.clusters %in% c("0", "1"))
+
+
+# If you need to scale data for heatmap
+DefaultAssay(cluster_subset) <- 'NeighborhoodToCell'
+cluster_subset <- ScaleData(cluster_subset)
+
+#Mechanism for Question A Heatmap 
+mechanisms <- c('TNC—ITGAV',
+                'COL4A1—CD93',
+                'COL4A1—ITGB1',
+                'COL1A2—CD93',
+                'FN1—ITGAV-ITGB1',
+                'LAMA5—ITGA7-ITGB1',
+                'HSPG2—ITGB1',
+                'COL1A2—ITGB1',
+                'TGFB1—SDC2',
+                'COL1A1—CD93',
+                'FBN1—ITGAV',
+                'COL6A1—ITGB1',
+                'COL6A2—ITGB1',
+                'MMP2—SDC2',
+                'HSPG2—LRP1',
+                'TGFB1—TGFBR1-TGFBR2',
+                'TGFB3—TGFBR1-TGFBR2',
+                'CXCL12—CD4',
+                'CD14—ITGB1',
+                'CD14—RIPK1',
+                'IL16—CD4',
+                'MIF—CD74',
+                'WNT5A—LRP5',
+                'EFNA3—EPHA4',
+                'WNT5A—FZD1',
+                'DKK2—LRP6',
+                'CTF1—LIFR',
+                'FGF13—FGFR4',
+                'ZNRF3—FZD1-LRP5',
+                'IL1RAP—PTPRF',
+                'APCDD1—FZD1-LRP5')
+
+plot_label <- c('Microenvironment','Vital Status','Sample Type','Gender','Fusion Gene','Phenotype', 'Sample ID') #took out tissue 
+
+
+CustomHeatmapDendrogram(object=cluster_subset,
+                        data.type = 'NeighborhoodToCell',
+                        primary = 'me.clusters' , 
+                        secondary = 'VitalStatus' ,
+                        tertiary = 'SampleType' ,
+                        quarternary = 'Gender' ,
+                        quinary = 'FusionGene',
+                        senary = 'cell_type',
+                        septenary = 'Sample', # added by chris
+                        #octal = 'Sample', # added by chris 
+                        primary.cols = NULL,
+                        secondary.cols = NULL, # Need to be a named list of colors
+                        tertiary.cols = NULL,
+                        quarternary.cols = NULL,
+                        quinary.cols = NULL,
+                        senary.cols = NULL,
+                        septenary.cols = NULL,
+                        #octal.cols = NULL,
+                        features = mechanisms,
+                        labels = plot_label,
+                        selected.row.anotations=NULL,
+                        selected.label.size = 10,
+                        use.scale.data = T,
+                        range.frac = 0.1,
+                        row.dendrogram = F)
+
+# Subset Data for Heatmap (Only 'Localized' samples)
+zero_subset <- subset(NICHES.integrated, subset = me.clusters == "0")
+
+# If you need to scale data for heatmap
+DefaultAssay(zero_subset) <- 'NeighborhoodToCell'
+zero_subset <- ScaleData(zero_subset)
+
+# Define mechanisms and plot labels
+mechanisms <- c('WNT5B—FZD3', 
+                'WNT2B—FZD4-LRP6', 
+                'WNT5A—FZD8', 
+                'COL1A2—ITGA10-ITGB1', 
+                'COL6A1—ITGA10-ITGB1', 
+                'COL4A1—ITGA10-ITGB1', 
+                'MMP9—CD44', 
+                'COL1A1—DDR1', 
+                'COL5A2—DDR1',
+                'TNC—NT5E',
+                'HSPG2—ITGB1',
+                'CD14—ITGB1',
+                'HLA-DRA—CD4',
+                'C1QA—CD93',
+                'IL34—CSF1R',
+                'TGFB1—TGFBR2',
+                'TGFB1—ITGB1',
+                'DCN—TGFB1',
+                'TGFB1—TGFBR1',
+                'COL4A5—ITGB1',
+                'COL9A2—ITGB1',
+                'WNT3—FZD1-LRP5',
+                'WNT3—LRP6')
+plot_label <- c('Microenvironment', 'Sample Type','Vital Status','Gender','Fusion Gene','Phenotype', 'Tissue', 'Sample ID')
+
+
+# Load custom heatmap function
+source("/Users/chrkuo/Dropbox/Niches/Graphs June 2024/CustomHeatmapDendrogram.CKedits.R")
+
+
+# Generate Heatmap for Localized Subset
+CustomHeatmapDendrogram(object = zero_subset,
+                        data.type = 'NeighborhoodToCell',
+                        primary = 'me.clusters',
+                        secondary = 'SampleType',
+                        tertiary = 'VitalStatus', 
+                        quarternary = 'Gender',
+                        quinary = 'FusionGene',
+                        senary = 'cell_type',
+                        septenary = 'Tissue',
+                        octal = 'Sample',
+                        primary.cols = NULL,
+                        secondary.cols = NULL,
+                        tertiary.cols = NULL,
+                        quarternary.cols = NULL,
+                        quinary.cols = NULL,
+                        senary.cols = NULL,
+                        septenary.cols = NULL,
+                        octal.cols = NULL,
+                        features = mechanisms,
+                        labels = plot_label,
+                        selected.row.anotations = NULL,
+                        selected.label.size = 10,
+                        use.scale.data = TRUE,
+                        range.frac = 0.75,
+                        row.dendrogram = TRUE)
+
+##Now subset Cluster 1 
+# Subset Data for Heatmap (Only 'Localized' samples)
+one_subset <- subset(NICHES.integrated, subset = me.clusters == "1")
+
+# If you need to scale data for heatmap
+DefaultAssay(one_subset) <- 'NeighborhoodToCell'
+one_subset <- ScaleData(one_subset)
+
+# Define mechanisms and plot labels
+mechanisms <- c('WNT5B—FZD3', 
+                'WNT2B—FZD3-LRP6', 
+                'WNT5A—FZD3', 
+                'DKK2—LRP6', 
+                'HLA-DRA—CD4', 
+                'NT5E-SLC29A3—ADORA2A', 
+                'PROS1—AXL', 
+                'WNT3—FZD2-LRP6', 
+                'APCDD1—FZD1-LRP5',
+                'WNT3—FZD2-LRP5',
+                'BMP2—BMPR2',
+                'APOE—LRP8')
+plot_label <- c('Microenvironment', 'Sample Type','Vital Status','Gender','Fusion Gene','Phenotype', 'Tissue', 'Sample ID')
+
+
+# Load custom heatmap function
+source("/Users/chrkuo/Dropbox/Niches/Graphs June 2024/CustomHeatmapDendrogram.CKedits.R")
+
+
+# Generate Heatmap for Localized Subset
+CustomHeatmapDendrogram(object = one_subset,
+                        data.type = 'NeighborhoodToCell',
+                        primary = 'me.clusters',
+                        secondary = 'SampleType',
+                        tertiary = 'VitalStatus', 
+                        quarternary = 'Gender',
+                        quinary = 'FusionGene',
+                        senary = 'cell_type',
+                        septenary = 'Tissue',
+                        octal = 'Sample',
+                        primary.cols = NULL,
+                        secondary.cols = NULL,
+                        tertiary.cols = NULL,
+                        quarternary.cols = NULL,
+                        quinary.cols = NULL,
+                        senary.cols = NULL,
+                        septenary.cols = NULL,
+                        octal.cols = NULL,
+                        features = mechanisms,
+                        labels = plot_label,
+                        selected.row.anotations = NULL,
+                        selected.label.size = 10,
+                        use.scale.data = TRUE,
+                        range.frac = 0.75,
+                        row.dendrogram = TRUE)
+
+#Question B heatmap: what are the representative microenvironmental niches in metastatic vs. localized primary tumors#
+
+mechanisms <- c(
+                'TNC—ITGAV',
+                'DKK2—LRP6',
+                'DCN—TGFB1',
+                'FN1—ITGA3-ITGB1',
+                
+                'COL3A1—DDR1',
+                'MMP9—LRP1',
+                'THBS1—TGFB1',
+                'TGFB1—ITGAV',
+                'COL5A1—ITGB1',
+                'HSPG2—ITGB1',
+                'HSPG2—LRP1',
+                'TGFB3—TGFBR1',
+                
+                'C1QB—LRP1',
+                'CXCL12—CD4',
+                'IL16—CD4',
+                'COL1A1—ITGA3-ITGB1',
+                'COL6A2—ITGA3-ITGB1',
+                'COL4A2—ITGA3-ITGB1',
+                'COL4A2—CD44',
+                'LAMA5—ITGA3-ITGB1',
+                'VEGFA—ITGAV',
+                'NT5E-SLC29A3—ADORA2A',
+                'VIM—CD44',
+                'APCDD1—FZD4-LRP6',
+                'APP—CAV1',
+                'ZNRF3—FZD2-LRP5',
+                'ZNRF3—FZD1-LRP5',
+                'APCDD1—FZD2-LRP5',
+                'EPHB2—EFNB1',
+                'COL9A2—ITGB1',
+                'BMP2—BMPR2',
+                'BMP2—ACVR2A',
+                'EPHA4—EFNA3',
+                'APOE—LRP5')
+
+plot_label <- c('Sample Type', 'Vital Status','Sample ID') #tookout'Phenotype' and 'Tissue'
+
+CustomHeatmapDendrogram(object=cluster_subset,
+                        data.type = 'NeighborhoodToCell',
+                        primary = 'SampleType' , #me.clusters SampleType
+                        secondary = 'VitalStatus' , #VitalStatus
+                        tertiary = 'Sample' , #SampleType
+                        #quarternary = 'Tissue' , #cell_type
+                        #quinary = 'cell_type',
+                        #senary = 'Sample', #FusionGene
+                        #septenary = 'FusionGene', # added by chris
+                        #octal = 'me.clusters', # added by chris 
+                        primary.cols = NULL,
+                        secondary.cols = NULL, # Need to be a named list of colors
+                        tertiary.cols = NULL,
+                        #quarternary.cols = NULL,
+                        #quinary.cols = NULL,
+                       # senary.cols = NULL,
+                       # septenary.cols = NULL,
+                        #octal.cols = NULL,
+                        features = mechanisms,
+                        labels = plot_label,
+                        selected.row.anotations=NULL,
+                        selected.label.size = 10,
+                        use.scale.data = T,
+                        range.frac = 0.1,
+                        row.dendrogram = F)
+
