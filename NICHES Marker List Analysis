@@ -1,0 +1,79 @@
+load('/Volumes/T7/Chris/Marker_List_with_Score_modified.Robj')
+
+load('/Volumes/T7/Chris/Marker_List_with_Score_Summarized_modified.Robj')
+
+load('/Volumes/T7/Chris/Marker_List_with_Score_Summarized_L_modified.Robj')
+
+load('/Volumes/T7/Chris/Marker_List_with_Score_Summarized_M_modified.Robj')
+
+Metastatic <- c('EWS4064','EWS4512','EWS4521','EWS4523','EWS4577','EWS4578')
+Localized <- c('EWS4531','EWS4539','EWS4550','EWS4553','EWS4554','EWS4556','EWS4557','EWS4559','EWS4564','EWS4582')
+
+cluster_ID_List <- c('0','1','2','3','4')
+
+SampleType_Classification <- function(x){
+  
+  SampleType <- 'Localized'
+  if(x %in% Metastatic){
+    SampleType <- 'Metastatic'
+  }
+  return(SampleType)
+}
+
+
+SampleType <- sapply(NICHES.integrated$Sample,SampleType_Classification)
+NICHES.integrated$SampleType <- SampleType
+
+load("/Volumes/T7/Chris/NICHES_list_all_merged.Robj")
+nFeature_NeighborhoodToCell <- NICHES_list$nFeature_NeighborhoodToCell
+names(nFeature_NeighborhoodToCell) <- colnames(NICHES.integrated)
+NICHES.integrated$nFeature_NeighborhoodToCell <- nFeature_NeighborhoodToCell
+
+table(NICHES.integrated$SampleType)
+
+Idents(NICHES.integrated) <- 'SampleType'
+DefaultAssay(NICHES.integrated) <- 'NeighborhoodToCell'
+mark <- FindAllMarkers(NICHES.integrated,min.pct = 0.05,logfc.threshold = 0.01,only.pos = T)
+mark$ratio <- mark$pct.1/mark$pct.2
+mark$power <- mark$ratio*mark$avg_log2FC
+
+
+Marker_List_with_Score_Summarized$ratio <- Marker_List_with_Score_Summarized$`Avg pct1`/Marker_List_with_Score_Summarized$`Avg pct2`
+Marker_List_with_Score_Summarized$power <- Marker_List_with_Score_Summarized$ratio*Marker_List_with_Score_Summarized$`Avg avg_log2FC`
+
+png(filename = 'test.file-2024-05-09.png',width=10,height = 10,units = 'in',res=300)
+FeaturePlot(NICHES.integrated,split.by = 'SampleType',ncol=4,feature = 'VEGFD—FLT4',pt.size = 2,order=T)
+dev.off()
+
+png(filename = 'test.file.vln-2024-05-09.png',width=10,height = 10,units = 'in',res=300)
+VlnPlot(NICHES.integrated,group.by = 'Sample',split.by = 'seurat_clusters',feature = 'VEGFD—FLT4',pt.size = 1)
+dev.off()
+
+SpatialFeaturePlot(NICHES.integrated,feature = 'VEGFD—FLT4',pt.size.factor = 4,ncol=4,max.cutoff = 2)
+
+#function 1 
+moi <- 'HGF—MET'
+Idents(NICHES.integrated) <- 'me.clusters'
+FeaturePlot(NICHES.integrated,feature = moi,pt.size = 2,order=T,label=T)
+FeaturePlot(NICHES.integrated,split.by = 'SampleType',ncol=4,feature = moi,pt.size = 2,order=T,label=T)
+
+#function 2
+VlnPlot(NICHES.integrated,group.by = 'Sample',split.by='me.clusters',feature = moi,pt.size = 1)
+
+#function 3
+FeaturePlot(NICHES.integrated,split.by='Sample',feature=moi,pt.size=2,order=T,label=T)
+
+
+
+# reorder SAmple to be Localized and then metastattic
+Metastatic <- c('EWS4064','EWS4512','EWS4521','EWS4523','EWS4577','EWS4578')
+Localized <- c('EWS4531','EWS4539','EWS4550','EWS4553','EWS4554','EWS4556','EWS4557','EWS4559','EWS4564','EWS4582')
+
+sample.order <- c(Localized,Metastatic)
+NICHES.integrated$Sample <- factor(NICHES.integrated$Sample,
+                                   levels = sample.order )
+
+moi <-'NRXN3—NLGN2'
+VlnPlot(NICHES.integrated,group.by = 'Sample',split.by='me.clusters',feature = moi,pt.size = 1)+ 
+  geom_vline(xintercept = 10.5, linetype="dotted", color = "red", size=1)
+VlnPlot(NICHES.integrated,group.by = 'SampleType',split.by='me.clusters',feature = moi,pt.size = 1)
